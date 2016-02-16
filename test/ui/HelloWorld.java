@@ -1,4 +1,4 @@
-package oram;
+package ui;
 
 public class HelloWorld {
 
