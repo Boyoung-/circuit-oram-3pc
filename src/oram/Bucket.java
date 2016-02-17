@@ -1,25 +1,18 @@
 package oram;
 
 public class Bucket {
-	private int tupleBytes;
 	private Tuple[] tuples;
 
-	public Bucket(int numTuples, int tb) {
-		tupleBytes = tb;
+	public Bucket(int numTuples) {
 		tuples = new Tuple[numTuples];
 	}
 
-	public Bucket(Tuple[] ts) {
-		tupleBytes = ts[0].getNumBytes();
-		tuples = ts;
+	public Bucket(Tuple[] tuples) {
+		this.tuples = tuples;
 	}
 
 	public int getNumTuples() {
 		return tuples.length;
-	}
-
-	public int getTupleBytes() {
-		return tupleBytes;
 	}
 
 	public Tuple[] getTuples() {
@@ -39,6 +32,7 @@ public class Bucket {
 	}
 
 	public byte[] toByteArray() {
+		int tupleBytes = tuples[0].getNumBytes();
 		byte[] bucket = new byte[tupleBytes * tuples.length];
 		for (int i = 0; i < tuples.length; i++) {
 			byte[] tuple = tuples[i].toByteArray();

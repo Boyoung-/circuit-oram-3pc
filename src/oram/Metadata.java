@@ -133,8 +133,6 @@ public class Metadata {
 			treeOffsets[i] = forestBytes;
 			forestBytes += treeBytes[i];
 		}
-
-		printInfo();
 	}
 
 	public void printInfo() {

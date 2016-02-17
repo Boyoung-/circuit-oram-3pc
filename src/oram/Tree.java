@@ -37,9 +37,9 @@ public class Tree {
 		d = lBits + 1;
 
 		buckets = new Array64<Bucket>(numBuckets);
-		buckets.set(0, new Bucket(stashSize, tupleBytes));
+		buckets.set(0, new Bucket(stashSize));
 		for (int i = 1; i < numBuckets; i++)
-			buckets.set(i, new Bucket(w, tupleBytes));
+			buckets.set(i, new Bucket(w));
 	}
 
 	public int getTreeIndex() {
@@ -107,9 +107,15 @@ public class Tree {
 			return new long[] { 0 };
 		if (L < 0 || L > numBuckets / 2)
 			throw new InvalidPathLabelException(BigInteger.valueOf(L).toString(2));
+		BigInteger biL = BigInteger.valueOf(L);
 		long[] indices = new long[d];
-		for (int i = 0; i < d; i++)
-			indices[i] = (L >> (d - i)) + (long) Math.pow(2, i) - 1;
+		indices[0] = 0;
+		for (int i = 1; i < d; i++) {
+			if (biL.testBit(d - i - 1))
+				indices[i] = indices[i - 1] * 2 + 2;
+			else
+				indices[i] = indices[i - 1] * 2 + 1;
+		}
 		return indices;
 	}
 
