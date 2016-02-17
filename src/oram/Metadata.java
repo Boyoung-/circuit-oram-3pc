@@ -1,54 +1,70 @@
 package oram;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Serializable;
+import java.io.File;
+import java.io.FileInputStream;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.yaml.snakeyaml.Yaml;
 
-import sprout.util.Util;
-
 public class Metadata {
-	public String CONFIG_FILE = "config.yaml";
-	public String TAU = "tau";
-	public String ADDRBITS = "addrBits";
-	public String W = "w";
-	public String DBYTES = "dBytes";
-	public String INSERT = "insert";
-	public String STASH = "stash";
+	private String CONFIG_FILE = "config/config.yaml";
 
-	public int tau;
-	public int twoTauPow;
-	public int addrBits;
-	public int w;
-	public int numTrees;
-	public int dBytes;
-	public int tempStashSize;
+	private String TAU = "tau";
+	private String ADDRBITS = "addrBits";
+	private String W = "w";
+	private String DBYTES = "dBytes";
+	private String INSERT = "insert";
+	private String STASH = "stash";
 
-	public int[] lBits;
-	public int[] nBits;
-	public int[] aBits;
-	public int[] tupleBits;
+	private int tau;
+	private int twoTauPow;
+	private int addrBits;
+	private int w;
+	private int dBytes;
+	private int tempStashSize;
+	private int numTrees;
+	private int h;
+	private long maxNumRecords;
+	private long numInsertRecords;
 
-	public long[] treeOffset;
-	public long[] numBuckets;
-	public long[] treeBytes;
-	public int[] stashSizes;
+	private int[] nBits;
+	private int[] lBits;
+	private int[] aBits;
+	
+	private int[] nBytes;
+	private int[] lBytes;
+	private int[] aBytes;
+	private int[] tupleBytes;
 
-	public long forestBytes;
+	private int[] stashSizes;
+	private long[] numBuckets;
+	private long[] treeBytes;
+	private long[] treeOffsets;
 
-	public long maxNumRecords;
-	public long numInsertRecords;
+	private long forestBytes;
+	
+	public Metadata() {
+		setup(CONFIG_FILE);
+	}
 
-	Metadata(String filename){
+	public Metadata(String filename) {
+		setup(filename);
+	}
+
+	private void setup(String filename) {
 		Yaml yaml = new Yaml();
-		InputStream input = new FileInputStream(new File(filename));
+		InputStream input = null;
+		try {
+			input = new FileInputStream(new File(filename));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		@SuppressWarnings("unchecked")
 		Map<String, Object> configMap = (Map<String, Object>) yaml.load(input);
 
 		tau = Integer.parseInt(configMap.get(TAU).toString());
@@ -57,288 +73,209 @@ public class Metadata {
 		dBytes = Integer.parseInt(configMap.get(DBYTES).toString());
 		numInsertRecords = Long.parseLong(configMap.get(INSERT).toString(), 10);
 		tempStashSize = Integer.parseInt(configMap.get(STASH).toString());
-		
+
 		init();
 	}
 
-	public void init() {
+	private void init() {
 		twoTauPow = (int) Math.pow(2, tau);
-		levels = (lastNBits + tau - 1) / tau + 1;
+		h = (addrBits - 1) / tau + 1;
+		numTrees = h + 1;
+		maxNumRecords = (long) Math.pow(2, addrBits);
+		if (numInsertRecords < 0 || numInsertRecords > maxNumRecords)
+			numInsertRecords = maxNumRecords;
 
-		lBits = new int[levels];
-		nBits = new int[levels];
-		aBits = new int[levels];
-		tupleBits = new int[levels];
-		numBuckets = new long[levels];
-		treeBytes = new long[levels];
-		offset = new long[levels];
-		numLeaves = new long[levels];
+		lBits = new int[numTrees];
+		nBits = new int[numTrees];
+		aBits = new int[numTrees];
+		lBytes = new int[numTrees];
+		nBytes = new int[numTrees];
+		aBytes = new int[numTrees];
+		tupleBytes = new int[numTrees];
 
-		forestBytes = 0L;
-
-		// Compute the values for each of the ORAM levels
-		int h = levels - 1;
-		int logW = (int) (Math.log(w) / Math.log(2));
+		stashSizes = new int[numTrees];
+		numBuckets = new long[numTrees];
+		treeOffsets = new long[numTrees];
+		treeBytes = new long[numTrees];
 
 		for (int i = h; i >= 0; i--) {
 			if (i == 0) {
 				nBits[i] = 0;
 				lBits[i] = 0;
-				numLeaves[i] = 0;
-				numBuckets[i] = 1;
-			} else {
-				if (i == h)
-					nBits[i] = lastNBits;
-				else
-					nBits[i] = i * tau;
-				lBits[i] = Math.max(nBits[i] - logW, 1);
-				numLeaves[i] = (long) Math.pow(2, lBits[i]);
-				numBuckets[i] = numLeaves[i] * e + numLeaves[i] - 1;
-			}
-
-			if (i == h) {
-				aBits[i] = dBytes * 8;
-
-				addressSpace = (long) Math.pow(2, nBits[i]);
-			} else {
 				aBits[i] = twoTauPow * lBits[i + 1];
+			} else if (i < h) {
+				nBits[i] = i * tau;
+				lBits[i] = nBits[i] + 1;
+				aBits[i] = twoTauPow * lBits[i + 1];
+			} else {
+				nBits[i] = addrBits;
+				lBits[i] = nBits[i] + 1;
+				aBits[i] = dBytes * 8;
 			}
 
-			if (i == 0)
-				tupleBits[i] = aBits[i];
-			else
-				tupleBits[i] = 1 + nBits[i] + lBits[i] + aBits[i];
-			treeBytes[i] = getBucketBytes(i) * numBuckets[i];
+			nBytes[i] = (nBits[i] + 7) / 8;
+			lBytes[i] = (lBits[i] + 7) / 8;
+			aBytes[i] = (aBits[i] + 7) / 8;
+			numBuckets[i] = (long) Math.pow(2, lBits[i] + 1) - 1;
+			if (i == 0) {
+				tupleBytes[i] = aBytes[i];
+				stashSizes[i] = 0;
+				treeBytes[i] = tupleBytes[i];
+			} else {
+				tupleBytes[i] = 1 + nBytes[i] + lBytes[i] + aBytes[i];
+				stashSizes[i] = tempStashSize;
+				treeBytes[i] = ((numBuckets[i] - 1) * w + stashSizes[i]) * tupleBytes[i];
+			}
+		}
+
+		forestBytes = 0L;
+		for (int i = 0; i < numTrees; i++) {
+			treeOffsets[i] = forestBytes;
 			forestBytes += treeBytes[i];
 		}
 
-		// calculate tree offsets
-		long os = 0L;
-		for (int i = 0; i < levels; i++) {
-			offset[i] = os;
-			os += treeBytes[i];
-		}
-
-		status = true;
-
-		if (ifPrint)
-			printInfo();
-
-		// for loadPathCheat
-		pathOffset = new long[levels];
-		pathNumBuckets = new long[levels];
-		pathOffset[0] = 0;
-		pathNumBuckets[0] = 1;
-		pathSize = pathNumBuckets[0] * getBucketBytes(0);
-		for (int i = 1; i < levels; i++) {
-			pathOffset[i] = pathSize;
-			pathNumBuckets[i] = lBits[i] + e;
-			pathSize += pathNumBuckets[i] * getBucketBytes(i);
-		}
+		printInfo();
 	}
 
-	public static void printInfo() {
-		Util.disp("===== ForestMetadata =====");
-		Util.disp("tau:\t" + tau);
-		Util.disp("N bits:\t" + lastNBits);
-		Util.disp("w:\t" + w);
-		Util.disp("e:\t" + e);
-		Util.disp("trees:\t" + levels);
-		Util.disp("D bytes:\t" + dBytes);
-		// Util.disp("nonce bits:\t" + nonceBits);
-		Util.disp("max # records:\t" + addressSpace);
-		Util.disp("forest bytes:\t" + forestBytes);
-		Util.disp("");
+	public void printInfo() {
+		System.out.println("===== ORAM Forest Metadata =====");
+		System.out.println();
+		System.out.println("tau:				" + tau);
+		System.out.println("address bits:		" + addrBits);
+		System.out.println("w:					" + w);
+		System.out.println("D bytes:			" + dBytes);
+		System.out.println();
+		System.out.println("max records:		" + maxNumRecords);
+		System.out.println("inserted records:	" + numInsertRecords);
+		System.out.println("trees:				" + numTrees);
+		System.out.println("forest bytes:		" + forestBytes);
+		System.out.println();
 
-		for (int i = 0; i < levels; i++) {
-			Util.disp("[Level " + i + "]");
-			Util.disp("    nBits             => " + nBits[i]);
-			Util.disp("    lBits             => " + lBits[i]);
-			Util.disp("    aBits             => " + aBits[i]);
-			Util.disp("    tupleBits         => " + tupleBits[i]);
-			Util.disp("    bucketTupleBytes  => " + getBucketTupleBytes(i));
-			Util.disp("    bucketBytes       => " + getBucketBytes(i));
-			Util.disp("    numLeaves         => " + numLeaves[i]);
-			Util.disp("    numBuckets        => " + numBuckets[i]);
-			Util.disp("    numTuples         => " + getNumTuples(i));
-			Util.disp("    treeOffset        => " + offset[i]);
-			Util.disp("    treeBytes         => " + treeBytes[i]);
-			Util.disp("");
+		for (int i = 0; i < numTrees; i++) {
+			System.out.println("[Tree " + i + "]");
+			System.out.println("	nBits		-> " + nBits[i]);
+			System.out.println("	lBits		-> " + lBits[i]);
+			System.out.println("	aBits		-> " + aBits[i]);
+			System.out.println("	tupleBytes	-> " + tupleBytes[i]);
+			System.out.println("	stashSize	-> " + stashSizes[i]);
+			System.out.println("	numBuckets	-> " + numBuckets[i]);
+			System.out.println("	treeOffset	-> " + treeOffsets[i]);
+			System.out.println("	treeBytes	-> " + treeBytes[i]);
+			System.out.println();
 		}
-		Util.disp("");
+		System.out.println("===== End of Metadata =====");
+		System.out.println();
 	}
 
-	public static void write() throws IOException {
-		write(CONFIG_FILE);
-	}
-
-	public static void write(String filename) throws IOException {
+	public void write(String filename){
 		Yaml yaml = new Yaml();
-		FileWriter writer = new FileWriter(filename);
+		FileWriter writer = null;
+		try {
+			writer = new FileWriter(filename);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
-		// Cached configuration map
 		Map<String, String> configMap = new HashMap<String, String>();
-		configMap.put(TAU_NAME, "" + tau);
-		configMap.put(NBITS_NAME, "" + lastNBits);
-		configMap.put(W_NAME, "" + w);
-		configMap.put(E_NAME, "" + e);
-		// configMap.put(LEVELS_NAME, "" + levels);
-		configMap.put(DBYTES_NAME, "" + dBytes);
-		// configMap.put(NONCEBITS_NAME, "" + nonceBits);
-		configMap.put(INSERT_NAME, "" + numInsert);
+		configMap.put(TAU, "" + tau);
+		configMap.put(ADDRBITS, "" + addrBits);
+		configMap.put(W, "" + w);
+		configMap.put(DBYTES, "" + dBytes);
+		configMap.put(INSERT, "" + numInsertRecords);
+		configMap.put(STASH, "" + tempStashSize);
 
 		yaml.dump(configMap, writer);
 	}
 
-	// /// ACCESSORS
-	public static boolean getStatus() {
-		return status;
+	public void write(){
+		write(CONFIG_FILE);
 	}
-
-	public static int getLastNBits() {
-		return lastNBits;
-	}
-
-	public static int getLevels() {
-		return levels;
-	}
-
-	public static int getLBits(int level) {
-		return lBits[level];
-	}
-
-	public static int getLBytes(int level) {
-		return (lBits[level] + 7) / 8;
-	}
-
-	public static int getNBits(int level) {
-		return nBits[level];
-	}
-
-	public static int getNBytes(int level) {
-		return (nBits[level] + 7) / 8;
-	}
-
-	public static int getABits(int level) {
-		return aBits[level];
-	}
-
-	public static int getABytes(int level) {
-		if (level == (levels - 1))
-			return dBytes;
-		else
-			return (aBits[level] + 7) / 8;
-	}
-
-	public static int getTupleBits(int level) {
-		return tupleBits[level];
-	}
-
-	public static int getTupleBytes(int level) {
-		return (tupleBits[level] + 7) / 8;
-	}
-
-	public static long getTreeOffset(int level) {
-		return offset[level];
-	}
-
-	public static long getTreeBytes(int level) {
-		return treeBytes[level];
-	}
-
-	public static int getBucketDepth() {
-		return w;
-	}
-
-	public static long getNumBuckets(int level) {
-		return numBuckets[level];
-	}
-
-	public static long getNumTuples(int level) {
-		if (level == 0)
-			return 1;
-		else
-			return numBuckets[level] * w;
-	}
-
-	public static long getNumLeaves(int level) {
-		return numLeaves[level];
-	}
-
-	public static int getDataSize() {
-		return dBytes;
-	}
-
-	public static int getLeafExpansion() {
-		return e;
-	}
-
-	public static int getTau() {
+	
+	public int getTau() {
 		return tau;
 	}
-
-	public static int getTwoTauPow() {
+	
+	public int getTwoTauPow() {
 		return twoTauPow;
 	}
-
-	public static long getForestBytes() {
+	
+	public int getAddrBits() {
+		return addrBits;
+	}
+	
+	public int getW() {
+		return w;
+	}
+	
+	public int getDBytes() {
+		return dBytes;
+	}
+	
+	public int getTempStashSize() {
+		return tempStashSize;
+	}
+	
+	public int getNumTrees() {
+		return numTrees;
+	}
+	
+	public int getH() {
+		return h;
+	}
+	
+	public long getMaxNumRecords() {
+		return maxNumRecords;
+	}
+	
+	public long getNumInsertRecords() {
+		return numInsertRecords;
+	}
+	
+	public int getNBitsOfTree(int i) {
+		return nBits[i];
+	}
+	
+	public int getLBitsOfTree(int i) {
+		return lBits[i];
+	}
+	
+	public int getABitsOfTree(int i) {
+		return aBits[i];
+	}
+	
+	public int getNBytesOfTree(int i) {
+		return nBytes[i];
+	}
+	
+	public int getLBytesOfTree(int i) {
+		return lBytes[i];
+	}
+	
+	public int getABytesOfTree(int i) {
+		return aBytes[i];
+	}
+	
+	public int getTupleBytesOfTree(int i) {
+		return tupleBytes[i];
+	}
+	
+	public int getStashSizeOfTree(int i) {
+		return stashSizes[i];
+	}
+	
+	public long getNumBucketsOfTree(int i) {
+		return numBuckets[i];
+	}
+	
+	public long getTreeBytesOfTree(int i) {
+		return treeBytes[i];
+	}
+	
+	public long getTreeOffsetOfTree(int i) {
+		return treeOffsets[i];
+	}
+	
+	public long getForestBytes() {
 		return forestBytes;
-	}
-
-	public static long getAddressSpace() {
-		return addressSpace;
-	}
-
-	/*
-	 * public static int getNonceBits() { return nonceBits; }
-	 * 
-	 * public static int getNonceBytes() { return (nonceBits + 7) / 8; }
-	 */
-
-	public static long getNumInsert() {
-		return numInsert;
-	}
-
-	public static int getBucketTupleBits(int level) {
-		if (level == 0)
-			return tupleBits[level];
-		else
-			return tupleBits[level] * w;
-	}
-
-	public static int getBucketTupleBytes(int level) {
-		return (getBucketTupleBits(level) + 7) / 8;
-	}
-
-	public static int getBucketBytes(int level) {
-		// return getNonceBytes() + getBucketTupleBytes(level);
-		return getBucketTupleBytes(level);
-	}
-
-	public static long getNumLeafTuples(int level) {
-		if (level == 0)
-			return (long) twoTauPow;
-		else
-			return numLeaves[level] * w * e;
-	}
-
-	public static String[] getDefaultForestNames() {
-		return defaultForestNames;
-	}
-
-	public static String[] getDefaultPathNames() {
-		return defaultPathNames;
-	}
-
-	public static long getPathNumBuckets(int level) {
-		return pathNumBuckets[level];
-	}
-
-	public static long getPathOffset(int level) {
-		return pathOffset[level];
-	}
-
-	public static long getPathSize() {
-		return pathSize;
 	}
 }
