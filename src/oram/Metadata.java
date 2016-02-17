@@ -35,7 +35,7 @@ public class Metadata {
 	private int[] nBits;
 	private int[] lBits;
 	private int[] aBits;
-	
+
 	private int[] nBytes;
 	private int[] lBytes;
 	private int[] aBytes;
@@ -47,7 +47,7 @@ public class Metadata {
 	private long[] treeOffsets;
 
 	private long forestBytes;
-	
+
 	public Metadata() {
 		setup(CONFIG_FILE);
 	}
@@ -167,7 +167,7 @@ public class Metadata {
 		System.out.println();
 	}
 
-	public void write(String filename){
+	public void write(String filename) {
 		Yaml yaml = new Yaml();
 		FileWriter writer = null;
 		try {
@@ -187,94 +187,94 @@ public class Metadata {
 		yaml.dump(configMap, writer);
 	}
 
-	public void write(){
+	public void write() {
 		write(CONFIG_FILE);
 	}
-	
+
 	public int getTau() {
 		return tau;
 	}
-	
+
 	public int getTwoTauPow() {
 		return twoTauPow;
 	}
-	
+
 	public int getAddrBits() {
 		return addrBits;
 	}
-	
+
 	public int getW() {
 		return w;
 	}
-	
+
 	public int getDBytes() {
 		return dBytes;
 	}
-	
+
 	public int getTempStashSize() {
 		return tempStashSize;
 	}
-	
+
 	public int getNumTrees() {
 		return numTrees;
 	}
-	
+
 	public int getH() {
 		return h;
 	}
-	
+
 	public long getMaxNumRecords() {
 		return maxNumRecords;
 	}
-	
+
 	public long getNumInsertRecords() {
 		return numInsertRecords;
 	}
-	
+
 	public int getNBitsOfTree(int i) {
 		return nBits[i];
 	}
-	
+
 	public int getLBitsOfTree(int i) {
 		return lBits[i];
 	}
-	
+
 	public int getABitsOfTree(int i) {
 		return aBits[i];
 	}
-	
+
 	public int getNBytesOfTree(int i) {
 		return nBytes[i];
 	}
-	
+
 	public int getLBytesOfTree(int i) {
 		return lBytes[i];
 	}
-	
+
 	public int getABytesOfTree(int i) {
 		return aBytes[i];
 	}
-	
+
 	public int getTupleBytesOfTree(int i) {
 		return tupleBytes[i];
 	}
-	
+
 	public int getStashSizeOfTree(int i) {
 		return stashSizes[i];
 	}
-	
+
 	public long getNumBucketsOfTree(int i) {
 		return numBuckets[i];
 	}
-	
+
 	public long getTreeBytesOfTree(int i) {
 		return treeBytes[i];
 	}
-	
+
 	public long getTreeOffsetOfTree(int i) {
 		return treeOffsets[i];
 	}
-	
+
 	public long getForestBytes() {
 		return forestBytes;
 	}
