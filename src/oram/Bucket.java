@@ -1,24 +1,44 @@
 package oram;
 
 public class Bucket {
-	private Tree tree;
+	private int tupleBytes;
 	private Tuple[] tuples;
 
-	public Bucket(Tree tree, Tuple[] tuples) {
-		this.tree = tree;
-		this.tuples = tuples;
+	public Bucket(int numTuples, int tb) {
+		tupleBytes = tb;
+		tuples = new Tuple[numTuples];
+	}
+
+	public Bucket(Tuple[] ts) {
+		tupleBytes = ts[0].getNumBytes();
+		tuples = ts;
+	}
+
+	public int getNumTuples() {
+		return tuples.length;
+	}
+
+	public int getTupleBytes() {
+		return tupleBytes;
 	}
 
 	public Tuple[] getTuples() {
 		return tuples;
 	}
 
-	public Tuple getTupleAt(int i) {
+	public Tuple getTuple(int i) {
 		return tuples[i];
 	}
 
+	public void setTuples(Tuple[] tuples) {
+		this.tuples = tuples;
+	}
+
+	public void setTuple(int i, Tuple tuple) {
+		tuples[i] = tuple;
+	}
+
 	public byte[] toByteArray() {
-		int tupleBytes = tree.getTupleBytes();
 		byte[] bucket = new byte[tupleBytes * tuples.length];
 		for (int i = 0; i < tuples.length; i++) {
 			byte[] tuple = tuples[i].toByteArray();

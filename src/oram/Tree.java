@@ -22,21 +22,24 @@ public class Tree {
 
 	private Array64<Bucket> buckets;
 
-	public Tree(int i, Metadata md) {
-		treeIndex = i;
+	public Tree(int index, Metadata md) {
+		treeIndex = index;
 		w = md.getW();
-		stashSize = md.getStashSizeOfTree(i);
-		nBits = md.getNBitsOfTree(i);
-		lBits = md.getLBitsOfTree(i);
-		aBits = md.getABitsOfTree(i);
-		nBytes = md.getNBytesOfTree(i);
-		lBytes = md.getLBytesOfTree(i);
-		aBytes = md.getABytesOfTree(i);
-		tupleBytes = md.getTupleBytesOfTree(i);
-		numBuckets = md.getNumBucketsOfTree(i);
+		stashSize = md.getStashSizeOfTree(treeIndex);
+		nBits = md.getNBitsOfTree(treeIndex);
+		lBits = md.getLBitsOfTree(treeIndex);
+		aBits = md.getABitsOfTree(treeIndex);
+		nBytes = md.getNBytesOfTree(treeIndex);
+		lBytes = md.getLBytesOfTree(treeIndex);
+		aBytes = md.getABytesOfTree(treeIndex);
+		tupleBytes = md.getTupleBytesOfTree(treeIndex);
+		numBuckets = md.getNumBucketsOfTree(treeIndex);
 		d = lBits + 1;
 
 		buckets = new Array64<Bucket>(numBuckets);
+		buckets.set(0, new Bucket(stashSize, tupleBytes));
+		for (int i = 1; i < numBuckets; i++)
+			buckets.set(i, new Bucket(w, tupleBytes));
 	}
 
 	public int getTreeIndex() {

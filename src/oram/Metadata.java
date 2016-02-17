@@ -119,7 +119,7 @@ public class Metadata {
 			numBuckets[i] = (long) Math.pow(2, lBits[i] + 1) - 1;
 			if (i == 0) {
 				tupleBytes[i] = aBytes[i];
-				stashSizes[i] = 0;
+				stashSizes[i] = 1;
 				treeBytes[i] = tupleBytes[i];
 			} else {
 				tupleBytes[i] = 1 + nBytes[i] + lBytes[i] + aBytes[i];

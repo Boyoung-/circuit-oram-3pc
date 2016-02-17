@@ -3,16 +3,30 @@ package oram;
 import java.math.BigInteger;
 
 public class Tuple {
+	private int numBytes;
 	private byte[] F;
 	private byte[] N;
 	private byte[] L;
 	private byte[] A;
 
+	public Tuple(int fs, int ns, int ls, int as) {
+		numBytes = fs + ns + ls + as;
+		F = new byte[fs];
+		N = new byte[ns];
+		L = new byte[ls];
+		A = new byte[as];
+	}
+
 	public Tuple(byte[] f, byte[] n, byte[] l, byte[] a) {
+		numBytes = f.length + n.length + l.length + a.length;
 		F = f.clone();
 		N = n.clone();
 		L = l.clone();
 		A = a.clone();
+	}
+
+	public int getNumBytes() {
+		return numBytes;
 	}
 
 	public byte[] getF() {
@@ -32,7 +46,7 @@ public class Tuple {
 	}
 
 	public byte[] toByteArray() {
-		byte[] tuple = new byte[F.length + N.length + L.length + A.length];
+		byte[] tuple = new byte[numBytes];
 		int offset = 0;
 		System.arraycopy(F, 0, tuple, offset, F.length);
 		offset += F.length;
