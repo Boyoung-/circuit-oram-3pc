@@ -22,7 +22,6 @@ public class Array64<T> {
 		return size;
 	}
 
-	// WARNING: shallow copy!
 	public T get(long index) {
 		if (index < 0 || index >= size)
 			throw new ArrayIndexOutOfBoundsException("" + index);
@@ -32,7 +31,6 @@ public class Array64<T> {
 		// return SerializationUtils.clone(data[chunk][offset]);
 	}
 
-	// WARNING: shallow copy!
 	public void set(long index, T item) {
 		if (index < 0 || index >= size)
 			throw new ArrayIndexOutOfBoundsException("" + index);

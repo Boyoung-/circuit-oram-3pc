@@ -1,7 +1,13 @@
 package oram;
 
 public class Bucket {
+	private Tree tree;
 	private Tuple[] tuples;
+
+	public Bucket(Tree tree, Tuple[] tuples) {
+		this.tree = tree;
+		this.tuples = tuples;
+	}
 
 	public Tuple[] getTuples() {
 		return tuples;
@@ -12,12 +18,9 @@ public class Bucket {
 	}
 
 	public byte[] toByteArray() {
-		// TODO: remove this firstTuple if has access to tree metadata
-		byte[] firstTuple = tuples[0].toByteArray();
-		int tupleBytes = firstTuple.length;
+		int tupleBytes = tree.getTupleBytes();
 		byte[] bucket = new byte[tupleBytes * tuples.length];
-		System.arraycopy(firstTuple, 0, bucket, 0, tupleBytes);
-		for (int i = 1; i < tuples.length; i++) {
+		for (int i = 0; i < tuples.length; i++) {
 			byte[] tuple = tuples[i].toByteArray();
 			System.arraycopy(tuple, 0, bucket, i * tupleBytes, tupleBytes);
 		}
