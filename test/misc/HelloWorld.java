@@ -1,6 +1,7 @@
 package misc;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 public class HelloWorld {
 
@@ -13,8 +14,10 @@ public class HelloWorld {
 
 		// System.out.println(tmp[3]);
 
-		// System.out.println(Arrays.copyOfRange(tmp, 5, 6).length);
-		throw new ArrayIndexOutOfBoundsException("" + 11);
+		System.out.println(Arrays.copyOfRange(tmp, 2, 1).length);
+		// throw new ArrayIndexOutOfBoundsException("" + 11);
+
+		long a = 1L << -3;
 	}
 
 }

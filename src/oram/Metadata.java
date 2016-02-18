@@ -28,7 +28,6 @@ public class Metadata {
 	private int dBytes;
 	private int tempStashSize;
 	private int numTrees;
-	private int h;
 	private long maxNumRecords;
 	private long numInsertRecords;
 
@@ -79,8 +78,7 @@ public class Metadata {
 
 	private void init() {
 		twoTauPow = (int) Math.pow(2, tau);
-		h = (addrBits - 1) / tau + 1;
-		numTrees = h + 1;
+		numTrees = (addrBits - 1) / tau + 2;
 		maxNumRecords = (long) Math.pow(2, addrBits);
 		if (numInsertRecords < 0 || numInsertRecords > maxNumRecords)
 			numInsertRecords = maxNumRecords;
@@ -98,12 +96,12 @@ public class Metadata {
 		treeOffsets = new long[numTrees];
 		treeBytes = new long[numTrees];
 
-		for (int i = h; i >= 0; i--) {
+		for (int i = numTrees - 1; i >= 0; i--) {
 			if (i == 0) {
 				nBits[i] = 0;
 				lBits[i] = 0;
 				aBits[i] = twoTauPow * lBits[i + 1];
-			} else if (i < h) {
+			} else if (i < numTrees - 1) {
 				nBits[i] = i * tau;
 				lBits[i] = nBits[i] + 1;
 				aBits[i] = twoTauPow * lBits[i + 1];
@@ -215,10 +213,6 @@ public class Metadata {
 
 	public int getNumTrees() {
 		return numTrees;
-	}
-
-	public int getH() {
-		return h;
 	}
 
 	public long getMaxNumRecords() {

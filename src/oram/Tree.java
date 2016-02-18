@@ -2,9 +2,9 @@ package oram;
 
 import java.math.BigInteger;
 
-import Util.Array64;
 import exceptions.InvalidPathLabelException;
 import exceptions.LengthNotMatchException;
+import util.Array64;
 
 public class Tree {
 	private int treeIndex;

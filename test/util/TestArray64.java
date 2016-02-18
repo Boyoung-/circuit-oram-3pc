@@ -1,4 +1,6 @@
-package Util;
+package util;
+
+import util.Array64;
 
 public class TestArray64 {
 

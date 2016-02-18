@@ -1,4 +1,4 @@
-package Util;
+package util;
 
 public class Array64<T> {
 	private final int CHUNK_SIZE = 1024 * 1024 * 1024;
