@@ -7,8 +7,6 @@ import crypto.OramCrypto;
 import util.Util;
 
 public class Forest {
-	// private String defaultFileName;
-
 	private Tree[] trees;
 
 	public Forest() {
@@ -18,12 +16,11 @@ public class Forest {
 	}
 
 	public Forest(Metadata md) {
-		// init an empty forest
 		init(md);
-		// insert records into ORAM forest
 		insertTuples(md);
 	}
 
+	// init an empty forest
 	private void init(Metadata md) {
 		trees = new Tree[md.getNumTrees()];
 		// for each tree
@@ -58,6 +55,7 @@ public class Forest {
 		}
 	}
 
+	// insert records into ORAM forest
 	private void insertTuples(Metadata md) {
 		int numTrees = trees.length;
 		int tau = md.getTau();
