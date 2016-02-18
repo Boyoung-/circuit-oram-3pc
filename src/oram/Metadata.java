@@ -133,7 +133,7 @@ public class Metadata {
 		}
 	}
 
-	public void printInfo() {
+	public void print() {
 		System.out.println("===== ORAM Forest Metadata =====");
 		System.out.println();
 		System.out.println("tau:				" + tau);

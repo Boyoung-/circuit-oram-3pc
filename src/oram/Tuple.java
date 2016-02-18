@@ -33,16 +33,32 @@ public class Tuple {
 		return F;
 	}
 
+	public void setF(byte[] f) {
+		F = f.clone();
+	}
+
 	public byte[] getN() {
 		return N;
+	}
+
+	public void setN(byte[] n) {
+		N = n.clone();
 	}
 
 	public byte[] getL() {
 		return L;
 	}
 
+	public void setL(byte[] l) {
+		L = l.clone();
+	}
+
 	public byte[] getA() {
 		return A;
+	}
+
+	public void setA(byte[] a) {
+		A = a.clone();
 	}
 
 	public byte[] toByteArray() {
