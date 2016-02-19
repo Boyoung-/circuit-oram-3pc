@@ -1,12 +1,18 @@
 package oram;
 
+import java.util.Random;
+
 import exceptions.LengthNotMatchException;
 
 public class Bucket {
 	private Tuple[] tuples;
 
-	public Bucket(int numTuples) {
+	public Bucket(int numTuples, int[] tupleParams, Random rand) {
+		if (tupleParams.length != 4)
+			throw new LengthNotMatchException(tupleParams.length + " != 4");
 		tuples = new Tuple[numTuples];
+		for (int i = 0; i < numTuples; i++)
+			tuples[i] = new Tuple(tupleParams[0], tupleParams[1], tupleParams[2], tupleParams[3], rand);
 	}
 
 	public Bucket(Tuple[] tuples) {

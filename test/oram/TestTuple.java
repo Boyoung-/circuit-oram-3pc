@@ -1,24 +1,17 @@
 package oram;
 
-import java.math.BigInteger;
+import java.util.Random;
 
 public class TestTuple {
 
 	public static void main(String[] args) {
-		byte[] F = new byte[] { 1 };
-		byte[] N = new byte[] { 2 };
-		byte[] L = new byte[] { 3 };
-		byte[] A = new byte[] { 4 };
-		Tuple tuple = new Tuple(F, N, L, A);
+		Random rand = new Random();
+		Tuple tuple = new Tuple(1, 2, 3, 4, null);
 		System.out.println(tuple);
-		System.out.println(new BigInteger(1, tuple.toByteArray()).toString(2));
-
-		F = new byte[0];
-		N = new byte[0];
-		L = new byte[0];
-		tuple = new Tuple(F, N, L, A);
+		tuple = new Tuple(1, 2, 3, 4, rand);
 		System.out.println(tuple);
-		System.out.println(new BigInteger(1, tuple.toByteArray()).toString(2));
+		tuple = new Tuple(0, 0, 0, 4, rand);
+		System.out.println(tuple);
 	}
 
 }

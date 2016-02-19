@@ -2,6 +2,7 @@ package oram;
 
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.Random;
 
 import crypto.OramCrypto;
 import util.Util;
@@ -9,54 +10,28 @@ import util.Util;
 public class Forest {
 	private Tree[] trees;
 
+	// build empty forest and insert records according to config file
 	public Forest() {
 		Metadata md = new Metadata();
-		init(md);
-		insertTuples(md);
+		initTrees(md, null);
+		insertRecords(md);
 	}
 
-	public Forest(Metadata md) {
-		init(md);
-		insertTuples(md);
+	// build empty/random content forest
+	public Forest(Random rand) {
+		Metadata md = new Metadata();
+		initTrees(md, rand);
 	}
 
-	// init an empty forest
-	private void init(Metadata md) {
+	// init trees
+	private void initTrees(Metadata md, Random rand) {
 		trees = new Tree[md.getNumTrees()];
-		// for each tree
-		for (int treeIndex = 0; treeIndex < md.getNumTrees(); treeIndex++) {
-			// init the tree
-			trees[treeIndex] = new Tree(treeIndex, md);
-			// get bytes of tuple in this tree
-			int fBytes = treeIndex == 0 ? 0 : 1;
-			int nBytes = trees[treeIndex].getNBytes();
-			int lBytes = trees[treeIndex].getLBytes();
-			int aBytes = trees[treeIndex].getABytes();
-			// for each level of the tree
-			long numBuckets = 1;
-			for (int i = 0; i < trees[treeIndex].getD(); i++) {
-				// for each bucket
-				for (int j = 0; j < numBuckets; j++) {
-					// calculate bucket index
-					long bucketIndex = j + numBuckets - 1;
-					// get the bucket
-					Bucket bucket = trees[treeIndex].getBucket(bucketIndex);
-					// for each tuple within the bucket
-					for (int k = 0; k < bucket.getNumTuples(); k++) {
-						// create a empty tuple
-						Tuple tuple = new Tuple(fBytes, nBytes, lBytes, aBytes);
-						// add to the bucket
-						bucket.setTuple(k, tuple);
-					}
-				}
-				// numBuckets doubled for next level
-				numBuckets *= 2;
-			}
-		}
+		for (int i = 0; i < trees.length; i++)
+			trees[i] = new Tree(i, md, rand);
 	}
 
 	// insert records into ORAM forest
-	private void insertTuples(Metadata md) {
+	private void insertRecords(Metadata md) {
 		int numTrees = trees.length;
 		int tau = md.getTau();
 		int w = md.getW();
@@ -74,7 +49,7 @@ public class Forest {
 		for (long addr = 0; addr < md.getNumInsertRecords(); addr++) {
 			// for each tree (from last to first)
 			for (int i = numTrees - 1; i >= 0; i--) {
-				long numBuckets = trees[i].getNumBucket();
+				long numBuckets = trees[i].getNumBuckets();
 				// index of bucket that contains the tuple we will insert/update
 				long bucketIndex = 0;
 				// index of tuple within the bucket
@@ -115,7 +90,7 @@ public class Forest {
 						indexN = (int) Util.getSubBits(N[i + 1], tau, 0);
 					int start = indexN * trees[i].getAlBytes();
 					int end = start + trees[i].getAlBytes();
-					targetTuple.setALabel(start, end, Util.rmSignBit(BigInteger.valueOf(L[i + 1]).toByteArray()));
+					targetTuple.setSubA(start, end, Util.rmSignBit(BigInteger.valueOf(L[i + 1]).toByteArray()));
 				}
 				// for the last tree, update the whole A field of the target
 				// tuple
@@ -140,7 +115,7 @@ public class Forest {
 
 		for (int i = 0; i < trees.length; i++) {
 			System.out.println("***** Tree " + i + " *****");
-			for (int j = 0; j < trees[i].getNumBucket(); j++)
+			for (int j = 0; j < trees[i].getNumBuckets(); j++)
 				System.out.println(trees[i].getBucket(j));
 			System.out.println();
 		}

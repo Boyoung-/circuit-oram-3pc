@@ -2,24 +2,19 @@ package oram;
 
 import java.math.BigInteger;
 
+import util.Util;
+
 public class TestTree {
 
 	public static void main(String[] args) {
 		Metadata md = new Metadata();
-		Tree tree = new Tree(2, md);
+		Tree tree = new Tree(2, md, null);
 		long tupleCounter = 0;
-		for (int i = 0; i < tree.getD(); i++) {
-			long numBuckets = (long) Math.pow(2, i);
-			for (int j = 0; j < numBuckets; j++) {
-				long bucketIndex = j + numBuckets - 1;
-				Bucket bucket = tree.getBucket(bucketIndex);
-				for (int k = 0; k < bucket.getNumTuples(); k++) {
-					byte[] fnl = new byte[0];
-					byte[] a = BigInteger.valueOf(tupleCounter).toByteArray();
-					Tuple tuple = new Tuple(fnl, fnl, fnl, a);
-					tupleCounter++;
-					bucket.setTuple(k, tuple);
-				}
+		for (long i = 0; i < tree.getNumBuckets(); i++) {
+			Bucket bucket = tree.getBucket(i);
+			for (int j = 0; j < bucket.getNumTuples(); j++) {
+				bucket.getTuple(j).setA(Util.rmSignBit(BigInteger.valueOf(tupleCounter).toByteArray()));
+				tupleCounter++;
 			}
 		}
 

@@ -2,6 +2,7 @@ package oram;
 
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Random;
 
 import exceptions.LengthNotMatchException;
 
@@ -11,14 +12,19 @@ public class Tuple {
 	private byte[] L;
 	private byte[] A;
 
-	public Tuple(int fs, int ns, int ls, int as) {
+	public Tuple(int fs, int ns, int ls, int as, Random rand) {
 		F = new byte[fs];
 		N = new byte[ns];
 		L = new byte[ls];
 		A = new byte[as];
+		if (rand != null) {
+			rand.nextBytes(F);
+			rand.nextBytes(N);
+			rand.nextBytes(L);
+			rand.nextBytes(A);
+		}
 	}
 
-	// shallow copy
 	public Tuple(byte[] f, byte[] n, byte[] l, byte[] a) {
 		F = f;
 		N = n;
@@ -98,11 +104,11 @@ public class Tuple {
 			A = a;
 	}
 
-	public byte[] getALabel(int start, int end) {
+	public byte[] getSubA(int start, int end) {
 		return Arrays.copyOfRange(A, start, end);
 	}
 
-	public void setALabel(int start, int end, byte[] label) {
+	public void setSubA(int start, int end, byte[] label) {
 		if (start < 0)
 			throw new IllegalArgumentException(start + " < 0");
 		if (start > end)

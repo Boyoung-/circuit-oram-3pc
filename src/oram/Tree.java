@@ -1,6 +1,7 @@
 package oram;
 
 import java.math.BigInteger;
+import java.util.Random;
 
 import exceptions.InvalidPathLabelException;
 import exceptions.LengthNotMatchException;
@@ -23,7 +24,7 @@ public class Tree {
 
 	private Array64<Bucket> buckets;
 
-	public Tree(int index, Metadata md) {
+	public Tree(int index, Metadata md, Random rand) {
 		treeIndex = index;
 		w = md.getW();
 		stashSize = md.getStashSizeOfTree(treeIndex);
@@ -38,10 +39,12 @@ public class Tree {
 		numBuckets = md.getNumBucketsOfTree(treeIndex);
 		d = lBits + 1;
 
+		int fBytes = treeIndex == 0 ? 0 : 1;
+		int[] tupleParams = new int[] { fBytes, nBytes, lBytes, aBytes };
 		buckets = new Array64<Bucket>(numBuckets);
-		buckets.set(0, new Bucket(stashSize));
+		buckets.set(0, new Bucket(stashSize, tupleParams, rand));
 		for (int i = 1; i < numBuckets; i++)
-			buckets.set(i, new Bucket(w));
+			buckets.set(i, new Bucket(w, tupleParams, rand));
 	}
 
 	public int getTreeIndex() {
@@ -88,7 +91,7 @@ public class Tree {
 		return tupleBytes;
 	}
 
-	public long getNumBucket() {
+	public long getNumBuckets() {
 		return numBuckets;
 	}
 
@@ -115,7 +118,6 @@ public class Tree {
 			throw new InvalidPathLabelException(BigInteger.valueOf(L).toString(2));
 		BigInteger biL = BigInteger.valueOf(L);
 		long[] indices = new long[d];
-		indices[0] = 0;
 		for (int i = 1; i < d; i++) {
 			if (biL.testBit(d - i - 1))
 				indices[i] = indices[i - 1] * 2 + 2;
