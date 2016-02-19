@@ -28,7 +28,6 @@ public class Array64<T> {
 		int chunk = (int) (index / CHUNK_SIZE);
 		int offset = (int) (index % CHUNK_SIZE);
 		return data[chunk][offset];
-		// return SerializationUtils.clone(data[chunk][offset]);
 	}
 
 	public void set(long index, T item) {
@@ -37,6 +36,5 @@ public class Array64<T> {
 		int chunk = (int) (index / CHUNK_SIZE);
 		int offset = (int) (index % CHUNK_SIZE);
 		data[chunk][offset] = item;
-		// data[chunk][offset] = SerializationUtils.clone(item);
 	}
 }

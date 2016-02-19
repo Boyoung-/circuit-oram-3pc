@@ -1,5 +1,7 @@
 package oram;
 
+import exceptions.LengthNotMatchException;
+
 public class Bucket {
 	private Tuple[] tuples;
 
@@ -9,6 +11,13 @@ public class Bucket {
 
 	public Bucket(Tuple[] tuples) {
 		this.tuples = tuples;
+	}
+
+	// deep copy
+	public Bucket(Bucket b) {
+		tuples = new Tuple[b.getNumTuples()];
+		for (int i = 0; i < tuples.length; i++)
+			tuples[i] = new Tuple(b.getTuple(i));
 	}
 
 	public int getNumTuples() {
@@ -24,6 +33,8 @@ public class Bucket {
 	}
 
 	public void setTuples(Tuple[] tuples) {
+		if (this.tuples.length != tuples.length)
+			throw new LengthNotMatchException(this.tuples.length + " != " + tuples.length);
 		this.tuples = tuples;
 	}
 

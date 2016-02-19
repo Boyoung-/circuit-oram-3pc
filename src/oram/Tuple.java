@@ -1,32 +1,41 @@
 package oram;
 
 import java.math.BigInteger;
+import java.util.Arrays;
+
+import exceptions.LengthNotMatchException;
 
 public class Tuple {
-	private int numBytes;
 	private byte[] F;
 	private byte[] N;
 	private byte[] L;
 	private byte[] A;
 
 	public Tuple(int fs, int ns, int ls, int as) {
-		numBytes = fs + ns + ls + as;
 		F = new byte[fs];
 		N = new byte[ns];
 		L = new byte[ls];
 		A = new byte[as];
 	}
 
+	// shallow copy
 	public Tuple(byte[] f, byte[] n, byte[] l, byte[] a) {
-		numBytes = f.length + n.length + l.length + a.length;
-		F = f.clone();
-		N = n.clone();
-		L = l.clone();
-		A = a.clone();
+		F = f;
+		N = n;
+		L = l;
+		A = a;
+	}
+
+	// deep copy
+	public Tuple(Tuple t) {
+		F = t.getF().clone();
+		N = t.getN().clone();
+		L = t.getL().clone();
+		A = t.getA().clone();
 	}
 
 	public int getNumBytes() {
-		return numBytes;
+		return F.length + N.length + L.length + A.length;
 	}
 
 	public byte[] getF() {
@@ -34,7 +43,14 @@ public class Tuple {
 	}
 
 	public void setF(byte[] f) {
-		F = f.clone();
+		if (F.length < f.length)
+			throw new LengthNotMatchException(F.length + " < " + f.length);
+		else if (F.length > f.length) {
+			for (int i = 0; i < F.length - f.length; i++)
+				F[i] = 0;
+			System.arraycopy(f, 0, F, F.length - f.length, f.length);
+		} else
+			F = f;
 	}
 
 	public byte[] getN() {
@@ -42,7 +58,14 @@ public class Tuple {
 	}
 
 	public void setN(byte[] n) {
-		N = n.clone();
+		if (N.length < n.length)
+			throw new LengthNotMatchException(N.length + " < " + n.length);
+		else if (N.length > n.length) {
+			for (int i = 0; i < N.length - n.length; i++)
+				N[i] = 0;
+			System.arraycopy(n, 0, N, N.length - n.length, n.length);
+		} else
+			N = n;
 	}
 
 	public byte[] getL() {
@@ -50,7 +73,14 @@ public class Tuple {
 	}
 
 	public void setL(byte[] l) {
-		L = l.clone();
+		if (L.length < l.length)
+			throw new LengthNotMatchException(L.length + " < " + l.length);
+		else if (L.length > l.length) {
+			for (int i = 0; i < L.length - l.length; i++)
+				L[i] = 0;
+			System.arraycopy(l, 0, L, L.length - l.length, l.length);
+		} else
+			L = l;
 	}
 
 	public byte[] getA() {
@@ -58,11 +88,37 @@ public class Tuple {
 	}
 
 	public void setA(byte[] a) {
-		A = a.clone();
+		if (A.length < a.length)
+			throw new LengthNotMatchException(A.length + " < " + a.length);
+		else if (A.length > a.length) {
+			for (int i = 0; i < A.length - a.length; i++)
+				A[i] = 0;
+			System.arraycopy(a, 0, A, A.length - a.length, a.length);
+		} else
+			A = a;
+	}
+
+	public byte[] getALabel(int start, int end) {
+		return Arrays.copyOfRange(A, start, end);
+	}
+
+	public void setALabel(int start, int end, byte[] label) {
+		if (start < 0)
+			throw new IllegalArgumentException(start + " < 0");
+		if (start > end)
+			throw new IllegalArgumentException(start + " > " + end);
+		int len = end - start;
+		if (len < label.length)
+			throw new LengthNotMatchException(len + " < " + label.length);
+		else if (len > label.length) {
+			for (int i = 0; i < len - label.length; i++)
+				A[start + i] = 0;
+		}
+		System.arraycopy(label, 0, A, start + len - label.length, label.length);
 	}
 
 	public byte[] toByteArray() {
-		byte[] tuple = new byte[numBytes];
+		byte[] tuple = new byte[F.length + N.length + L.length + A.length];
 		int offset = 0;
 		System.arraycopy(F, 0, tuple, offset, F.length);
 		offset += F.length;

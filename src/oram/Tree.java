@@ -12,9 +12,10 @@ public class Tree {
 	private int stashSize;
 	private int nBits;
 	private int lBits;
-	private int aBits;
+	private int alBits;
 	private int nBytes;
 	private int lBytes;
+	private int alBytes;
 	private int aBytes;
 	private int tupleBytes;
 	private long numBuckets;
@@ -28,9 +29,10 @@ public class Tree {
 		stashSize = md.getStashSizeOfTree(treeIndex);
 		nBits = md.getNBitsOfTree(treeIndex);
 		lBits = md.getLBitsOfTree(treeIndex);
-		aBits = md.getABitsOfTree(treeIndex);
+		alBits = md.getAlBitsOfTree(treeIndex);
 		nBytes = md.getNBytesOfTree(treeIndex);
 		lBytes = md.getLBytesOfTree(treeIndex);
+		alBytes = md.getAlBytesOfTree(treeIndex);
 		aBytes = md.getABytesOfTree(treeIndex);
 		tupleBytes = md.getTupleBytesOfTree(treeIndex);
 		numBuckets = md.getNumBucketsOfTree(treeIndex);
@@ -62,8 +64,8 @@ public class Tree {
 		return lBits;
 	}
 
-	public int getABits() {
-		return aBits;
+	public int getAlBits() {
+		return alBits;
 	}
 
 	public int getNBytes() {
@@ -72,6 +74,10 @@ public class Tree {
 
 	public int getLBytes() {
 		return lBytes;
+	}
+
+	public int getAlBytes() {
+		return alBytes;
 	}
 
 	public int getABytes() {

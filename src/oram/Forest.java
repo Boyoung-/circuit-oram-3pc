@@ -113,11 +113,9 @@ public class Forest {
 						indexN = (int) Util.getSubBits(N[i + 1], lastNBits, 0);
 					else
 						indexN = (int) Util.getSubBits(N[i + 1], tau, 0);
-					int start = (md.getTwoTauPow() - indexN - 1) * md.getLBitsOfTree(i + 1);
-					int end = start + md.getLBitsOfTree(i + 1);
-					BigInteger newA = Util.setSubBits(new BigInteger(1, targetTuple.getA()),
-							BigInteger.valueOf(L[i + 1]), end, start);
-					targetTuple.setA(Util.rmSignBit(newA.toByteArray()));
+					int start = indexN * trees[i].getAlBytes();
+					int end = start + trees[i].getAlBytes();
+					targetTuple.setALabel(start, end, Util.rmSignBit(BigInteger.valueOf(L[i + 1]).toByteArray()));
 				}
 				// for the last tree, update the whole A field of the target
 				// tuple

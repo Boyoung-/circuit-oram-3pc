@@ -14,10 +14,14 @@ public class HelloWorld {
 
 		// System.out.println(tmp[3]);
 
-		System.out.println(Arrays.copyOfRange(tmp, 2, 1).length);
+		//System.out.println(Arrays.copyOfRange(tmp, 2, 1).length);
+		
+		byte[] a = new byte[]{0};
+		byte[] b = a.clone();
+		a[0] = 1;
+		System.out.println(a[0] + " " + b[0]);
 		// throw new ArrayIndexOutOfBoundsException("" + 11);
 
-		long a = 1L << -3;
 	}
 
 }

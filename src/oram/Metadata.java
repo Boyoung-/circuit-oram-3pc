@@ -33,17 +33,17 @@ public class Metadata {
 
 	private int[] nBits;
 	private int[] lBits;
-	private int[] aBits;
+	private int[] alBits;
 
 	private int[] nBytes;
 	private int[] lBytes;
+	private int[] alBytes;
 	private int[] aBytes;
 	private int[] tupleBytes;
 
 	private int[] stashSizes;
 	private long[] numBuckets;
 	private long[] treeBytes;
-	private long[] treeOffsets;
 
 	private long forestBytes;
 
@@ -85,35 +85,39 @@ public class Metadata {
 
 		lBits = new int[numTrees];
 		nBits = new int[numTrees];
-		aBits = new int[numTrees];
+		alBits = new int[numTrees];
 		lBytes = new int[numTrees];
 		nBytes = new int[numTrees];
+		alBytes = new int[numTrees];
 		aBytes = new int[numTrees];
 		tupleBytes = new int[numTrees];
 
 		stashSizes = new int[numTrees];
 		numBuckets = new long[numTrees];
-		treeOffsets = new long[numTrees];
 		treeBytes = new long[numTrees];
+
+		forestBytes = 0;
 
 		for (int i = numTrees - 1; i >= 0; i--) {
 			if (i == 0) {
 				nBits[i] = 0;
 				lBits[i] = 0;
-				aBits[i] = twoTauPow * lBits[i + 1];
+				alBits[i] = lBits[i + 1];
 			} else if (i < numTrees - 1) {
 				nBits[i] = i * tau;
 				lBits[i] = nBits[i] + 1;
-				aBits[i] = twoTauPow * lBits[i + 1];
+				alBits[i] = lBits[i + 1];
 			} else {
 				nBits[i] = addrBits;
 				lBits[i] = nBits[i] + 1;
-				aBits[i] = dBytes * 8;
+				alBits[i] = 0;
 			}
 
 			nBytes[i] = (nBits[i] + 7) / 8;
 			lBytes[i] = (lBits[i] + 7) / 8;
-			aBytes[i] = (aBits[i] + 7) / 8;
+			alBytes[i] = (alBits[i] + 7) / 8;
+			aBytes[i] = (i < numTrees - 1) ? (alBytes[i] * twoTauPow) : dBytes;
+
 			numBuckets[i] = (long) Math.pow(2, lBits[i] + 1) - 1;
 			if (i == 0) {
 				tupleBytes[i] = aBytes[i];
@@ -124,11 +128,7 @@ public class Metadata {
 				stashSizes[i] = tempStashSize;
 				treeBytes[i] = ((numBuckets[i] - 1) * w + stashSizes[i]) * tupleBytes[i];
 			}
-		}
 
-		forestBytes = 0L;
-		for (int i = 0; i < numTrees; i++) {
-			treeOffsets[i] = forestBytes;
 			forestBytes += treeBytes[i];
 		}
 	}
@@ -151,11 +151,14 @@ public class Metadata {
 			System.out.println("[Tree " + i + "]");
 			System.out.println("	nBits		-> " + nBits[i]);
 			System.out.println("	lBits		-> " + lBits[i]);
-			System.out.println("	aBits		-> " + aBits[i]);
+			System.out.println("	alBits		-> " + alBits[i]);
+			System.out.println("	nBytes		-> " + nBytes[i]);
+			System.out.println("	lBytes		-> " + lBytes[i]);
+			System.out.println("	alBytes		-> " + alBytes[i]);
+			System.out.println("	aBytes		-> " + aBytes[i]);
 			System.out.println("	tupleBytes	-> " + tupleBytes[i]);
 			System.out.println("	stashSize	-> " + stashSizes[i]);
 			System.out.println("	numBuckets	-> " + numBuckets[i]);
-			System.out.println("	treeOffset	-> " + treeOffsets[i]);
 			System.out.println("	treeBytes	-> " + treeBytes[i]);
 			System.out.println();
 		}
@@ -231,8 +234,8 @@ public class Metadata {
 		return lBits[i];
 	}
 
-	public int getABitsOfTree(int i) {
-		return aBits[i];
+	public int getAlBitsOfTree(int i) {
+		return alBits[i];
 	}
 
 	public int getNBytesOfTree(int i) {
@@ -241,6 +244,10 @@ public class Metadata {
 
 	public int getLBytesOfTree(int i) {
 		return lBytes[i];
+	}
+
+	public int getAlBytesOfTree(int i) {
+		return alBytes[i];
 	}
 
 	public int getABytesOfTree(int i) {
@@ -261,10 +268,6 @@ public class Metadata {
 
 	public long getTreeBytesOfTree(int i) {
 		return treeBytes[i];
-	}
-
-	public long getTreeOffsetOfTree(int i) {
-		return treeOffsets[i];
 	}
 
 	public long getForestBytes() {
