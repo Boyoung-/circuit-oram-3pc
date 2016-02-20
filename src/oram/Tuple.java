@@ -5,14 +5,17 @@ import java.util.Arrays;
 import java.util.Random;
 
 import exceptions.LengthNotMatchException;
+import util.Util;
 
 public class Tuple {
+	private int numBytes;
 	private byte[] F;
 	private byte[] N;
 	private byte[] L;
 	private byte[] A;
 
 	public Tuple(int fs, int ns, int ls, int as, Random rand) {
+		numBytes = fs + ns + ls + as;
 		F = new byte[fs];
 		N = new byte[ns];
 		L = new byte[ls];
@@ -26,6 +29,9 @@ public class Tuple {
 	}
 
 	public Tuple(byte[] f, byte[] n, byte[] l, byte[] a) {
+		if (f == null || n == null || l == null || a == null)
+			throw new NullPointerException();
+		numBytes = f.length + n.length + l.length + a.length;
 		F = f;
 		N = n;
 		L = l;
@@ -34,6 +40,7 @@ public class Tuple {
 
 	// deep copy
 	public Tuple(Tuple t) {
+		numBytes = t.getNumBytes();
 		F = t.getF().clone();
 		N = t.getN().clone();
 		L = t.getL().clone();
@@ -41,7 +48,7 @@ public class Tuple {
 	}
 
 	public int getNumBytes() {
-		return F.length + N.length + L.length + A.length;
+		return numBytes;
 	}
 
 	public byte[] getF() {
@@ -120,11 +127,34 @@ public class Tuple {
 			for (int i = 0; i < len - label.length; i++)
 				A[start + i] = 0;
 		}
-		System.arraycopy(label, 0, A, start + len - label.length, label.length);
+		System.arraycopy(label, 0, A, end - label.length, label.length);
+	}
+
+	public Tuple xor(Tuple t) {
+		if (!this.sameLength(t))
+			throw new LengthNotMatchException(this.getNumBytes() + " != " + t.getNumBytes());
+		byte[] newF = Util.xor(F, t.getF());
+		byte[] newN = Util.xor(N, t.getN());
+		byte[] newL = Util.xor(L, t.getL());
+		byte[] newA = Util.xor(A, t.getA());
+		return new Tuple(newF, newN, newL, newA);
+	}
+
+	public void setXor(Tuple t) {
+		if (!this.sameLength(t))
+			throw new LengthNotMatchException(this.getNumBytes() + " != " + t.getNumBytes());
+		Util.setXor(F, t.getF());
+		Util.setXor(N, t.getN());
+		Util.setXor(L, t.getL());
+		Util.setXor(A, t.getA());
+	}
+
+	public boolean sameLength(Tuple t) {
+		return numBytes == t.getNumBytes();
 	}
 
 	public byte[] toByteArray() {
-		byte[] tuple = new byte[F.length + N.length + L.length + A.length];
+		byte[] tuple = new byte[numBytes];
 		int offset = 0;
 		System.arraycopy(F, 0, tuple, offset, F.length);
 		offset += F.length;

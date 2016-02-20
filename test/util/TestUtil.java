@@ -10,6 +10,11 @@ public class TestUtil {
 		System.out.println(BigInteger.valueOf(subBits).toString(2));
 		long b = Util.setSubBits(a, subBits, 5, 2);
 		System.out.println(BigInteger.valueOf(b).toString(2));
+
+		byte[] aa = new byte[] { 0 };
+		byte[] bb = new byte[] { 1 };
+		Util.setXor(aa, bb);
+		System.out.println(aa[0]);
 	}
 
 }

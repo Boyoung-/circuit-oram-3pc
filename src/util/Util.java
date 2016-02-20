@@ -4,6 +4,8 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Random;
 
+import exceptions.LengthNotMatchException;
+
 public class Util {
 	public static long nextLong(Random r, long range) {
 		long bits, val;
@@ -49,5 +51,23 @@ public class Util {
 		if (arr[0] == 0)
 			return Arrays.copyOfRange(arr, 1, arr.length);
 		return arr;
+	}
+
+	// c = a ^ b
+	public static byte[] xor(byte[] a, byte[] b) {
+		if (a.length != b.length)
+			throw new LengthNotMatchException(a.length + " != " + b.length);
+		byte[] c = new byte[a.length];
+		for (int i = 0; i < a.length; i++)
+			c[i] = (byte) (a[i] ^ b[i]);
+		return c;
+	}
+
+	// a = a ^ b to save memory
+	public static void setXor(byte[] a, byte[] b) {
+		if (a.length != b.length)
+			throw new LengthNotMatchException(a.length + " != " + b.length);
+		for (int i = 0; i < a.length; i++)
+			a[i] = (byte) (a[i] ^ b[i]);
 	}
 }

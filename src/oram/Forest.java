@@ -5,14 +5,17 @@ import java.util.HashMap;
 import java.util.Random;
 
 import crypto.OramCrypto;
+import exceptions.LengthNotMatchException;
 import util.Util;
 
 public class Forest {
+	private long numBytes;
 	private Tree[] trees;
 
 	// build empty forest and insert records according to config file
 	public Forest() {
 		Metadata md = new Metadata();
+		numBytes = md.getForestBytes();
 		initTrees(md, null);
 		insertRecords(md);
 	}
@@ -20,7 +23,35 @@ public class Forest {
 	// build empty/random content forest
 	public Forest(Random rand) {
 		Metadata md = new Metadata();
+		numBytes = md.getForestBytes();
 		initTrees(md, rand);
+	}
+
+	// only used in xor operation
+	private Forest(Tree[] trees) {
+		if (trees == null)
+			throw new NullPointerException();
+		this.trees = trees;
+		for (int i = 0; i < trees.length; i++)
+			numBytes += trees[i].getNumBytes();
+	}
+
+	public long getNumBytes() {
+		return numBytes;
+	}
+
+	public int getNumTrees() {
+		return trees.length;
+	}
+
+	public Tree getTree(int i) {
+		return trees[i];
+	}
+
+	public void setTree(int i, Tree tree) {
+		if (!trees[i].sameLength(tree))
+			throw new LengthNotMatchException(trees[i].getNumBytes() + " != " + tree.getNumBytes());
+		trees[i] = tree;
 	}
 
 	// init trees
@@ -107,6 +138,26 @@ public class Forest {
 				}
 			}
 		}
+	}
+
+	public Forest xor(Forest f) {
+		if (!this.sameLength(f))
+			throw new LengthNotMatchException(numBytes + " != " + f.getNumBytes());
+		Tree[] newTrees = new Tree[trees.length];
+		for (int i = 0; i < trees.length; i++)
+			newTrees[i] = trees[i].xor(f.getTree(i));
+		return new Forest(newTrees);
+	}
+
+	public void setXor(Forest f) {
+		if (!this.sameLength(f))
+			throw new LengthNotMatchException(numBytes + " != " + f.getNumBytes());
+		for (int i = 0; i < trees.length; i++)
+			trees[i].setXor(f.getTree(i));
+	}
+
+	public boolean sameLength(Forest f) {
+		return numBytes == f.getNumBytes();
 	}
 
 	public void print() {
