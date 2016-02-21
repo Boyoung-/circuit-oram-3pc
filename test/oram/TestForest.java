@@ -9,7 +9,8 @@ public class TestForest {
 
 	public static void main(String[] args) {
 		Metadata md = new Metadata();
-		Forest forest = new Forest(md);
+		// Forest forest = new Forest(md);
+		Forest forest = Forest.readFromFile(md.getDefaultForestFileName());
 		int tau = md.getTau();
 		int addrBits = md.getAddrBits();
 		long numRecords = md.getNumInsertRecords();

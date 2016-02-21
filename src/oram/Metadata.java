@@ -12,7 +12,9 @@ import java.util.Map;
 import org.yaml.snakeyaml.Yaml;
 
 public class Metadata {
-	private String CONFIG_FILE = "config/config.yaml";
+	private String configFolder = "config/";
+	private String configFileName = "config.yaml";
+	private String defaultForestFileName;
 
 	private String TAU = "tau";
 	private String ADDRBITS = "addrBits";
@@ -48,7 +50,7 @@ public class Metadata {
 	private long forestBytes;
 
 	public Metadata() {
-		setup(CONFIG_FILE);
+		setup(configFileName);
 	}
 
 	public Metadata(String filename) {
@@ -59,7 +61,7 @@ public class Metadata {
 		Yaml yaml = new Yaml();
 		InputStream input = null;
 		try {
-			input = new FileInputStream(new File(filename));
+			input = new FileInputStream(new File(configFolder + filename));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
@@ -74,6 +76,7 @@ public class Metadata {
 		tempStashSize = Integer.parseInt(configMap.get(STASH).toString());
 
 		init();
+		setDefaultForestFileName();
 	}
 
 	private void init() {
@@ -166,11 +169,11 @@ public class Metadata {
 		System.out.println();
 	}
 
-	public void write(String filename) {
+	public void writeToFile(String filename) {
 		Yaml yaml = new Yaml();
 		FileWriter writer = null;
 		try {
-			writer = new FileWriter(filename);
+			writer = new FileWriter(configFolder + filename);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -186,8 +189,23 @@ public class Metadata {
 		yaml.dump(configMap, writer);
 	}
 
-	public void write() {
-		write(CONFIG_FILE);
+	public void writeToFile() {
+		writeToFile(configFileName);
+	}
+
+	private void setDefaultForestFileName() {
+		defaultForestFileName = "forest_";
+		defaultForestFileName += "t" + tau;
+		defaultForestFileName += "m" + addrBits;
+		defaultForestFileName += "w" + w;
+		defaultForestFileName += "d" + dBytes;
+		defaultForestFileName += "_i" + numInsertRecords;
+		defaultForestFileName += "s" + tempStashSize;
+		defaultForestFileName += ".bin";
+	}
+
+	public String getDefaultForestFileName() {
+		return defaultForestFileName;
 	}
 
 	public int getTau() {

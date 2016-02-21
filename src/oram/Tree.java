@@ -1,5 +1,6 @@
 package oram;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Random;
 
@@ -7,7 +8,12 @@ import exceptions.InvalidPathLabelException;
 import exceptions.LengthNotMatchException;
 import util.Array64;
 
-public class Tree {
+public class Tree implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	private int treeIndex;
 	private int w;
 	private int stashSize;
@@ -50,7 +56,7 @@ public class Tree {
 	}
 
 	// only used for xor operation
-	// does not deep copy buckets
+	// does not shallow/deep copy buckets
 	private Tree(Tree t) {
 		treeIndex = t.getTreeIndex();
 		w = t.getW();
@@ -66,13 +72,7 @@ public class Tree {
 		numBuckets = t.getNumBuckets();
 		numBytes = t.getNumBytes();
 		d = t.getD();
-
 		buckets = new Array64<Bucket>(numBuckets);
-	}
-
-	// only used for xor operation
-	private Array64<Bucket> getBuckets() {
-		return buckets;
 	}
 
 	public Bucket getBucket(long i) {
@@ -91,7 +91,7 @@ public class Tree {
 		Tree newTree = new Tree(t);
 		for (long i = 0; i < numBuckets; i++)
 			// cannot use newTree.setBucket() here
-			newTree.getBuckets().set(i, buckets.get(i).xor(t.getBucket(i)));
+			newTree.buckets.set(i, buckets.get(i).xor(t.getBucket(i)));
 		return newTree;
 	}
 

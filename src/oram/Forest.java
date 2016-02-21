@@ -1,5 +1,11 @@
 package oram;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Random;
@@ -8,20 +14,32 @@ import crypto.OramCrypto;
 import exceptions.LengthNotMatchException;
 import util.Util;
 
-public class Forest {
+public class Forest implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	private static String folderName = "data/";
+	private String defaultFileName;
+
+	private int tau;
+	private int addrBits;
+	private long numInsertRecords;
+
 	private long numBytes;
 	private Tree[] trees;
 
 	// build empty forest and insert records according to config file
 	public Forest() {
 		Metadata md = new Metadata();
-		numBytes = md.getForestBytes();
+		init(md);
 		initTrees(md, null);
 		insertRecords(md);
 	}
 
 	public Forest(Metadata md) {
-		numBytes = md.getForestBytes();
+		init(md);
 		initTrees(md, null);
 		insertRecords(md);
 	}
@@ -29,17 +47,43 @@ public class Forest {
 	// build empty/random content forest
 	public Forest(Random rand) {
 		Metadata md = new Metadata();
-		numBytes = md.getForestBytes();
+		init(md);
 		initTrees(md, rand);
 	}
 
 	// only used in xor operation
-	private Forest(Tree[] trees) {
-		if (trees == null)
-			throw new NullPointerException();
-		this.trees = trees;
-		for (int i = 0; i < trees.length; i++)
-			numBytes += trees[i].getNumBytes();
+	// does not shallow/deep copy trees
+	private Forest(Forest f) {
+		defaultFileName = f.getDefaultFileName();
+		tau = f.getTau();
+		addrBits = f.getAddrBits();
+		numInsertRecords = f.getNumInsertRecords();
+		numBytes = f.getNumBytes();
+		trees = new Tree[f.getNumTrees()];
+	}
+
+	private void init(Metadata md) {
+		defaultFileName = md.getDefaultForestFileName();
+		tau = md.getTau();
+		addrBits = md.getAddrBits();
+		numInsertRecords = md.getNumInsertRecords();
+		numBytes = md.getForestBytes();
+	}
+
+	public String getDefaultFileName() {
+		return defaultFileName;
+	}
+
+	public int getTau() {
+		return tau;
+	}
+
+	public int getAddrBits() {
+		return addrBits;
+	}
+
+	public long getNumInsertRecords() {
+		return numInsertRecords;
 	}
 
 	public long getNumBytes() {
@@ -149,10 +193,10 @@ public class Forest {
 	public Forest xor(Forest f) {
 		if (!this.sameLength(f))
 			throw new LengthNotMatchException(numBytes + " != " + f.getNumBytes());
-		Tree[] newTrees = new Tree[trees.length];
+		Forest newForest = new Forest(f);
 		for (int i = 0; i < trees.length; i++)
-			newTrees[i] = trees[i].xor(f.getTree(i));
-		return new Forest(newTrees);
+			newForest.trees[i] = trees[i].xor(f.getTree(i));
+		return newForest;
 	}
 
 	public void setXor(Forest f) {
@@ -179,5 +223,49 @@ public class Forest {
 
 		System.out.println("===== End of Forest =====");
 		System.out.println();
+	}
+
+	public void writeToFile() {
+		writeToFile(defaultFileName);
+	}
+
+	public void writeToFile(String filename) {
+		FileOutputStream fos = null;
+		ObjectOutputStream oos = null;
+		try {
+			fos = new FileOutputStream(folderName + filename);
+			oos = new ObjectOutputStream(fos);
+			oos.writeObject(this);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (oos != null)
+				try {
+					oos.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+		}
+	}
+
+	public static Forest readFromFile(String filename) {
+		FileInputStream fis = null;
+		ObjectInputStream ois = null;
+		Forest forest = null;
+		try {
+			fis = new FileInputStream(folderName + filename);
+			ois = new ObjectInputStream(fis);
+			forest = (Forest) ois.readObject();
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+		} finally {
+			if (ois != null)
+				try {
+					ois.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+		}
+		return forest;
 	}
 }

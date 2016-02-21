@@ -1,6 +1,13 @@
 package util;
 
-public class Array64<T> {
+import java.io.Serializable;
+
+public class Array64<T> implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	private final int CHUNK_SIZE = 1024 * 1024 * 1024;
 
 	private long size;

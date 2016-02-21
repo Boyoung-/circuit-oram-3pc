@@ -5,7 +5,7 @@ import java.security.SecureRandom;
 
 public class OramCrypto {
 	public static SecureRandom sr;
-	
+
 	static {
 		try {
 			sr = SecureRandom.getInstance("SHA1PRNG");

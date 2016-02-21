@@ -1,5 +1,6 @@
 package oram;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Random;
@@ -7,7 +8,12 @@ import java.util.Random;
 import exceptions.LengthNotMatchException;
 import util.Util;
 
-public class Tuple {
+public class Tuple implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	private int numBytes;
 	private byte[] F;
 	private byte[] N;
@@ -29,8 +35,6 @@ public class Tuple {
 	}
 
 	public Tuple(byte[] f, byte[] n, byte[] l, byte[] a) {
-		if (f == null || n == null || l == null || a == null)
-			throw new NullPointerException();
 		numBytes = f.length + n.length + l.length + a.length;
 		F = f;
 		N = n;

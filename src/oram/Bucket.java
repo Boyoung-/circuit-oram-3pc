@@ -1,10 +1,16 @@
 package oram;
 
+import java.io.Serializable;
 import java.util.Random;
 
 import exceptions.LengthNotMatchException;
 
-public class Bucket {
+public class Bucket implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	private int numBytes;
 	private Tuple[] tuples;
 
@@ -18,8 +24,6 @@ public class Bucket {
 	}
 
 	public Bucket(Tuple[] tuples) {
-		if (tuples == null)
-			throw new NullPointerException();
 		this.tuples = tuples;
 		numBytes = tuples.length * tuples[0].getNumBytes();
 	}
