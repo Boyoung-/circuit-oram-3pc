@@ -20,6 +20,12 @@ public class Forest {
 		insertRecords(md);
 	}
 
+	public Forest(Metadata md) {
+		numBytes = md.getForestBytes();
+		initTrees(md, null);
+		insertRecords(md);
+	}
+
 	// build empty/random content forest
 	public Forest(Random rand) {
 		Metadata md = new Metadata();
