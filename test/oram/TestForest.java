@@ -16,10 +16,12 @@ public class TestForest {
 		long numRecords = md.getNumInsertRecords();
 		int numTrees = forest.getNumTrees();
 
-		int numTests = 100;
-		for (int n = 0; n < numTests; n++) {
+		long numTests = 100;
+		// long numTests = numRecords;
+		for (long n = 0; n < numTests; n++) {
 			// address of record we want to test
 			long testAddr = Util.nextLong(OramCrypto.sr, numRecords);
+			// long testAddr = n;
 			long L = 0;
 			long outRecord = 0;
 
