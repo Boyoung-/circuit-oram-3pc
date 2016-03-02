@@ -10,7 +10,7 @@ import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Random;
 
-import crypto.OramCrypto;
+import crypto.Crypto;
 import exceptions.LengthNotMatchException;
 import util.Util;
 
@@ -154,7 +154,7 @@ public class Forest implements Serializable {
 					// if N is a new address, then find an unused leaf tuple
 					if (leafTupleIndex == null) {
 						do {
-							leafTupleIndex = Util.nextLong(OramCrypto.sr, (numBuckets / 2 + 1) * w);
+							leafTupleIndex = Util.nextLong(Crypto.sr, (numBuckets / 2 + 1) * w);
 						} while (addrToTuple[i].containsValue(leafTupleIndex));
 						addrToTuple[i].put(N[i], leafTupleIndex);
 					}

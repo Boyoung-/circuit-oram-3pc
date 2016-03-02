@@ -1,6 +1,6 @@
-package ui;
+package init;
 
-import crypto.OramCrypto;
+import crypto.Crypto;
 import oram.Forest;
 import oram.Metadata;
 
@@ -13,7 +13,7 @@ public class InitForest {
 		forest.writeToFile();
 
 		Forest share1 = forest;
-		Forest share2 = new Forest(md, OramCrypto.sr);
+		Forest share2 = new Forest(md, Crypto.sr);
 		share1.setXor(share2);
 		share1.writeToFile(md.getDefaultSharesName1());
 		share2.writeToFile(md.getDefaultSharesName2());

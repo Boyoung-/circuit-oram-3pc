@@ -2,7 +2,7 @@ package oram;
 
 import java.math.BigInteger;
 
-import crypto.OramCrypto;
+import crypto.Crypto;
 import util.Util;
 
 public class TestForest {
@@ -20,7 +20,7 @@ public class TestForest {
 		// long numTests = numRecords;
 		for (long n = 0; n < numTests; n++) {
 			// address of record we want to test
-			long testAddr = Util.nextLong(OramCrypto.sr, numRecords);
+			long testAddr = Util.nextLong(Crypto.sr, numRecords);
 			// long testAddr = n;
 			long L = 0;
 			long outRecord = 0;

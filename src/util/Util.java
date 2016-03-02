@@ -1,6 +1,7 @@
 package util;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -70,19 +71,25 @@ public class Util {
 		for (int i = 0; i < a.length; i++)
 			a[i] = (byte) (a[i] ^ b[i]);
 	}
-	
+
+	public static byte[] intToBytes(int i) {
+		ByteBuffer bb = ByteBuffer.allocate(4);
+		bb.putInt(i);
+		return bb.array();
+	}
+
 	public static void debug(String s) {
 		// only to make Communication.java compile
 	}
-	
+
 	public static void disp(String s) {
 		// only to make Communication.java compile
 	}
-	
+
 	public static void error(String s) {
 		// only to make Communication.java compile
 	}
-	
+
 	public static void error(String s, Exception e) {
 		// only to make Communication.java compile
 	}

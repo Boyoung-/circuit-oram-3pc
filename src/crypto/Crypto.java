@@ -3,7 +3,7 @@ package crypto;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
-public class OramCrypto {
+public class Crypto {
 	public static SecureRandom sr;
 
 	static {
