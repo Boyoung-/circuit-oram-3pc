@@ -208,6 +208,14 @@ public class Metadata {
 		return defaultForestFileName;
 	}
 
+	public String getDefaultSharesName1() {
+		return defaultForestFileName + ".share1";
+	}
+
+	public String getDefaultSharesName2() {
+		return defaultForestFileName + ".share2";
+	}
+
 	public int getTau() {
 		return tau;
 	}

@@ -70,4 +70,20 @@ public class Util {
 		for (int i = 0; i < a.length; i++)
 			a[i] = (byte) (a[i] ^ b[i]);
 	}
+	
+	public static void debug(String s) {
+		// only to make Communication.java compile
+	}
+	
+	public static void disp(String s) {
+		// only to make Communication.java compile
+	}
+	
+	public static void error(String s) {
+		// only to make Communication.java compile
+	}
+	
+	public static void error(String s, Exception e) {
+		// only to make Communication.java compile
+	}
 }

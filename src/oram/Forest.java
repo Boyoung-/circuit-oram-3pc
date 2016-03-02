@@ -21,7 +21,7 @@ public class Forest implements Serializable {
 	private static final long serialVersionUID = 1L;
 
 	private static String folderName = "data/";
-	private String defaultFileName;
+	private String forestFileName;
 
 	private int tau;
 	private int addrBits;
@@ -50,11 +50,16 @@ public class Forest implements Serializable {
 		init(md);
 		initTrees(md, rand);
 	}
+	
+	public Forest(Metadata md, Random rand) {
+		init(md);
+		initTrees(md, rand);
+	}
 
 	// only used in xor operation
 	// does not shallow/deep copy trees
 	private Forest(Forest f) {
-		defaultFileName = f.getDefaultFileName();
+		forestFileName = f.getForestFileName();
 		tau = f.getTau();
 		addrBits = f.getAddrBits();
 		numInsertRecords = f.getNumInsertRecords();
@@ -63,15 +68,15 @@ public class Forest implements Serializable {
 	}
 
 	private void init(Metadata md) {
-		defaultFileName = md.getDefaultForestFileName();
+		forestFileName = md.getDefaultForestFileName();
 		tau = md.getTau();
 		addrBits = md.getAddrBits();
 		numInsertRecords = md.getNumInsertRecords();
 		numBytes = md.getForestBytes();
 	}
 
-	public String getDefaultFileName() {
-		return defaultFileName;
+	public String getForestFileName() {
+		return forestFileName;
 	}
 
 	public int getTau() {
@@ -226,7 +231,7 @@ public class Forest implements Serializable {
 	}
 
 	public void writeToFile() {
-		writeToFile(defaultFileName);
+		writeToFile(forestFileName);
 	}
 
 	public void writeToFile(String filename) {
@@ -266,6 +271,7 @@ public class Forest implements Serializable {
 					e.printStackTrace();
 				}
 		}
+		forest.forestFileName = filename;
 		return forest;
 	}
 }
