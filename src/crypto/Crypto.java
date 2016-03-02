@@ -5,6 +5,7 @@ import java.security.SecureRandom;
 
 public class Crypto {
 	public static SecureRandom sr;
+	public static int secParam;
 
 	static {
 		try {
@@ -12,5 +13,6 @@ public class Crypto {
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
+		secParam = 80;
 	}
 }

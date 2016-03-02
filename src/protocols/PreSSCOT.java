@@ -10,8 +10,8 @@ import crypto.PRG;
 import oram.Forest;
 import oram.Metadata;
 
-public class SSCOT extends Protocol {
-	public SSCOT(Communication con1, Communication con2) {
+public class PreSSCOT extends Protocol {
+	public PreSSCOT(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
 
