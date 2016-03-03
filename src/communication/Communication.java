@@ -66,7 +66,7 @@ public class Communication {
 	public Communication() {
 		mState = STATE_NONE;
 	}
-	
+
 	public void setTcpNoDelay(boolean on) {
 		if (mConnectedThread != null)
 			mConnectedThread.setTcpNoDelay(on);
@@ -165,8 +165,8 @@ public class Communication {
 			Util.debug("Waking up: " + getState());
 
 		// TODO: make this less strict
-		if (mState != STATE_CONNECTING && mState != STATE_CONNECTED
-				&& mConnectedThread == null && mConnectThread == null)
+		if (mState != STATE_CONNECTING && mState != STATE_CONNECTED && mConnectedThread == null
+				&& mConnectThread == null)
 			connect(mAddress);
 	}
 
@@ -326,14 +326,14 @@ public class Communication {
 		write("" + out.length);
 		write(out);
 	}
-	
+
 	public void write(int out) {
-		write(Util.intToBytes(out));
+		write(BigInteger.valueOf(out).toByteArray());
 	}
-	
+
 	public void write(byte[][] out) {
 		write(out.length);
-		for (int i=0; i<out.length; i++)
+		for (int i = 0; i < out.length; i++)
 			write(out[i]);
 	}
 
@@ -416,15 +416,15 @@ public class Communication {
 
 		return total;
 	}
-	
+
 	public int readInt() {
 		return new BigInteger(read()).intValue();
 	}
-	
+
 	public byte[][] readDoubleByteArray() {
 		int len = readInt();
 		byte[][] data = new byte[len][];
-		for (int i=0; i<len; i++)
+		for (int i = 0; i < len; i++)
 			data[i] = read();
 		return data;
 	}
@@ -462,7 +462,7 @@ public class Communication {
 					// This is a blocking call and will only return on a
 					// successful connection or an exception
 					socket = mmServerSocket.accept();
-					//socket.setTcpNoDelay(true);
+					// socket.setTcpNoDelay(true);
 				} catch (IOException e) {
 					Util.error("accept() failed", e);
 					break;
@@ -523,12 +523,9 @@ public class Communication {
 
 			mmSocket = new Socket();
 			/*
-			try {
-				mmSocket.setTcpNoDelay(true);
-			} catch (SocketException e) {
-				e.printStackTrace();
-			}
-			*/
+			 * try { mmSocket.setTcpNoDelay(true); } catch (SocketException e) {
+			 * e.printStackTrace(); }
+			 */
 		}
 
 		public void run() {
@@ -544,9 +541,7 @@ public class Communication {
 				try {
 					mmSocket.close();
 				} catch (IOException e2) {
-					Util.error(
-							"unable to close() socket during connection failure",
-							e2);
+					Util.error("unable to close() socket during connection failure", e2);
 				}
 				connectionFailed();
 				return;
@@ -605,7 +600,7 @@ public class Communication {
 			mmInStream = tmpIn;
 			mmOutStream = tmpOut;
 		}
-		
+
 		public void setTcpNoDelay(boolean on) {
 			if (mmSocket != null)
 				try {

@@ -80,7 +80,7 @@ public class SSCOT extends Protocol {
 		int invariant = 0;
 
 		for (int i = 0; i < n; i++) {
-			if (Util.equal(v[i],  w[i])) {
+			if (Util.equal(v[i], w[i])) {
 				byte[] m = Util.xor(e[i], G.compute(p[i]));
 				output = new OutSSCOT(i, m);
 				invariant++;
@@ -94,39 +94,50 @@ public class SSCOT extends Protocol {
 
 	@Override
 	public void run(Party party, Metadata md, Forest forest) {
-		int n = 100;
-		int A = 32;
-		int FN = 5;
-		byte[][] m = new byte[n][A];
-		byte[][] a = new byte[n][FN];
-		byte[][] b = new byte[n][FN];
-		for (int i=0; i<n; i++) {
-			Crypto.sr.nextBytes(m[i]);
-			Crypto.sr.nextBytes(a[i]);
-			Crypto.sr.nextBytes(b[i]);			
-			while (Util.equal(a[i], b[i]))
-				Crypto.sr.nextBytes(b[i]);				
-		}
-		int index = Crypto.sr.nextInt(n);
-		b[index] = a[index].clone();
+		for (int j = 0; j < 100; j++) {
+			int n = 100;
+			int A = 32;
+			int FN = 5;
+			byte[][] m = new byte[n][A];
+			byte[][] a = new byte[n][FN];
+			byte[][] b = new byte[n][FN];
+			for (int i = 0; i < n; i++) {
+				Crypto.sr.nextBytes(m[i]);
+				Crypto.sr.nextBytes(a[i]);
+				Crypto.sr.nextBytes(b[i]);
+				while (Util.equal(a[i], b[i]))
+					Crypto.sr.nextBytes(b[i]);
+			}
+			int index = Crypto.sr.nextInt(n);
+			b[index] = a[index].clone();
 
-		PreData predata = new PreData();
-		PreSSCOT presscot = new PreSSCOT(con1, con2);
-		if (party == Party.Eddie) {
-			presscot.runE(predata, n);
-			runE(predata, m, a);
-		} else if (party == Party.Debbie) {
-			presscot.runD(predata);
-			runD(predata, b);
-		} else if (party == Party.Charlie) {
-			presscot.runC();
-			OutSSCOT output = runC();
-			if (output.t == index && Util.equal(output.m_t, m[index]))
-				System.out.println("SSCOT test passed");
-			else 
-				System.err.println("SSCOT test failed");
-		} else {
-			throw new NoSuchPartyException(party+"");
+			PreData predata = new PreData();
+			PreSSCOT presscot = new PreSSCOT(con1, con2);
+			if (party == Party.Eddie) {
+				con1.write(b);
+				con2.write(m);
+				con2.write(index);
+				presscot.runE(predata, n);
+				runE(predata, m, a);
+
+			} else if (party == Party.Debbie) {
+				b = con1.readDoubleByteArray();
+				presscot.runD(predata);
+				runD(predata, b);
+
+			} else if (party == Party.Charlie) {
+				m = con1.readDoubleByteArray();
+				index = con1.readInt();
+				presscot.runC();
+				OutSSCOT output = runC();
+				if (output.t == index && Util.equal(output.m_t, m[index]))
+					System.out.println("SSCOT test passed");
+				else
+					System.err.println("SSCOT test failed");
+
+			} else {
+				throw new NoSuchPartyException(party + "");
+			}
 		}
 	}
 }
