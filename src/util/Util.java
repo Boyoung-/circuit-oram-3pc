@@ -8,6 +8,12 @@ import java.util.Random;
 import exceptions.LengthNotMatchException;
 
 public class Util {
+	public static boolean equal(byte[] a, byte[] b) {
+		if (a.length != b.length)
+			return false;
+		return new BigInteger(a).compareTo(new BigInteger(b)) == 0;
+	}
+
 	public static long nextLong(Random r, long range) {
 		long bits, val;
 		do {
@@ -76,6 +82,10 @@ public class Util {
 		ByteBuffer bb = ByteBuffer.allocate(4);
 		bb.putInt(i);
 		return bb.array();
+	}
+
+	public static int bytesToInt(byte[] b) {
+		return new BigInteger(b).intValue();
 	}
 
 	public static void debug(String s) {

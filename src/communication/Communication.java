@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.StreamCorruptedException;
+import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -325,6 +326,16 @@ public class Communication {
 		write("" + out.length);
 		write(out);
 	}
+	
+	public void write(int out) {
+		write(Util.intToBytes(out));
+	}
+	
+	public void write(byte[][] out) {
+		write(out.length);
+		for (int i=0; i<out.length; i++)
+			write(out[i]);
+	}
 
 	public static final Charset defaultCharset = Charset.forName("ASCII");
 
@@ -404,6 +415,18 @@ public class Communication {
 		}
 
 		return total;
+	}
+	
+	public int readInt() {
+		return new BigInteger(read()).intValue();
+	}
+	
+	public byte[][] readDoubleByteArray() {
+		int len = readInt();
+		byte[][] data = new byte[len][];
+		for (int i=0; i<len; i++)
+			data[i] = read();
+		return data;
 	}
 
 	/**

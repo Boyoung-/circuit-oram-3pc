@@ -2,6 +2,8 @@ package misc;
 
 import java.math.BigInteger;
 
+import util.Util;
+
 public class HelloWorld {
 
 	public static void main(String[] args) {
@@ -22,6 +24,9 @@ public class HelloWorld {
 		// throw new ArrayIndexOutOfBoundsException("" + 11);
 
 		System.out.println((new long[3])[0]);
+		
+		byte[] negInt = Util.intToBytes(-3);
+		System.out.println(new BigInteger(negInt).intValue());
 	}
 
 }

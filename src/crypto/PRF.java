@@ -2,6 +2,7 @@ package crypto;
 
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Random;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -94,5 +95,11 @@ public class PRF {
 		byte[] last = leq128(input, np);
 		System.arraycopy(last, 0, output, outBytes - last.length, last.length);
 		return output;
+	}
+
+	public static byte[] generateKey(Random rand) {
+		byte[] key = new byte[16];
+		rand.nextBytes(key);
+		return key;
 	}
 }

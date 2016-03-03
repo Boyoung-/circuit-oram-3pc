@@ -1,121 +1,132 @@
 package protocols;
 
-import java.math.BigInteger;
-
-import org.apache.commons.lang3.tuple.Pair;
-
 import communication.Communication;
+import crypto.Crypto;
 import crypto.PRF;
 import crypto.PRG;
+import exceptions.NoSuchPartyException;
+import exceptions.SSCOTException;
 import oram.Forest;
 import oram.Metadata;
+import util.Util;
 
 public class SSCOT extends Protocol {
 	public SSCOT(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
 
-	public Pair<Integer, BigInteger> executeCharlie(Communication D,
-			Communication E, int i, int N, int l, int l_p) {
-		// protocol
+	public void runE(PreData predata, byte[][] m, byte[][] a) {
 		// step 1
-		byte[] msg_ev = E.read();
+		int n = m.length;
+		int l = m[0].length * 8;
+		byte[][] x = predata.sscot_r;
+		byte[][] e = new byte[n][];
+		byte[][] v = new byte[n][];
+		PRF F_k = new PRF(Crypto.secParam);
+		F_k.init(predata.sscot_k);
+		PRF F_kprime = new PRF(Crypto.secParam);
+		F_kprime.init(predata.sscot_kprime);
+		PRG G = new PRG(l);
+
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < a[i].length; j++)
+				x[i][j] = (byte) (predata.sscot_r[i][j] ^ a[i][j]);
+
+			e[i] = Util.xor(G.compute(F_k.compute(x[i])), m[i]);
+			v[i] = F_kprime.compute(x[i]);
+		}
+
+		con2.write(e);
+		con2.write(v);
+	}
+
+	public void runD(PreData predata, byte[][] b) {
+		// step 2
+		int n = b.length;
+		byte[][] y = predata.sscot_r;
+		byte[][] p = new byte[n][];
+		byte[][] w = new byte[n][];
+		PRF F_k = new PRF(Crypto.secParam);
+		F_k.init(predata.sscot_k);
+		PRF F_kprime = new PRF(Crypto.secParam);
+		F_kprime.init(predata.sscot_kprime);
+
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < b[i].length; j++)
+				y[i][j] = (byte) (predata.sscot_r[i][j] ^ b[i][j]);
+
+			p[i] = F_k.compute(y[i]);
+			w[i] = F_kprime.compute(y[i]);
+		}
+
+		con2.write(p);
+		con2.write(w);
+	}
+
+	public OutSSCOT runC() {
+		// step 1
+		byte[][] e = con1.readDoubleByteArray();
+		byte[][] v = con1.readDoubleByteArray();
 
 		// step 2
-		byte[] msg_pw = D.read();
+		byte[][] p = con2.readDoubleByteArray();
+		byte[][] w = con2.readDoubleByteArray();
 
 		// step 3
-		byte[][] e = new byte[N][];
-		byte[][] v = new byte[N][];
-		byte[][] p = new byte[N][];
-		byte[][] w = new byte[N][];
+		int n = e.length;
+		int l = e[0].length * 8;
 		PRG G = new PRG(l);
-		int gBytes = (l + 7) / 8;
+		OutSSCOT output = null;
+		int invariant = 0;
 
-		for (int t = 0; t < N; t++) {
-			e[t] = Arrays.copyOfRange(msg_ev, t * gBytes, (t + 1) * gBytes);
-			v[t] = Arrays.copyOfRange(msg_ev, N * gBytes + t * SR.kBytes, N
-					* gBytes + (t + 1) * SR.kBytes);
-			p[t] = Arrays.copyOfRange(msg_pw, t * SR.kBytes, (t + 1)
-					* SR.kBytes);
-			w[t] = Arrays.copyOfRange(msg_pw, (N + t) * SR.kBytes, (N + t + 1)
-					* SR.kBytes);
-
-			if (new BigInteger(1, v[t]).compareTo(new BigInteger(1, w[t])) == 0) {
-				//BigInteger m_t = new BigInteger(1, e[t]).xor(new BigInteger(1, G.compute(p[t])));
-				byte[] tmp = G.compute(p[t]);
-				BigInteger m_t = new BigInteger(1, e[t]).xor(new BigInteger(1, tmp));
-				return Pair.of(t, m_t);
+		for (int i = 0; i < n; i++) {
+			if (Util.equal(v[i],  w[i])) {
+				byte[] m = Util.xor(e[i], G.compute(p[i]));
+				output = new OutSSCOT(i, m);
+				invariant++;
 			}
 		}
 
-		// error
-		return null;
-	}
-
-	public void executeDebbie(Communication C, Communication E, int i, int N,
-			int l, int l_p, BigInteger[] b) {
-		// protocol
-		// step 2
-		int diffBits = SR.kBits - l_p;
-		BigInteger[] y = new BigInteger[N];
-		byte[][][] pw = new byte[2][N][];
-		byte[] msg_pw = new byte[SR.kBytes * N * 2];
-		PRF F_k = new PRF(SR.kBits);
-		PRF F_k_p = new PRF(SR.kBits);
-		F_k.init(PreData.sscot_k[i]);
-		F_k_p.init(PreData.sscot_k_p[i]);
-
-		for (int t = 0; t < N; t++) {
-			y[t] = PreData.sscot_r[i][t].xor(b[t].shiftLeft(diffBits));
-			pw[0][t] = F_k.compute(y[t].toByteArray());
-			pw[1][t] = F_k_p.compute(y[t].toByteArray());
-			System.arraycopy(pw[0][t], 0, msg_pw, t * SR.kBytes, SR.kBytes);
-			System.arraycopy(pw[1][t], 0, msg_pw, (N + t) * SR.kBytes,
-					SR.kBytes);
-		}
-
-		C.write(msg_pw, PID.sscot);
-	}
-
-	public void executeEddie(Communication C, Communication D, int i, int N,
-			int l, int l_p, BigInteger[] m, BigInteger[] a) {
-		// protocol
-		// step 1
-		int gBytes = (l + 7) / 8;
-		int diffBits = SR.kBits - l_p;
-		BigInteger[] x = new BigInteger[N];
-		byte[][][] ev = new byte[2][N][];
-		byte[] msg_ev = new byte[(SR.kBytes + gBytes) * N];
-		PRF F_k = new PRF(SR.kBits);
-		PRF F_k_p = new PRF(SR.kBits);
-		PRG G = new PRG(l);
-		F_k.init(PreData.sscot_k[i]);
-		F_k_p.init(PreData.sscot_k_p[i]);
-
-		for (int t = 0; t < N; t++) {
-			x[t] = PreData.sscot_r[i][t].xor(a[t].shiftLeft(diffBits));
-			//ev[0][t] = new BigInteger(1, G.compute(F_k.compute(x[t].toByteArray()))).xor(m[t]).toByteArray();
-			ev[1][t] = F_k_p.compute(x[t].toByteArray());
-			byte[] tmp = F_k.compute(x[t].toByteArray());
-			tmp = G.compute(tmp);
-			ev[0][t] = new BigInteger(1, tmp).xor(m[t]).toByteArray();
-			if (ev[0][t].length < gBytes)
-				System.arraycopy(ev[0][t], 0, msg_ev, (t + 1) * gBytes
-						- ev[0][t].length, ev[0][t].length);
-			else
-				System.arraycopy(ev[0][t], ev[0][t].length - gBytes, msg_ev, t
-						* gBytes, gBytes);
-			System.arraycopy(ev[1][t], 0, msg_ev, N * gBytes + t * SR.kBytes,
-					SR.kBytes);
-		}
-
-		C.write(msg_ev, PID.sscot);
+		if (invariant != 1)
+			throw new SSCOTException("Invariant error: " + invariant);
+		return output;
 	}
 
 	@Override
 	public void run(Party party, Metadata md, Forest forest) {
-		// TODO Auto-generated method stub
-		
+		int n = 100;
+		int A = 32;
+		int FN = 5;
+		byte[][] m = new byte[n][A];
+		byte[][] a = new byte[n][FN];
+		byte[][] b = new byte[n][FN];
+		for (int i=0; i<n; i++) {
+			Crypto.sr.nextBytes(m[i]);
+			Crypto.sr.nextBytes(a[i]);
+			Crypto.sr.nextBytes(b[i]);			
+			while (Util.equal(a[i], b[i]))
+				Crypto.sr.nextBytes(b[i]);				
+		}
+		int index = Crypto.sr.nextInt(n);
+		b[index] = a[index].clone();
+
+		PreData predata = new PreData();
+		PreSSCOT presscot = new PreSSCOT(con1, con2);
+		if (party == Party.Eddie) {
+			presscot.runE(predata, n);
+			runE(predata, m, a);
+		} else if (party == Party.Debbie) {
+			presscot.runD(predata);
+			runD(predata, b);
+		} else if (party == Party.Charlie) {
+			presscot.runC();
+			OutSSCOT output = runC();
+			if (output.t == index && Util.equal(output.m_t, m[index]))
+				System.out.println("SSCOT test passed");
+			else 
+				System.err.println("SSCOT test failed");
+		} else {
+			throw new NoSuchPartyException(party+"");
+		}
 	}
 }

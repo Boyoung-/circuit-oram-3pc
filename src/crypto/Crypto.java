@@ -6,6 +6,7 @@ import java.security.SecureRandom;
 public class Crypto {
 	public static SecureRandom sr;
 	public static int secParam;
+	public static int secParamBytes;
 
 	static {
 		try {
@@ -14,5 +15,6 @@ public class Crypto {
 			e.printStackTrace();
 		}
 		secParam = 80;
+		secParamBytes = (secParam + 7) / 8;
 	}
 }

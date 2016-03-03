@@ -14,6 +14,7 @@ import communication.Communication;
 import exceptions.NoSuchPartyException;
 import protocols.Party;
 import protocols.Protocol;
+import protocols.SSCOT;
 
 public class TestCLI {
 	public static final int DEFAULT_PORT = 8000;
@@ -38,6 +39,7 @@ public class TestCLI {
 		}
 
 		String configFile = cmd.getOptionValue("config", "config.yaml");
+		String forestFile = cmd.getOptionValue("forest", null);
 
 		String party = null;
 		String[] positionalArgs = cmd.getArgs();
@@ -48,6 +50,7 @@ public class TestCLI {
 				throw new ParseException("No party specified");
 			} catch (ParseException e) {
 				e.printStackTrace();
+				System.exit(-1);
 			}
 		}
 
@@ -59,26 +62,22 @@ public class TestCLI {
 		String eddieIp = cmd.getOptionValue("eddie_ip", DEFAULT_IP);
 		String debbieIp = cmd.getOptionValue("debbie_ip", DEFAULT_IP);
 
-		//
-		// Class<? extends Protocol> operation = null;
-		// String protocol = cmd.getOptionValue("protocol",
-		// "retrieve").toLowerCase();
-		//
-		// if (protocol.equals("access")) {
-		// operation = Access.class;
-		// } else {
-		// System.out.println("Method " + protocol + " not supported");
-		// System.exit(-1);
-		// }
-		//
-		// Constructor<? extends Protocol> operationCtor = null;
-		// try {
-		// operationCtor = operation.getDeclaredConstructor(Communication.class,
-		// Communication.class);
-		// } catch (NoSuchMethodException | SecurityException e1) {
-		// e1.printStackTrace();
-		// }
-		//
+		Class<? extends Protocol> operation = null;
+		String protocol = cmd.getOptionValue("protocol", "retrieve").toLowerCase();
+
+		if (protocol.equals("sscot")) {
+			operation = SSCOT.class;
+		} else {
+			System.out.println("Protocol " + protocol + " not supported");
+			System.exit(-1);
+		}
+
+		Constructor<? extends Protocol> operationCtor = null;
+		try {
+			operationCtor = operation.getDeclaredConstructor(Communication.class, Communication.class);
+		} catch (NoSuchMethodException | SecurityException e1) {
+			e1.printStackTrace();
+		}
 
 		// For now all logic happens here. Eventually this will get wrapped
 		// up in party specific classes.
@@ -103,20 +102,23 @@ public class TestCLI {
 			debbieCon.readString();
 			charlieCon.readString();
 
-			// try {
-			// operationCtor.newInstance(debbieCon, charlieCon).run(Party.Eddie,
-			// configFile, null);
-			// } catch (InstantiationException | IllegalAccessException |
-			// IllegalArgumentException
-			// | InvocationTargetException e1) {
-			// e1.printStackTrace();
-			// }
+			try {
+				operationCtor.newInstance(debbieCon, charlieCon).run(Party.Eddie, configFile, forestFile);
+			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException e) {
+				e.printStackTrace();
+			}
 
 			debbieCon.write("end");
 			charlieCon.write("end");
 			debbieCon.readString();
 			charlieCon.readString();
 
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			debbieCon.stop();
 			charlieCon.stop();
 
@@ -140,20 +142,23 @@ public class TestCLI {
 			eddieCon.readString();
 			charlieCon.readString();
 
-			// try {
-			// operationCtor.newInstance(eddieCon, charlieCon).run(Party.Debbie,
-			// configFile, null);
-			// } catch (InstantiationException | IllegalAccessException |
-			// IllegalArgumentException
-			// | InvocationTargetException e1) {
-			// e1.printStackTrace();
-			// }
+			try {
+				operationCtor.newInstance(eddieCon, charlieCon).run(Party.Debbie, configFile, forestFile);
+			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException e) {
+				e.printStackTrace();
+			}
 
 			eddieCon.write("end");
 			charlieCon.write("end");
 			eddieCon.readString();
 			charlieCon.readString();
 
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			eddieCon.stop();
 			charlieCon.stop();
 
@@ -177,20 +182,23 @@ public class TestCLI {
 			eddieCon.readString();
 			debbieCon.readString();
 
-			// try {
-			// operationCtor.newInstance(eddieCon, debbieCon).run(Party.Charlie,
-			// configFile, null);
-			// } catch (InstantiationException | IllegalAccessException |
-			// IllegalArgumentException
-			// | InvocationTargetException e1) {
-			// e1.printStackTrace();
-			// }
+			try {
+				operationCtor.newInstance(eddieCon, debbieCon).run(Party.Charlie, configFile, forestFile);
+			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException e) {
+				e.printStackTrace();
+			}
 
 			eddieCon.write("end");
 			debbieCon.write("end");
 			eddieCon.readString();
 			debbieCon.readString();
 
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 			eddieCon.stop();
 			debbieCon.stop();
 
