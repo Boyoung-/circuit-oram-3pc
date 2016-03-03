@@ -50,7 +50,7 @@ public class Forest implements Serializable {
 		init(md);
 		initTrees(md, rand);
 	}
-	
+
 	public Forest(Metadata md, Random rand) {
 		init(md);
 		initTrees(md, rand);

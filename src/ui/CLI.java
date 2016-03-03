@@ -97,6 +97,9 @@ public class CLI {
 				;
 			System.out.println("Connection established.");
 
+			debbieCon.setTcpNoDelay(true);
+			charlieCon.setTcpNoDelay(true);
+
 			debbieCon.write("start");
 			charlieCon.write("start");
 			debbieCon.readString();
@@ -137,6 +140,9 @@ public class CLI {
 				;
 			System.out.println("Connection established");
 
+			eddieCon.setTcpNoDelay(true);
+			charlieCon.setTcpNoDelay(true);
+
 			eddieCon.write("start");
 			charlieCon.write("start");
 			eddieCon.readString();
@@ -176,6 +182,9 @@ public class CLI {
 			while (debbieCon.getState() != Communication.STATE_CONNECTED)
 				;
 			System.out.println("Connection established");
+
+			eddieCon.setTcpNoDelay(true);
+			debbieCon.setTcpNoDelay(true);
 
 			eddieCon.write("start");
 			debbieCon.write("start");
