@@ -15,6 +15,7 @@ import exceptions.NoSuchPartyException;
 import protocols.Party;
 import protocols.Protocol;
 import protocols.SSCOT;
+import protocols.Access;
 
 public class CLI {
 	public static final int DEFAULT_PORT = 8000;
@@ -67,6 +68,8 @@ public class CLI {
 
 		if (protocol.equals("sscot")) {
 			operation = SSCOT.class;
+		} else if (protocol.equals("access")) {
+			operation = Access.class;
 		} else {
 			System.out.println("Protocol " + protocol + " not supported");
 			System.exit(-1);

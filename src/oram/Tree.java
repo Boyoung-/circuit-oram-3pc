@@ -150,6 +150,10 @@ public class Tree implements Serializable {
 		return stashSize;
 	}
 
+	public int getFBytes() {
+		return treeIndex == 0 ? 0 : 1;
+	}
+
 	public int getNBits() {
 		return nBits;
 	}

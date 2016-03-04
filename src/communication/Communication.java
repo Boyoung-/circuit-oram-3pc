@@ -3,6 +3,7 @@ package communication;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.StreamCorruptedException;
 import java.math.BigInteger;
 import java.net.InetSocketAddress;
@@ -13,6 +14,8 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import org.apache.commons.lang3.SerializationUtils;
 
 import util.Util;
 
@@ -337,6 +340,22 @@ public class Communication {
 			write(out[i]);
 	}
 
+	public void write(int[] out) {
+		write(out.length);
+		for (int i = 0; i < out.length; i++)
+			write(out[i]);
+	}
+
+	public <T> void write(T out) {
+		write(SerializationUtils.serialize((Serializable) out));
+	}
+
+	public <T> void write(T[] out) {
+		write(out.length);
+		for (int i = 0; i < out.length; i++)
+			write(out[i]);
+	}
+
 	public static final Charset defaultCharset = Charset.forName("ASCII");
 
 	// TODO: Rather than having millions of write/read methods can we take
@@ -426,6 +445,28 @@ public class Communication {
 		byte[][] data = new byte[len][];
 		for (int i = 0; i < len; i++)
 			data[i] = read();
+		return data;
+	}
+
+	public int[] readIntArray() {
+		int len = readInt();
+		int[] data = new int[len];
+		for (int i = 0; i < len; i++)
+			data[i] = readInt();
+		return data;
+	}
+
+	public <T> T readObject() {
+		T object = SerializationUtils.deserialize(read());
+		return object;
+	}
+
+	public <T> T[] readObjectArray() {
+		int len = readInt();
+		@SuppressWarnings("unchecked")
+		T[] data = (T[]) new Object[len];
+		for (int i = 0; i < len; i++)
+			data[i] = readObject();
 		return data;
 	}
 

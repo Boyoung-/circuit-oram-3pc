@@ -20,7 +20,7 @@ public class TestForest {
 		// long numTests = numRecords;
 		for (long n = 0; n < numTests; n++) {
 			// address of record we want to test
-			long testAddr = Util.nextLong(Crypto.sr, numRecords);
+			long testAddr = Util.nextLong(numRecords, Crypto.sr);
 			// long testAddr = n;
 			long L = 0;
 			long outRecord = 0;

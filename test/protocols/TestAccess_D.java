@@ -1,11 +1,11 @@
-package ui;
+package protocols;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 
-public class TestCLI {
+public class TestAccess_D {
 
 	public static void main(String[] args) {
 		Runtime runTime = Runtime.getRuntime();
@@ -14,7 +14,7 @@ public class TestCLI {
 		String binDir = dir + "\\bin";
 		String libs = dir + "\\lib\\*";
 		try {
-			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol sscot eddie");
+			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol access debbie");
 
 		} catch (IOException e) {
 			e.printStackTrace();

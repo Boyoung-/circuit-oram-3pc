@@ -2,7 +2,10 @@ package util;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 import exceptions.LengthNotMatchException;
@@ -14,7 +17,13 @@ public class Util {
 		return new BigInteger(a).compareTo(new BigInteger(b)) == 0;
 	}
 
-	public static long nextLong(Random r, long range) {
+	public static byte[] nextBytes(int len, Random r) {
+		byte[] data = new byte[len];
+		r.nextBytes(data);
+		return data;
+	}
+
+	public static long nextLong(long range, Random r) {
 		long bits, val;
 		do {
 			bits = (r.nextLong() << 1) >>> 1;
@@ -86,6 +95,25 @@ public class Util {
 
 	public static int bytesToInt(byte[] b) {
 		return new BigInteger(b).intValue();
+	}
+
+	public static int[] randomPermutation(int len, Random rand) {
+		List<Integer> list = new ArrayList<Integer>(len);
+		for (int i = 0; i < len; i++)
+			list.add(i);
+		Collections.shuffle(list, rand);
+		int[] array = new int[len];
+		for (int i = 0; i < len; i++)
+			array[i] = list.get(i);
+		return array;
+	}
+
+	public static <T> T[] permute(T[] original, int[] p) {
+		@SuppressWarnings("unchecked")
+		T[] permuted = (T[]) new Object[original.length];
+		for (int i = 0; i < original.length; i++)
+			permuted[p[i]] = original[i];
+		return permuted;
 	}
 
 	public static void debug(String s) {
