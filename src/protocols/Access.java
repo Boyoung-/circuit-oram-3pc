@@ -98,24 +98,26 @@ public class Access extends Protocol {
 
 	@Override
 	public void run(Party party, Metadata md, Forest forest) {
-		// for (int j = 0; j < 100; j++) {
 		PreData predata = new PreData();
 		PreAccess preaccess = new PreAccess(con1, con2);
-		int treeIndex = 2;
+		int treeIndex = 1;
 		Tree tree = null;
 		int numBuckets = 0;
 		if (forest != null) {
 			tree = forest.getTree(treeIndex);
 			numBuckets = tree.getD();
 		}
-		byte[] Li = new byte[] { 0 };
+		byte[] Li = new BigInteger("101", 2).toByteArray();
+		byte[] Nip1 = new byte[] { 0 };
+		byte[] Ni = new byte[] { 0 };
+		byte[] Nip1_pr = new byte[] { 0 };
 		if (party == Party.Eddie) {
 			preaccess.runE(predata, tree, numBuckets);
-			runE(predata, tree, Li, Li, Li, Li);
+			runE(predata, tree, Li, Nip1, Ni, Nip1_pr);
 
 		} else if (party == Party.Debbie) {
 			preaccess.runD(predata);
-			runD(predata, tree, Li, Li, Li, Li);
+			runD(predata, tree, Li, Nip1, Ni, Nip1_pr);
 
 		} else if (party == Party.Charlie) {
 			preaccess.runC();
@@ -124,6 +126,5 @@ public class Access extends Protocol {
 		} else {
 			throw new NoSuchPartyException(party + "");
 		}
-		// }
 	}
 }
