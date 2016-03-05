@@ -21,7 +21,7 @@ public class Access extends Protocol {
 		super(con1, con2);
 	}
 
-	public void runE(PreData predata, Tree OTi, byte[] Li, byte[] Nip1, byte[] Ni, byte[] Nip1_pr) {
+	public void runE(PreData predata, Tree OTi, byte[] Li, byte[] Ni, byte[] Nip1_pr) {
 		// step 1
 		Bucket[] pathBuckets = OTi.getBucketsOnPath(new BigInteger(1, Li).longValue());
 		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
@@ -54,7 +54,7 @@ public class Access extends Protocol {
 		ssiot.runE(predata, y_array, Nip1_pr);
 	}
 
-	public void runD(PreData predata, Tree OTi, byte[] Li, byte[] Nip1, byte[] Ni, byte[] Nip1_pr) {
+	public void runD(PreData predata, Tree OTi, byte[] Li, byte[] Ni, byte[] Nip1_pr) {
 		// step 1
 		Bucket[] pathBuckets = OTi.getBucketsOnPath(new BigInteger(1, Li).longValue());
 		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
@@ -65,7 +65,7 @@ public class Access extends Protocol {
 
 		// step 2
 		con2.write(pathTuples);
-		// con2.write(Nip1);
+		con2.write(Ni);
 
 		// step 3
 		byte[][] b = new byte[pathTuples.length][];
@@ -84,21 +84,28 @@ public class Access extends Protocol {
 		ssiot.runD(predata, Nip1_pr);
 	}
 
-	public void runC() {
+	public void runC(Metadata md, int treeIndex) {
 		// step 2
 		Object[] objArray = con2.readObjectArray();
 		Tuple[] pathTuples = Arrays.copyOf(objArray, objArray.length, Tuple[].class);
-		// byte[] Nip1 = con2.read();
+		byte[] Ni = con2.read();
 
 		// step 3
 		SSCOT sscot = new SSCOT(con1, con2);
 		OutSSCOT je = sscot.runC();
-		byte[] d = pathTuples[je.t].getA();
+		int j1 = je.t;
+		byte[] d = pathTuples[j1].getA();
 		byte[] z = Util.xor(je.m_t, d);
 
 		// step 4
 		SSIOT ssiot = new SSIOT(con1, con2);
 		OutSSIOT jy = ssiot.runC();
+
+		// step 5
+		int j2 = jy.t;
+		int lSegBytes = md.getABytesOfTree(treeIndex) / md.getTwoTauPow();
+		byte[] z_j2 = Arrays.copyOfRange(z, j2 * lSegBytes, (j2 + 1) * lSegBytes);
+		byte[] Lip1 = Util.xor(jy.m_t, z_j2);
 	}
 
 	@Override
@@ -113,20 +120,19 @@ public class Access extends Protocol {
 			numTuples = (tree.getD() - 1) * tree.getW() + tree.getStashSize();
 		}
 		byte[] Li = new BigInteger("11", 2).toByteArray();
-		byte[] Nip1 = new byte[] { 0 };
 		byte[] Ni = new byte[] { 0 };
 		byte[] Nip1_pr = new byte[] { 0 };
 		if (party == Party.Eddie) {
 			preaccess.runE(predata, tree, numTuples);
-			runE(predata, tree, Li, Nip1, Ni, Nip1_pr);
+			runE(predata, tree, Li, Ni, Nip1_pr);
 
 		} else if (party == Party.Debbie) {
 			preaccess.runD(predata);
-			runD(predata, tree, Li, Nip1, Ni, Nip1_pr);
+			runD(predata, tree, Li, Ni, Nip1_pr);
 
 		} else if (party == Party.Charlie) {
 			preaccess.runC();
-			runC();
+			runC(md, treeIndex);
 
 		} else {
 			throw new NoSuchPartyException(party + "");
