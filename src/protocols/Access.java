@@ -31,30 +31,47 @@ public class Access extends Protocol {
 		pathTuples = Arrays.copyOf(objArray, objArray.length, Tuple[].class);
 
 		// step 3
-		byte[][] a = new byte[pathTuples.length][];
-		byte[][] m = new byte[pathTuples.length][];
-		byte[] y = Util.nextBytes(OTi.getABytes(), Crypto.sr);
-		for (int i = 0; i < pathTuples.length; i++) {
-			m[i] = Util.xor(pathTuples[i].getA(), y);
-			a[i] = ArrayUtils.addAll(pathTuples[i].getF(), pathTuples[i].getN());
-			for (int j = 0; j < Ni.length; j++)
-				a[i][a[i].length - 1 - j] ^= Ni[Ni.length - 1 - j];
+		byte[] y = null;
+		if (OTi.getTreeIndex() == 0) {
+			y = pathTuples[0].getA();
+		} else if (OTi.getTreeIndex() < OTi.getH() - 1) {
+			y = Util.nextBytes(OTi.getABytes(), Crypto.sr);
+		} else {
+			y = new byte[OTi.getABytes()];
 		}
 
-		SSCOT sscot = new SSCOT(con1, con2);
-		sscot.runE(predata, m, a);
+		if (OTi.getTreeIndex() > 0) {
+			byte[][] a = new byte[pathTuples.length][];
+			byte[][] m = new byte[pathTuples.length][];
+			for (int i = 0; i < pathTuples.length; i++) {
+				m[i] = Util.xor(pathTuples[i].getA(), y);
+				a[i] = ArrayUtils.addAll(pathTuples[i].getF(), pathTuples[i].getN());
+				for (int j = 0; j < Ni.length; j++)
+					a[i][a[i].length - 1 - j] ^= Ni[Ni.length - 1 - j];
+			}
+
+			SSCOT sscot = new SSCOT(con1, con2);
+			sscot.runE(predata, m, a);
+		}
 
 		// step 4
-		int ySegBytes = y.length / OTi.getTwoTauPow();
-		byte[][] y_array = new byte[OTi.getTwoTauPow()][];
-		for (int i = 0; i < OTi.getTwoTauPow(); i++)
-			y_array[i] = Arrays.copyOfRange(y, i * ySegBytes, (i + 1) * ySegBytes);
+		if (OTi.getTreeIndex() < OTi.getH() - 1) {
+			int ySegBytes = y.length / OTi.getTwoTauPow();
+			byte[][] y_array = new byte[OTi.getTwoTauPow()][];
+			for (int i = 0; i < OTi.getTwoTauPow(); i++)
+				y_array[i] = Arrays.copyOfRange(y, i * ySegBytes, (i + 1) * ySegBytes);
 
-		SSIOT ssiot = new SSIOT(con1, con2);
-		ssiot.runE(predata, y_array, Nip1_pr);
+			SSIOT ssiot = new SSIOT(con1, con2);
+			ssiot.runE(predata, y_array, Nip1_pr);
+		}
 
 		// step 5
-		Tuple Ti = new Tuple(new byte[0], Ni, Li, y);
+		Tuple Ti = null;
+		if (OTi.getTreeIndex() == 0) {
+			Ti = pathTuples[0];
+		} else {
+			Ti = new Tuple(new byte[0], Ni, Li, y);
+		}
 
 		OutAccess outaccess = new OutAccess(null, null, null, Ti, pathTuples);
 		return outaccess;
@@ -74,20 +91,24 @@ public class Access extends Protocol {
 		con2.write(Ni);
 
 		// step 3
-		byte[][] b = new byte[pathTuples.length][];
-		for (int i = 0; i < pathTuples.length; i++) {
-			b[i] = ArrayUtils.addAll(pathTuples[i].getF(), pathTuples[i].getN());
-			b[i][0] ^= 1;
-			for (int j = 0; j < Ni.length; j++)
-				b[i][b[i].length - 1 - j] ^= Ni[Ni.length - 1 - j];
+		if (OTi.getTreeIndex() > 0) {
+			byte[][] b = new byte[pathTuples.length][];
+			for (int i = 0; i < pathTuples.length; i++) {
+				b[i] = ArrayUtils.addAll(pathTuples[i].getF(), pathTuples[i].getN());
+				b[i][0] ^= 1;
+				for (int j = 0; j < Ni.length; j++)
+					b[i][b[i].length - 1 - j] ^= Ni[Ni.length - 1 - j];
+			}
+
+			SSCOT sscot = new SSCOT(con1, con2);
+			sscot.runD(predata, b);
 		}
 
-		SSCOT sscot = new SSCOT(con1, con2);
-		sscot.runD(predata, b);
-
 		// step 4
-		SSIOT ssiot = new SSIOT(con1, con2);
-		ssiot.runD(predata, Nip1_pr);
+		if (OTi.getTreeIndex() < OTi.getH() - 1) {
+			SSIOT ssiot = new SSIOT(con1, con2);
+			ssiot.runD(predata, Nip1_pr);
+		}
 	}
 
 	public OutAccess runC(Metadata md, int treeIndex) {
@@ -97,28 +118,43 @@ public class Access extends Protocol {
 		byte[] Ni = con2.read();
 
 		// step 3
-		SSCOT sscot = new SSCOT(con1, con2);
-		OutSSCOT je = sscot.runC();
-		int j1 = je.t;
-		byte[] d = pathTuples[j1].getA();
-		byte[] z = Util.xor(je.m_t, d);
+		int j1 = 0;
+		byte[] z = null;
+		if (treeIndex == 0) {
+			z = pathTuples[0].getA();
+		} else {
+			SSCOT sscot = new SSCOT(con1, con2);
+			OutSSCOT je = sscot.runC();
+			j1 = je.t;
+			byte[] d = pathTuples[j1].getA();
+			z = Util.xor(je.m_t, d);
+		}
 
 		// step 4
-		SSIOT ssiot = new SSIOT(con1, con2);
-		OutSSIOT jy = ssiot.runC();
+		int j2 = 0;
+		byte[] Lip1 = null;
+		if (treeIndex < md.getNumTrees() - 1) {
+			SSIOT ssiot = new SSIOT(con1, con2);
+			OutSSIOT jy = ssiot.runC();
 
-		// step 5
-		int j2 = jy.t;
-		int lSegBytes = md.getABytesOfTree(treeIndex) / md.getTwoTauPow();
-		byte[] z_j2 = Arrays.copyOfRange(z, j2 * lSegBytes, (j2 + 1) * lSegBytes);
-		byte[] Lip1 = Util.xor(jy.m_t, z_j2);
+			// step 5
+			j2 = jy.t;
+			int lSegBytes = md.getABytesOfTree(treeIndex) / md.getTwoTauPow();
+			byte[] z_j2 = Arrays.copyOfRange(z, j2 * lSegBytes, (j2 + 1) * lSegBytes);
+			Lip1 = Util.xor(jy.m_t, z_j2);
+		}
 
-		Tuple Ti = new Tuple(new byte[] { 1 }, Ni, new byte[md.getLBytesOfTree(treeIndex)], z);
+		Tuple Ti = null;
+		if (treeIndex == 0) {
+			Ti = pathTuples[0];
+		} else {
+			Ti = new Tuple(new byte[] { 1 }, Ni, new byte[md.getLBytesOfTree(treeIndex)], z);
 
-		pathTuples[j1].getF()[0] = (byte) (1 - pathTuples[j1].getF()[0]);
-		Crypto.sr.nextBytes(pathTuples[j1].getN());
-		Crypto.sr.nextBytes(pathTuples[j1].getL());
-		Crypto.sr.nextBytes(pathTuples[j1].getA());
+			pathTuples[j1].getF()[0] = (byte) (1 - pathTuples[j1].getF()[0]);
+			Crypto.sr.nextBytes(pathTuples[j1].getN());
+			Crypto.sr.nextBytes(pathTuples[j1].getL());
+			Crypto.sr.nextBytes(pathTuples[j1].getA());
+		}
 
 		OutAccess outaccess = new OutAccess(Lip1, Ti, pathTuples, null, null);
 		return outaccess;
