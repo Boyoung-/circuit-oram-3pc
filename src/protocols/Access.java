@@ -21,7 +21,7 @@ public class Access extends Protocol {
 		super(con1, con2);
 	}
 
-	public void runE(PreData predata, Tree OTi, byte[] Li, byte[] Ni, byte[] Nip1_pr) {
+	public OutAccess runE(PreData predata, Tree OTi, byte[] Li, byte[] Ni, byte[] Nip1_pr) {
 		// step 1
 		Bucket[] pathBuckets = OTi.getBucketsOnPath(new BigInteger(1, Li).longValue());
 		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
@@ -52,6 +52,12 @@ public class Access extends Protocol {
 
 		SSIOT ssiot = new SSIOT(con1, con2);
 		ssiot.runE(predata, y_array, Nip1_pr);
+
+		// step 5
+		Tuple Ti = new Tuple(new byte[0], Ni, Li, y);
+
+		OutAccess outaccess = new OutAccess(null, null, null, Ti, pathTuples);
+		return outaccess;
 	}
 
 	public void runD(PreData predata, Tree OTi, byte[] Li, byte[] Ni, byte[] Nip1_pr) {
@@ -84,7 +90,7 @@ public class Access extends Protocol {
 		ssiot.runD(predata, Nip1_pr);
 	}
 
-	public void runC(Metadata md, int treeIndex) {
+	public OutAccess runC(Metadata md, int treeIndex) {
 		// step 2
 		Object[] objArray = con2.readObjectArray();
 		Tuple[] pathTuples = Arrays.copyOf(objArray, objArray.length, Tuple[].class);
@@ -106,6 +112,16 @@ public class Access extends Protocol {
 		int lSegBytes = md.getABytesOfTree(treeIndex) / md.getTwoTauPow();
 		byte[] z_j2 = Arrays.copyOfRange(z, j2 * lSegBytes, (j2 + 1) * lSegBytes);
 		byte[] Lip1 = Util.xor(jy.m_t, z_j2);
+
+		Tuple Ti = new Tuple(new byte[] { 1 }, Ni, new byte[md.getLBytesOfTree(treeIndex)], z);
+
+		pathTuples[j1].getF()[0] = (byte) (1 - pathTuples[j1].getF()[0]);
+		Crypto.sr.nextBytes(pathTuples[j1].getN());
+		Crypto.sr.nextBytes(pathTuples[j1].getL());
+		Crypto.sr.nextBytes(pathTuples[j1].getA());
+
+		OutAccess outaccess = new OutAccess(Lip1, Ti, pathTuples, null, null);
+		return outaccess;
 	}
 
 	@Override
