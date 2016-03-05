@@ -92,4 +92,19 @@ public class Bucket implements Serializable {
 		return str;
 	}
 
+	public static Tuple[] bucketsToTuples(Bucket[] buckets) {
+		int numTuples = 0;
+		for (int i = 0; i < buckets.length; i++)
+			numTuples += buckets[i].getNumTuples();
+
+		Tuple[] tuples = new Tuple[numTuples];
+		int tupleCnt = 0;
+		for (int i = 0; i < buckets.length; i++)
+			for (int j = 0; j < buckets[i].getNumTuples(); j++) {
+				tuples[tupleCnt] = buckets[i].getTuple(j);
+				tupleCnt++;
+			}
+
+		return tuples;
+	}
 }

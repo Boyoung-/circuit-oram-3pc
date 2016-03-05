@@ -14,6 +14,8 @@ public class Tree implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	private int tau;
+	private int twoTauPow;
 	private int treeIndex;
 	private int w;
 	private int stashSize;
@@ -28,10 +30,13 @@ public class Tree implements Serializable {
 	private long numBuckets;
 	private long numBytes;
 	private int d;
+	private int h;
 
 	private Array64<Bucket> buckets;
 
 	public Tree(int index, Metadata md, Random rand) {
+		tau = md.getTau();
+		twoTauPow = md.getTwoTauPow();
 		treeIndex = index;
 		w = md.getW();
 		stashSize = md.getStashSizeOfTree(treeIndex);
@@ -46,6 +51,7 @@ public class Tree implements Serializable {
 		numBuckets = md.getNumBucketsOfTree(treeIndex);
 		numBytes = md.getTreeBytesOfTree(treeIndex);
 		d = lBits + 1;
+		h = md.getNumTrees();
 
 		int fBytes = treeIndex == 0 ? 0 : 1;
 		int[] tupleParams = new int[] { fBytes, nBytes, lBytes, aBytes };
@@ -58,6 +64,8 @@ public class Tree implements Serializable {
 	// only used for xor operation
 	// does not shallow/deep copy buckets
 	private Tree(Tree t) {
+		tau = t.getTau();
+		twoTauPow = t.getTwoTauPow();
 		treeIndex = t.getTreeIndex();
 		w = t.getW();
 		stashSize = t.getStashSize();
@@ -72,6 +80,7 @@ public class Tree implements Serializable {
 		numBuckets = t.getNumBuckets();
 		numBytes = t.getNumBytes();
 		d = t.getD();
+		h = t.getH();
 		buckets = new Array64<Bucket>(numBuckets);
 	}
 
@@ -138,6 +147,14 @@ public class Tree implements Serializable {
 			setBucket(indices[i], buckets[i]);
 	}
 
+	public int getTau() {
+		return tau;
+	}
+
+	public int getTwoTauPow() {
+		return twoTauPow;
+	}
+
 	public int getTreeIndex() {
 		return treeIndex;
 	}
@@ -196,5 +213,9 @@ public class Tree implements Serializable {
 
 	public int getD() {
 		return d;
+	}
+
+	public int getH() {
+		return h;
 	}
 }

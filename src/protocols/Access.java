@@ -6,6 +6,7 @@ import java.util.Arrays;
 import org.apache.commons.lang3.ArrayUtils;
 
 import communication.Communication;
+import crypto.Crypto;
 import exceptions.NoSuchPartyException;
 import oram.Bucket;
 import oram.Forest;
@@ -26,29 +27,30 @@ public class Access extends Protocol {
 		// Object[] objArray = Util.permute(pathBuckets, predata.access_sigma);
 		// pathBuckets = Arrays.copyOf(objArray, objArray.length,
 		// Bucket[].class);
-		for (int i = 0; i < pathBuckets.length; i++) {
+		for (int i = 0; i < pathBuckets.length; i++)
 			pathBuckets[i].setXor(predata.access_p[i]);
-		}
+		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
 
 		// step 3
-		int numTuples = OTi.getStashSize() + (pathBuckets.length - 1) * OTi.getW();
-		byte[][] a = new byte[numTuples][];
-		byte[][] m = new byte[numTuples][];
-		int tupleCnt = 0;
-		for (int i = 0; i < pathBuckets.length; i++)
-			for (int j = 0; j < pathBuckets[i].getNumTuples(); j++) {
-				Tuple tuple = pathBuckets[i].getTuple(j);
-				a[tupleCnt] = ArrayUtils.addAll(tuple.getF(), tuple.getN());
-				m[tupleCnt] = tuple.getA();
-				tupleCnt++;
-			}
-		for (int i = 0; i < numTuples; i++) {
+		byte[][] a = new byte[pathTuples.length][];
+		byte[][] m = new byte[pathTuples.length][];
+		byte[] y = Util.nextBytes(OTi.getABytes(), Crypto.sr);
+		for (int i = 0; i < pathTuples.length; i++) {
+			m[i] = Util.xor(pathTuples[i].getA(), y);
+			a[i] = ArrayUtils.addAll(pathTuples[i].getF(), pathTuples[i].getN());
 			for (int j = 0; j < Ni.length; j++)
 				a[i][a[i].length - 1 - j] ^= Ni[Ni.length - 1 - j];
 		}
 
 		SSCOT sscot = new SSCOT(con1, con2);
 		sscot.runE(predata, m, a);
+
+		// step 4
+		System.out.println(OTi.getTau() + " " + OTi.getTwoTauPow());
+		int ySegBytes = y.length / OTi.getTwoTauPow();
+		byte[][] y_array = new byte[OTi.getTwoTauPow()][];
+		for (int i = 0; i < OTi.getTwoTauPow(); i++)
+			y_array[i] = Arrays.copyOfRange(y, i * ySegBytes, (i + 1) * ySegBytes);
 	}
 
 	public void runD(PreData predata, Tree OTi, byte[] Li, byte[] Nip1, byte[] Ni, byte[] Nip1_pr) {
@@ -57,25 +59,18 @@ public class Access extends Protocol {
 		// Object[] objArray = Util.permute(pathBuckets, predata.access_sigma);
 		// pathBuckets = Arrays.copyOf(objArray, objArray.length,
 		// Bucket[].class);
-		for (int i = 0; i < pathBuckets.length; i++) {
+		for (int i = 0; i < pathBuckets.length; i++)
 			pathBuckets[i].setXor(predata.access_p[i]);
-		}
+		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
 
 		// step 2
-		con2.write(pathBuckets);
-		con2.write(Nip1);
+		con2.write(pathTuples);
+		// con2.write(Nip1);
 
 		// step 3
-		int numTuples = OTi.getStashSize() + (pathBuckets.length - 1) * OTi.getW();
-		byte[][] b = new byte[numTuples][];
-		int tupleCnt = 0;
-		for (int i = 0; i < pathBuckets.length; i++)
-			for (int j = 0; j < pathBuckets[i].getNumTuples(); j++) {
-				Tuple tuple = pathBuckets[i].getTuple(j);
-				b[tupleCnt] = ArrayUtils.addAll(tuple.getF(), tuple.getN());
-				tupleCnt++;
-			}
-		for (int i = 0; i < numTuples; i++) {
+		byte[][] b = new byte[pathTuples.length][];
+		for (int i = 0; i < pathTuples.length; i++) {
+			b[i] = ArrayUtils.addAll(pathTuples[i].getF(), pathTuples[i].getN());
 			b[i][0] ^= 1;
 			for (int j = 0; j < Ni.length; j++)
 				b[i][b[i].length - 1 - j] ^= Ni[Ni.length - 1 - j];
@@ -88,12 +83,15 @@ public class Access extends Protocol {
 	public void runC() {
 		// step 2
 		Object[] objArray = con2.readObjectArray();
-		Bucket[] pathBuckets = Arrays.copyOf(objArray, objArray.length, Bucket[].class);
-		byte[] Nip1 = con2.read();
+		Tuple[] pathTuples = Arrays.copyOf(objArray, objArray.length, Tuple[].class);
+		// byte[] Nip1 = con2.read();
 
 		// step 3
 		SSCOT sscot = new SSCOT(con1, con2);
-		sscot.runC();
+		OutSSCOT je = sscot.runC();
+		byte[] d = pathTuples[je.t].getA();
+		byte[] z = Util.xor(je.m_t, d);
+
 	}
 
 	@Override
@@ -107,7 +105,7 @@ public class Access extends Protocol {
 			tree = forest.getTree(treeIndex);
 			numBuckets = tree.getD();
 		}
-		byte[] Li = new BigInteger("101", 2).toByteArray();
+		byte[] Li = new BigInteger("11", 2).toByteArray();
 		byte[] Nip1 = new byte[] { 0 };
 		byte[] Ni = new byte[] { 0 };
 		byte[] Nip1_pr = new byte[] { 0 };

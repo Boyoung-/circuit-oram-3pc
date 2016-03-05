@@ -15,6 +15,7 @@ import exceptions.NoSuchPartyException;
 import protocols.Party;
 import protocols.Protocol;
 import protocols.SSCOT;
+import protocols.SSIOT;
 import protocols.Access;
 
 public class CLI {
@@ -68,6 +69,8 @@ public class CLI {
 
 		if (protocol.equals("sscot")) {
 			operation = SSCOT.class;
+		} else if (protocol.equals("ssiot")) {
+			operation = SSIOT.class;
 		} else if (protocol.equals("access")) {
 			operation = Access.class;
 		} else {

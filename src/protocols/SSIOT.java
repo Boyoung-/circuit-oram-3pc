@@ -1,0 +1,135 @@
+package protocols;
+
+import communication.Communication;
+import crypto.Crypto;
+import crypto.PRF;
+import crypto.PRG;
+import exceptions.NoSuchPartyException;
+import exceptions.SSIOTException;
+import oram.Forest;
+import oram.Metadata;
+import util.Util;
+
+public class SSIOT extends Protocol {
+	public SSIOT(Communication con1, Communication con2) {
+		super(con1, con2);
+	}
+
+	public void runE(PreData predata, byte[][] y, byte[] Nip1_pr) {
+		// step 1
+		int n = y.length;
+		int l = y[0].length * 8;
+		byte[][] x = new byte[n][];
+		byte[][] e = new byte[n][];
+		byte[][] v = new byte[n][];
+		PRF F_k = new PRF(Crypto.secParam);
+		F_k.init(predata.ssiot_k);
+		PRF F_kprime = new PRF(Crypto.secParam);
+		F_kprime.init(predata.ssiot_kprime);
+		PRG G = new PRG(l);
+
+		for (int i = 0; i < n; i++) {
+			byte[] i_bytes = Util.intToBytes(i);
+			x[i] = predata.ssiot_r.clone();
+			for (int j = 0; j < Nip1_pr.length; j++)
+				x[i][x[i].length - 1 - j] ^= Nip1_pr[Nip1_pr.length - 1 - j] ^ i_bytes[i_bytes.length - 1 - j];
+
+			e[i] = Util.xor(G.compute(F_k.compute(x[i])), y[i]);
+			v[i] = F_kprime.compute(x[i]);
+		}
+
+		con2.write(e);
+		con2.write(v);
+	}
+
+	public void runD(PreData predata, byte[] Nip1_pr) {
+		// step 2
+		PRF F_k = new PRF(Crypto.secParam);
+		F_k.init(predata.ssiot_k);
+		PRF F_kprime = new PRF(Crypto.secParam);
+		F_kprime.init(predata.ssiot_kprime);
+
+		byte[] y = predata.ssiot_r;
+		for (int i = 0; i < Nip1_pr.length; i++)
+			y[y.length - 1 - i] ^= Nip1_pr[Nip1_pr.length - 1 - i];
+		byte[] p = F_k.compute(y);
+		byte[] w = F_kprime.compute(y);
+
+		con2.write(p);
+		con2.write(w);
+	}
+
+	public OutSSIOT runC() {
+		// step 1
+		byte[][] e = con1.readDoubleByteArray();
+		byte[][] v = con1.readDoubleByteArray();
+
+		// step 2
+		byte[] p = con2.read();
+		byte[] w = con2.read();
+
+		// step 3
+		int n = e.length;
+		int l = e[0].length * 8;
+		PRG G = new PRG(l);
+		OutSSIOT output = null;
+		int invariant = 0;
+
+		for (int i = 0; i < n; i++) {
+			if (Util.equal(v[i], w)) {
+				byte[] y = Util.xor(e[i], G.compute(p));
+				output = new OutSSIOT(i, y);
+				invariant++;
+			}
+		}
+
+		if (invariant != 1)
+			throw new SSIOTException("Invariant error: " + invariant);
+		return output;
+	}
+
+	@Override
+	public void run(Party party, Metadata md, Forest forest) {
+		for (int j = 0; j < 100; j++) {
+			int twoTauPow = 64;
+			int label = 4;
+			byte[][] y = new byte[twoTauPow][label];
+			byte[] sE_Nip1_pr = new byte[1];
+			byte[] sD_Nip1_pr = new byte[1];
+			for (int i = 0; i < twoTauPow; i++)
+				Crypto.sr.nextBytes(y[i]);
+			int index = Crypto.sr.nextInt(twoTauPow);
+			Crypto.sr.nextBytes(sE_Nip1_pr);
+			sD_Nip1_pr[0] = (byte) (Util.intToBytes(index)[3] ^ sE_Nip1_pr[0]);
+
+			PreData predata = new PreData();
+			PreSSIOT pressiot = new PreSSIOT(con1, con2);
+
+			if (party == Party.Eddie) {
+				con1.write(sD_Nip1_pr);
+				con2.write(y);
+				con2.write(index);
+				pressiot.runE(predata, twoTauPow);
+				runE(predata, y, sE_Nip1_pr);
+
+			} else if (party == Party.Debbie) {
+				sD_Nip1_pr = con1.read();
+				pressiot.runD(predata);
+				runD(predata, sD_Nip1_pr);
+
+			} else if (party == Party.Charlie) {
+				y = con1.readDoubleByteArray();
+				index = con1.readInt();
+				pressiot.runC();
+				OutSSIOT output = runC();
+				if (output.t == index && Util.equal(output.m_t, y[index]))
+					System.out.println("SSIOT test passed");
+				else
+					System.err.println("SSIOT test failed");
+
+			} else {
+				throw new NoSuchPartyException(party + "");
+			}
+		}
+	}
+}
