@@ -1,6 +1,6 @@
 package protocols;
 
-import oram.Bucket;
+import oram.Tuple;
 
 public class PreData {
 	public byte[] sscot_k;
@@ -12,7 +12,6 @@ public class PreData {
 	public byte[] ssiot_r;
 
 	public int[] access_sigma;
-	public int[] access_delta;
-	public int[] access_rho;
-	public Bucket[] access_p;
+	// public int[] access_rho;
+	public Tuple[] access_p;
 }

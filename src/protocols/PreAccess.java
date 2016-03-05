@@ -4,10 +4,10 @@ import java.util.Arrays;
 
 import communication.Communication;
 import crypto.Crypto;
-import oram.Bucket;
 import oram.Forest;
 import oram.Metadata;
 import oram.Tree;
+import oram.Tuple;
 import util.Util;
 
 public class PreAccess extends Protocol {
@@ -15,9 +15,8 @@ public class PreAccess extends Protocol {
 		super(con1, con2);
 	}
 
-	public void runE(PreData predata, Tree OT, int numBuckets) {
+	public void runE(PreData predata, Tree OT, int numTuples) {
 		// SSCOT
-		int numTuples = OT.getStashSize() + (numBuckets - 1) * OT.getW();
 		PreSSCOT presscot = new PreSSCOT(con1, con2);
 		presscot.runE(predata, numTuples);
 
@@ -26,13 +25,10 @@ public class PreAccess extends Protocol {
 		pressiot.runE(predata, OT.getTwoTauPow());
 
 		// Access
-		predata.access_sigma = Util.randomPermutation(numBuckets, Crypto.sr);
-
-		int[] tupleParam = new int[] { OT.getFBytes(), OT.getNBytes(), OT.getLBytes(), OT.getABytes() };
-		predata.access_p = new Bucket[numBuckets];
-		predata.access_p[0] = new Bucket(OT.getStashSize(), tupleParam, Crypto.sr);
-		for (int i = 1; i < numBuckets; i++)
-			predata.access_p[i] = new Bucket(OT.getW(), tupleParam, Crypto.sr);
+		predata.access_sigma = Util.randomPermutation(numTuples, Crypto.sr);
+		predata.access_p = new Tuple[numTuples];
+		for (int i = 0; i < numTuples; i++)
+			predata.access_p[i] = new Tuple(OT.getFBytes(), OT.getNBytes(), OT.getLBytes(), OT.getABytes(), Crypto.sr);
 
 		con1.write(predata.access_sigma);
 		con1.write(predata.access_p);
@@ -50,7 +46,7 @@ public class PreAccess extends Protocol {
 		// Access
 		predata.access_sigma = con1.readIntArray();
 		Object[] objArray = con1.readObjectArray();
-		predata.access_p = Arrays.copyOf(objArray, objArray.length, Bucket[].class);
+		predata.access_p = Arrays.copyOf(objArray, objArray.length, Tuple[].class);
 	}
 
 	public void runC() {
