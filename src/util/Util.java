@@ -116,6 +116,19 @@ public class Util {
 		return permuted;
 	}
 
+	public static byte[] longToBytes(long l, int numBytes) {
+		byte[] bytes = BigInteger.valueOf(l).toByteArray();
+		if (bytes.length == numBytes)
+			return bytes;
+		else if (bytes.length > numBytes)
+			return Arrays.copyOfRange(bytes, bytes.length - numBytes, bytes.length);
+		else {
+			byte[] out = new byte[numBytes];
+			System.arraycopy(bytes, 0, out, numBytes - bytes.length, bytes.length);
+			return out;
+		}
+	}
+
 	public static void debug(String s) {
 		// only to make Communication.java compile
 	}

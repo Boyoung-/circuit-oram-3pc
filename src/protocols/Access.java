@@ -21,7 +21,12 @@ public class Access extends Protocol {
 		super(con1, con2);
 	}
 
-	public OutAccess runE(PreData predata, Tree OTi, byte[] Li, byte[] Ni, byte[] Nip1_pr) {
+	public OutAccess runE(PreData predata, Tree OTi, byte[] Ni, byte[] Nip1_pr) {
+		// step 0: get Li from C
+		byte[] Li = new byte[0];
+		if (OTi.getTreeIndex() > 0)
+			Li = con2.read();
+
 		// step 1
 		Bucket[] pathBuckets = OTi.getBucketsOnPath(new BigInteger(1, Li).longValue());
 		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
@@ -32,13 +37,12 @@ public class Access extends Protocol {
 
 		// step 3
 		byte[] y = null;
-		if (OTi.getTreeIndex() == 0) {
+		if (OTi.getTreeIndex() == 0)
 			y = pathTuples[0].getA();
-		} else if (OTi.getTreeIndex() < OTi.getH() - 1) {
+		else if (OTi.getTreeIndex() < OTi.getH() - 1)
 			y = Util.nextBytes(OTi.getABytes(), Crypto.sr);
-		} else {
+		else
 			y = new byte[OTi.getABytes()];
-		}
 
 		if (OTi.getTreeIndex() > 0) {
 			byte[][] a = new byte[pathTuples.length][];
@@ -67,17 +71,21 @@ public class Access extends Protocol {
 
 		// step 5
 		Tuple Ti = null;
-		if (OTi.getTreeIndex() == 0) {
+		if (OTi.getTreeIndex() == 0)
 			Ti = pathTuples[0];
-		} else {
+		else
 			Ti = new Tuple(new byte[0], Ni, Li, y);
-		}
 
 		OutAccess outaccess = new OutAccess(null, null, null, Ti, pathTuples);
 		return outaccess;
 	}
 
-	public void runD(PreData predata, Tree OTi, byte[] Li, byte[] Ni, byte[] Nip1_pr) {
+	public void runD(PreData predata, Tree OTi, byte[] Ni, byte[] Nip1_pr) {
+		// step 0: get Li from C
+		byte[] Li = new byte[0];
+		if (OTi.getTreeIndex() > 0)
+			Li = con2.read();
+
 		// step 1
 		Bucket[] pathBuckets = OTi.getBucketsOnPath(new BigInteger(1, Li).longValue());
 		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
@@ -111,7 +119,13 @@ public class Access extends Protocol {
 		}
 	}
 
-	public OutAccess runC(Metadata md, int treeIndex) {
+	public OutAccess runC(Metadata md, int treeIndex, byte[] Li) {
+		// step 0: send Li to E and D
+		if (treeIndex > 0) {
+			con1.write(Li);
+			con2.write(Li);
+		}
+
 		// step 2
 		Object[] objArray = con2.readObjectArray();
 		Tuple[] pathTuples = Arrays.copyOf(objArray, objArray.length, Tuple[].class);
@@ -162,32 +176,101 @@ public class Access extends Protocol {
 
 	@Override
 	public void run(Party party, Metadata md, Forest forest) {
-		PreData predata = new PreData();
-		PreAccess preaccess = new PreAccess(con1, con2);
-		int treeIndex = 1;
-		Tree tree = null;
-		int numTuples = 0;
-		if (forest != null) {
-			tree = forest.getTree(treeIndex);
-			numTuples = (tree.getD() - 1) * tree.getW() + tree.getStashSize();
-		}
-		byte[] Li = new BigInteger("11", 2).toByteArray();
-		byte[] Ni = new byte[] { 0 };
-		byte[] Nip1_pr = new byte[] { 0 };
-		if (party == Party.Eddie) {
-			preaccess.runE(predata, tree, numTuples);
-			runE(predata, tree, Li, Ni, Nip1_pr);
+		/*
+		 * PreData predata = new PreData(); PreAccess preaccess = new
+		 * PreAccess(con1, con2); int treeIndex = 1; Tree tree = null; int
+		 * numTuples = 0; if (forest != null) { tree =
+		 * forest.getTree(treeIndex); numTuples = (tree.getD() - 1) *
+		 * tree.getW() + tree.getStashSize(); } byte[] Li = new BigInteger("11",
+		 * 2).toByteArray(); byte[] Ni = new byte[] { 0 }; byte[] Nip1_pr = new
+		 * byte[] { 0 }; if (party == Party.Eddie) { preaccess.runE(predata,
+		 * tree, numTuples); runE(predata, tree, Ni, Nip1_pr);
+		 * 
+		 * } else if (party == Party.Debbie) { preaccess.runD(predata);
+		 * runD(predata, tree, Ni, Nip1_pr);
+		 * 
+		 * } else if (party == Party.Charlie) { preaccess.runC(); runC(md,
+		 * treeIndex, Li);
+		 * 
+		 * } else { throw new NoSuchPartyException(party + ""); }
+		 */
 
-		} else if (party == Party.Debbie) {
-			preaccess.runD(predata);
-			runD(predata, tree, Li, Ni, Nip1_pr);
+		int records = 10;
+		int repeart = 5;
 
-		} else if (party == Party.Charlie) {
-			preaccess.runC();
-			runC(md, treeIndex);
+		int tau = md.getTau();
+		int numTrees = md.getNumTrees();
+		long numInsert = md.getNumInsertRecords();
+		int addrBits = md.getAddrBits();
 
-		} else {
-			throw new NoSuchPartyException(party + "");
+		for (int i = 0; i < records; i++) {
+			long N = Util.nextLong(numInsert, Crypto.sr);
+			// System.out.println("N=" + BigInteger.valueOf(N).toString(2));
+			for (int j = 0; j < repeart; j++) {
+				byte[] Li = new byte[0];
+				for (int ti = 0; ti < numTrees; ti++) {
+					// System.out.println(i + " " + j + " " + ti);
+
+					long Ni_value = Util.getSubBits(N, addrBits, addrBits - md.getNBitsOfTree(ti));
+					long Nip1_pr_value = Util.getSubBits(N, addrBits - md.getNBitsOfTree(ti),
+							Math.max(addrBits - md.getNBitsOfTree(ti) - tau, 0));
+					byte[] Ni = Util.longToBytes(Ni_value, md.getNBytesOfTree(ti));
+					byte[] Nip1_pr = Util.longToBytes(Nip1_pr_value, (tau + 7) / 8);
+					// System.out.println("Ni=" +
+					// BigInteger.valueOf(Ni_value).toString(2));
+					// System.out.println("Nip1_pr=" +
+					// BigInteger.valueOf(Nip1_pr_value).toString(2));
+
+					PreData predata = new PreData();
+					PreAccess preaccess = new PreAccess(con1, con2);
+					Access access = new Access(con1, con2);
+
+					if (party == Party.Eddie) {
+						Tree OTi = forest.getTree(ti);
+						int numTuples = (OTi.getD() - 1) * OTi.getW() + OTi.getStashSize();
+						preaccess.runE(predata, OTi, numTuples);
+
+						byte[] sE_Ni = Util.nextBytes(Ni.length, Crypto.sr);
+						byte[] sD_Ni = Util.xor(Ni, sE_Ni);
+						con1.write(sD_Ni);
+
+						byte[] sE_Nip1_pr = Util.nextBytes(Nip1_pr.length, Crypto.sr);
+						byte[] sD_Nip1_pr = Util.xor(Nip1_pr, sE_Nip1_pr);
+						con1.write(sD_Nip1_pr);
+
+						access.runE(predata, OTi, sE_Ni, sE_Nip1_pr);
+
+						if (ti == numTrees - 1)
+							con2.write(N);
+
+					} else if (party == Party.Debbie) {
+						Tree OTi = forest.getTree(ti);
+						preaccess.runD(predata);
+
+						byte[] sD_Ni = con1.read();
+
+						byte[] sD_Nip1_pr = con1.read();
+
+						access.runD(predata, OTi, sD_Ni, sD_Nip1_pr);
+
+					} else if (party == Party.Charlie) {
+						preaccess.runC();
+
+						OutAccess outaccess = access.runC(md, ti, Li);
+						Li = outaccess.C_Lip1;
+
+						if (ti == numTrees - 1) {
+							N = con1.readObject();
+							long data = new BigInteger(1, outaccess.C_Ti.getA()).longValue();
+							System.out.println(N);
+							System.out.println(data);
+						}
+
+					} else {
+						throw new NoSuchPartyException(party + "");
+					}
+				}
+			}
 		}
 	}
 }
