@@ -45,8 +45,9 @@ public class PreAccess extends Protocol {
 
 		// Access
 		predata.access_sigma = con1.readIntArray();
-		Object[] objArray = con1.readObjectArray();
-		predata.access_p = Arrays.copyOf(objArray, objArray.length, Tuple[].class);
+		//Object[] objArray = con1.readObjectArray();
+		//predata.access_p = Arrays.copyOf(objArray, objArray.length, Tuple[].class);
+		predata.access_p = con1.readTupleArray();
 	}
 
 	public void runC() {

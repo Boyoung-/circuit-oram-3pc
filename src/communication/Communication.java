@@ -17,6 +17,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.lang3.SerializationUtils;
 
+import oram.Tuple;
 import util.Util;
 
 /**
@@ -346,14 +347,26 @@ public class Communication {
 			write(out[i]);
 	}
 
-	public <T> void write(T out) {
+	private <T> void write(T out) {
 		write(SerializationUtils.serialize((Serializable) out));
 	}
-
+	
+	/*
 	public <T> void write(T[] out) {
 		write(out.length);
 		for (int i = 0; i < out.length; i++)
 			write(out[i]);
+	}
+	*/
+	
+	public void write(Tuple[] tuples) {
+		write(tuples.length);
+		for (int i=0; i<tuples.length; i++) {
+			write(tuples[i].getF());
+			write(tuples[i].getN());
+			write(tuples[i].getL());
+			write(tuples[i].getA());
+		}
 	}
 
 	public static final Charset defaultCharset = Charset.forName("ASCII");
@@ -456,11 +469,12 @@ public class Communication {
 		return data;
 	}
 
-	public <T> T readObject() {
+	private <T> T readObject() {
 		T object = SerializationUtils.deserialize(read());
 		return object;
 	}
 
+	/*
 	public <T> T[] readObjectArray() {
 		int len = readInt();
 		@SuppressWarnings("unchecked")
@@ -468,6 +482,15 @@ public class Communication {
 		for (int i = 0; i < len; i++)
 			data[i] = readObject();
 		return data;
+	}
+	*/
+	
+	public Tuple[] readTupleArray() {
+		int len = readInt();
+		Tuple[] tuples = new Tuple[len];
+		for (int i=0; i<len; i++)
+			tuples[i] = new Tuple(read(), read(), read(), read());
+		return tuples;
 	}
 
 	/**
