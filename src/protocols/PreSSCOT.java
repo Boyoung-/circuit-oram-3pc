@@ -3,6 +3,9 @@ package protocols;
 import communication.Communication;
 import crypto.Crypto;
 import crypto.PRF;
+import measure.M;
+import measure.P;
+import measure.Timer;
 import oram.Forest;
 import oram.Metadata;
 
@@ -11,7 +14,9 @@ public class PreSSCOT extends Protocol {
 		super(con1, con2);
 	}
 
-	public void runE(PreData predata, int n) {
+	public void runE(PreData predata, int n, Timer timer) {
+		timer.start(P.COT, M.offline_comp);
+
 		predata.sscot_k = PRF.generateKey(Crypto.sr);
 		predata.sscot_kprime = PRF.generateKey(Crypto.sr);
 		predata.sscot_r = new byte[n][];
@@ -19,15 +24,22 @@ public class PreSSCOT extends Protocol {
 			predata.sscot_r[i] = new byte[Crypto.secParamBytes];
 			Crypto.sr.nextBytes(predata.sscot_r[i]);
 		}
+
+		timer.start(P.COT, M.offline_write);
 		con1.write(predata.sscot_k);
 		con1.write(predata.sscot_kprime);
 		con1.write(predata.sscot_r);
+		timer.stop(P.COT, M.offline_write);
+
+		timer.stop(P.COT, M.offline_comp);
 	}
 
-	public void runD(PreData predata) {
+	public void runD(PreData predata, Timer timer) {
+		timer.start(P.COT, M.offline_read);
 		predata.sscot_k = con1.read();
 		predata.sscot_kprime = con1.read();
 		predata.sscot_r = con1.readObject();
+		timer.stop(P.COT, M.offline_read);
 	}
 
 	public void runC() {

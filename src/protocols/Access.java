@@ -11,7 +11,7 @@ import exceptions.AccessException;
 import exceptions.NoSuchPartyException;
 import measure.M;
 import measure.P;
-import measure.Timing;
+import measure.Timer;
 import oram.Bucket;
 import oram.Forest;
 import oram.Metadata;
@@ -25,15 +25,15 @@ public class Access extends Protocol {
 		super(con1, con2);
 	}
 
-	public OutAccess runE(PreData predata, Tree OTi, byte[] Ni, byte[] Nip1_pr, Timing time) {
-		time.start(P.ACC, M.online_comp);
+	public OutAccess runE(PreData predata, Tree OTi, byte[] Ni, byte[] Nip1_pr, Timer timer) {
+		timer.start(P.ACC, M.online_comp);
 
 		// step 0: get Li from C
-		time.start(P.ACC, M.online_read);
+		timer.start(P.ACC, M.online_read);
 		byte[] Li = new byte[0];
 		if (OTi.getTreeIndex() > 0)
 			Li = con2.read();
-		time.stop(P.ACC, M.online_read);
+		timer.stop(P.ACC, M.online_read);
 
 		// step 1
 		Bucket[] pathBuckets = OTi.getBucketsOnPath(new BigInteger(1, Li).longValue());
@@ -63,7 +63,7 @@ public class Access extends Protocol {
 			}
 
 			SSCOT sscot = new SSCOT(con1, con2);
-			sscot.runE(predata, m, a, time);
+			sscot.runE(predata, m, a, timer);
 		}
 
 		// step 4
@@ -74,7 +74,7 @@ public class Access extends Protocol {
 				y_array[i] = Arrays.copyOfRange(y, i * ySegBytes, (i + 1) * ySegBytes);
 
 			SSIOT ssiot = new SSIOT(con1, con2);
-			ssiot.runE(predata, y_array, Nip1_pr, time);
+			ssiot.runE(predata, y_array, Nip1_pr, timer);
 		}
 
 		// step 5
@@ -86,19 +86,19 @@ public class Access extends Protocol {
 
 		OutAccess outaccess = new OutAccess(null, null, null, Ti, pathTuples);
 
-		time.stop(P.ACC, M.online_comp);
+		timer.stop(P.ACC, M.online_comp);
 		return outaccess;
 	}
 
-	public void runD(PreData predata, Tree OTi, byte[] Ni, byte[] Nip1_pr, Timing time) {
-		time.start(P.ACC, M.online_comp);
+	public void runD(PreData predata, Tree OTi, byte[] Ni, byte[] Nip1_pr, Timer timer) {
+		timer.start(P.ACC, M.online_comp);
 
 		// step 0: get Li from C
-		time.start(P.ACC, M.online_read);
+		timer.start(P.ACC, M.online_read);
 		byte[] Li = new byte[0];
 		if (OTi.getTreeIndex() > 0)
 			Li = con2.read();
-		time.stop(P.ACC, M.online_read);
+		timer.stop(P.ACC, M.online_read);
 
 		// step 1
 		Bucket[] pathBuckets = OTi.getBucketsOnPath(new BigInteger(1, Li).longValue());
@@ -109,10 +109,10 @@ public class Access extends Protocol {
 		pathTuples = Arrays.copyOf(objArray, objArray.length, Tuple[].class);
 
 		// step 2
-		time.start(P.ACC, M.online_write);
+		timer.start(P.ACC, M.online_write);
 		con2.write(pathTuples);
 		con2.write(Ni);
-		time.stop(P.ACC, M.online_write);
+		timer.stop(P.ACC, M.online_write);
 
 		// step 3
 		if (OTi.getTreeIndex() > 0) {
@@ -125,34 +125,34 @@ public class Access extends Protocol {
 			}
 
 			SSCOT sscot = new SSCOT(con1, con2);
-			sscot.runD(predata, b, time);
+			sscot.runD(predata, b, timer);
 		}
 
 		// step 4
 		if (OTi.getTreeIndex() < OTi.getH() - 1) {
 			SSIOT ssiot = new SSIOT(con1, con2);
-			ssiot.runD(predata, Nip1_pr, time);
+			ssiot.runD(predata, Nip1_pr, timer);
 		}
 
-		time.stop(P.ACC, M.online_comp);
+		timer.stop(P.ACC, M.online_comp);
 	}
 
-	public OutAccess runC(Metadata md, int treeIndex, byte[] Li, Timing time) {
-		time.start(P.ACC, M.online_comp);
+	public OutAccess runC(Metadata md, int treeIndex, byte[] Li, Timer timer) {
+		timer.start(P.ACC, M.online_comp);
 
 		// step 0: send Li to E and D
-		time.start(P.ACC, M.online_write);
+		timer.start(P.ACC, M.online_write);
 		if (treeIndex > 0) {
 			con1.write(Li);
 			con2.write(Li);
 		}
-		time.stop(P.ACC, M.online_write);
+		timer.stop(P.ACC, M.online_write);
 
 		// step 2
-		time.start(P.ACC, M.online_read);
+		timer.start(P.ACC, M.online_read);
 		Tuple[] pathTuples = con2.readObject();
 		byte[] Ni = con2.read();
-		time.stop(P.ACC, M.online_read);
+		timer.stop(P.ACC, M.online_read);
 
 		// step 3
 		int j1 = 0;
@@ -161,7 +161,7 @@ public class Access extends Protocol {
 			z = pathTuples[0].getA();
 		} else {
 			SSCOT sscot = new SSCOT(con1, con2);
-			OutSSCOT je = sscot.runC(time);
+			OutSSCOT je = sscot.runC(timer);
 			j1 = je.t;
 			byte[] d = pathTuples[j1].getA();
 			z = Util.xor(je.m_t, d);
@@ -172,7 +172,7 @@ public class Access extends Protocol {
 		byte[] Lip1 = null;
 		if (treeIndex < md.getNumTrees() - 1) {
 			SSIOT ssiot = new SSIOT(con1, con2);
-			OutSSIOT jy = ssiot.runC(time);
+			OutSSIOT jy = ssiot.runC(timer);
 
 			// step 5
 			j2 = jy.t;
@@ -195,7 +195,7 @@ public class Access extends Protocol {
 
 		OutAccess outaccess = new OutAccess(Lip1, Ti, pathTuples, null, null);
 
-		time.stop(P.ACC, M.online_comp);
+		timer.stop(P.ACC, M.online_comp);
 		return outaccess;
 	}
 
@@ -209,7 +209,7 @@ public class Access extends Protocol {
 		long numInsert = md.getNumInsertRecords();
 		int addrBits = md.getAddrBits();
 
-		Timing time = new Timing();
+		Timer timer = new Timer();
 
 		sanityCheck();
 
@@ -237,7 +237,7 @@ public class Access extends Protocol {
 					if (party == Party.Eddie) {
 						Tree OTi = forest.getTree(ti);
 						int numTuples = (OTi.getD() - 1) * OTi.getW() + OTi.getStashSize();
-						preaccess.runE(predata, OTi, numTuples);
+						preaccess.runE(predata, OTi, numTuples, timer);
 
 						byte[] sE_Ni = Util.nextBytes(Ni.length, Crypto.sr);
 						byte[] sD_Ni = Util.xor(Ni, sE_Ni);
@@ -247,27 +247,27 @@ public class Access extends Protocol {
 						byte[] sD_Nip1_pr = Util.xor(Nip1_pr, sE_Nip1_pr);
 						con1.write(sD_Nip1_pr);
 
-						runE(predata, OTi, sE_Ni, sE_Nip1_pr, time);
+						runE(predata, OTi, sE_Ni, sE_Nip1_pr, timer);
 
 						if (ti == numTrees - 1)
 							con2.write(N);
 
 					} else if (party == Party.Debbie) {
 						Tree OTi = forest.getTree(ti);
-						preaccess.runD(predata);
+						preaccess.runD(predata, timer);
 
 						byte[] sD_Ni = con1.read();
 
 						byte[] sD_Nip1_pr = con1.read();
 
-						runD(predata, OTi, sD_Ni, sD_Nip1_pr, time);
+						runD(predata, OTi, sD_Ni, sD_Nip1_pr, timer);
 
 					} else if (party == Party.Charlie) {
-						preaccess.runC();
+						preaccess.runC(timer);
 
 						System.out.println("L" + ti + "=" + new BigInteger(1, Li).toString(2));
 
-						OutAccess outaccess = runC(md, ti, Li, time);
+						OutAccess outaccess = runC(md, ti, Li, timer);
 
 						Li = outaccess.C_Lip1;
 
@@ -289,6 +289,6 @@ public class Access extends Protocol {
 			}
 		}
 
-		time.print();
+		timer.print();
 	}
 }

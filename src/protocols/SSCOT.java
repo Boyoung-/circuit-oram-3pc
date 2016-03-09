@@ -8,7 +8,7 @@ import exceptions.NoSuchPartyException;
 import exceptions.SSCOTException;
 import measure.M;
 import measure.P;
-import measure.Timing;
+import measure.Timer;
 import oram.Forest;
 import oram.Metadata;
 import util.Util;
@@ -18,8 +18,8 @@ public class SSCOT extends Protocol {
 		super(con1, con2);
 	}
 
-	public void runE(PreData predata, byte[][] m, byte[][] a, Timing time) {
-		time.start(P.COT, M.online_comp);
+	public void runE(PreData predata, byte[][] m, byte[][] a, Timer timer) {
+		timer.start(P.COT, M.online_comp);
 
 		// step 1
 		int n = m.length;
@@ -41,16 +41,16 @@ public class SSCOT extends Protocol {
 			v[i] = F_kprime.compute(x[i]);
 		}
 
-		time.start(P.COT, M.online_write);
+		timer.start(P.COT, M.online_write);
 		con2.write(e);
 		con2.write(v);
-		time.stop(P.COT, M.online_write);
+		timer.stop(P.COT, M.online_write);
 
-		time.stop(P.COT, M.online_comp);
+		timer.stop(P.COT, M.online_comp);
 	}
 
-	public void runD(PreData predata, byte[][] b, Timing time) {
-		time.start(P.COT, M.online_comp);
+	public void runD(PreData predata, byte[][] b, Timer timer) {
+		timer.start(P.COT, M.online_comp);
 
 		// step 2
 		int n = b.length;
@@ -70,26 +70,26 @@ public class SSCOT extends Protocol {
 			w[i] = F_kprime.compute(y[i]);
 		}
 
-		time.start(P.COT, M.online_write);
+		timer.start(P.COT, M.online_write);
 		con2.write(p);
 		con2.write(w);
-		time.stop(P.COT, M.online_write);
+		timer.stop(P.COT, M.online_write);
 
-		time.stop(P.COT, M.online_comp);
+		timer.stop(P.COT, M.online_comp);
 	}
 
-	public OutSSCOT runC(Timing time) {
-		time.start(P.COT, M.online_comp);
+	public OutSSCOT runC(Timer timer) {
+		timer.start(P.COT, M.online_comp);
 
 		// step 1
-		time.start(P.COT, M.online_read);
+		timer.start(P.COT, M.online_read);
 		byte[][] e = con1.readObject();
 		byte[][] v = con1.readObject();
 
 		// step 2
 		byte[][] p = con2.readObject();
 		byte[][] w = con2.readObject();
-		time.stop(P.COT, M.online_read);
+		timer.stop(P.COT, M.online_read);
 
 		// step 3
 		int n = e.length;
@@ -109,13 +109,13 @@ public class SSCOT extends Protocol {
 		if (invariant != 1)
 			throw new SSCOTException("Invariant error: " + invariant);
 
-		time.stop(P.COT, M.online_comp);
+		timer.stop(P.COT, M.online_comp);
 		return output;
 	}
 
 	@Override
 	public void run(Party party, Metadata md, Forest forest) {
-		Timing time = new Timing();
+		Timer timer = new Timer();
 
 		for (int j = 0; j < 100; j++) {
 			int n = 100;
@@ -140,19 +140,19 @@ public class SSCOT extends Protocol {
 				con1.write(b);
 				con2.write(m);
 				con2.write(index);
-				presscot.runE(predata, n);
-				runE(predata, m, a, time);
+				presscot.runE(predata, n, timer);
+				runE(predata, m, a, timer);
 
 			} else if (party == Party.Debbie) {
 				b = con1.readObject();
-				presscot.runD(predata);
-				runD(predata, b, time);
+				presscot.runD(predata, timer);
+				runD(predata, b, timer);
 
 			} else if (party == Party.Charlie) {
 				m = con1.readObject();
 				index = con1.readObject();
 				presscot.runC();
-				OutSSCOT output = runC(time);
+				OutSSCOT output = runC(timer);
 				if (output.t == index && Util.equal(output.m_t, m[index]))
 					System.out.println("SSCOT test passed");
 				else

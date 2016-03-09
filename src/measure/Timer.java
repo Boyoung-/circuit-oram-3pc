@@ -5,11 +5,11 @@ import java.util.Stack;
 import exceptions.TimingException;
 import util.StopWatch;
 
-public class Timing {
+public class Timer {
 	StopWatch[][] watches;
 	Stack<StopWatch> stack;
 
-	public Timing() {
+	public Timer() {
 		watches = new StopWatch[P.size][M.size];
 		for (int i = 0; i < P.size; i++)
 			for (int j = 0; j < M.size; j++)
