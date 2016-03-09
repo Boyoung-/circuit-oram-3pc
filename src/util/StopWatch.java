@@ -7,6 +7,7 @@ import exceptions.StopWatchException;
 
 public class StopWatch {
 
+	private String task;
 	private long startWC;
 	private long startCPU;
 	public long elapsedWC;
@@ -14,6 +15,16 @@ public class StopWatch {
 	private boolean isOn;
 
 	public StopWatch() {
+		task = "";
+		startWC = 0;
+		startCPU = 0;
+		elapsedWC = 0;
+		elapsedCPU = 0;
+		isOn = false;
+	}
+
+	public StopWatch(String t) {
+		task = t;
 		startWC = 0;
 		startCPU = 0;
 		elapsedWC = 0;
@@ -70,8 +81,11 @@ public class StopWatch {
 	}
 
 	public String toMS() {
-		String out = "WallClock(ms): " + elapsedWC / 1000000;
-		out += "\nCPUClock(ms): " + elapsedCPU / 1000000;
-		return out;
+		String out = " WallClock(ms): " + elapsedWC / 1000000;
+		out += "\n CPUClock(ms): " + elapsedCPU / 1000000;
+		if (task.length() == 0)
+			return out;
+		else
+			return task + "\n" + out;
 	}
 }

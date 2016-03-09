@@ -9,43 +9,32 @@ import communication.Communication;
 import crypto.Crypto;
 import exceptions.AccessException;
 import exceptions.NoSuchPartyException;
+import measure.M;
+import measure.P;
+import measure.Timing;
 import oram.Bucket;
 import oram.Forest;
 import oram.Metadata;
 import oram.Tree;
 import oram.Tuple;
-import util.StopWatch;
 import util.Util;
 
 public class Access extends Protocol {
 
-	private StopWatch step0;
-	private StopWatch step1;
-	private StopWatch step2;
-	private StopWatch step3;
-	private StopWatch step4;
-	private StopWatch step5;
-
 	public Access(Communication con1, Communication con2) {
 		super(con1, con2);
-
-		step0 = new StopWatch();
-		step1 = new StopWatch();
-		step2 = new StopWatch();
-		step3 = new StopWatch();
-		step4 = new StopWatch();
-		step5 = new StopWatch();
 	}
 
-	public OutAccess runE(PreData predata, Tree OTi, byte[] Ni, byte[] Nip1_pr) {
-		step0.start();
+	public OutAccess runE(PreData predata, Tree OTi, byte[] Ni, byte[] Nip1_pr, Timing time) {
+		time.start(P.ACC, M.online_comp);
+
 		// step 0: get Li from C
+		time.start(P.ACC, M.online_read);
 		byte[] Li = new byte[0];
 		if (OTi.getTreeIndex() > 0)
 			Li = con2.read();
-		step0.stop();
+		time.stop(P.ACC, M.online_read);
 
-		step1.start();
 		// step 1
 		Bucket[] pathBuckets = OTi.getBucketsOnPath(new BigInteger(1, Li).longValue());
 		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
@@ -53,9 +42,7 @@ public class Access extends Protocol {
 			pathTuples[i].setXor(predata.access_p[i]);
 		Object[] objArray = Util.permute(pathTuples, predata.access_sigma);
 		pathTuples = Arrays.copyOf(objArray, objArray.length, Tuple[].class);
-		step1.stop();
 
-		step3.start();
 		// step 3
 		byte[] y = null;
 		if (OTi.getTreeIndex() == 0)
@@ -76,11 +63,9 @@ public class Access extends Protocol {
 			}
 
 			SSCOT sscot = new SSCOT(con1, con2);
-			sscot.runE(predata, m, a);
+			sscot.runE(predata, m, a, time);
 		}
-		step3.stop();
 
-		step4.start();
 		// step 4
 		if (OTi.getTreeIndex() < OTi.getH() - 1) {
 			int ySegBytes = y.length / OTi.getTwoTauPow();
@@ -89,32 +74,32 @@ public class Access extends Protocol {
 				y_array[i] = Arrays.copyOfRange(y, i * ySegBytes, (i + 1) * ySegBytes);
 
 			SSIOT ssiot = new SSIOT(con1, con2);
-			ssiot.runE(predata, y_array, Nip1_pr);
+			ssiot.runE(predata, y_array, Nip1_pr, time);
 		}
-		step4.stop();
 
-		step5.start();
 		// step 5
 		Tuple Ti = null;
 		if (OTi.getTreeIndex() == 0)
 			Ti = pathTuples[0];
 		else
 			Ti = new Tuple(new byte[0], Ni, Li, y);
-		step5.stop();
 
 		OutAccess outaccess = new OutAccess(null, null, null, Ti, pathTuples);
+
+		time.stop(P.ACC, M.online_comp);
 		return outaccess;
 	}
 
-	public void runD(PreData predata, Tree OTi, byte[] Ni, byte[] Nip1_pr) {
-		step0.start();
+	public void runD(PreData predata, Tree OTi, byte[] Ni, byte[] Nip1_pr, Timing time) {
+		time.start(P.ACC, M.online_comp);
+
 		// step 0: get Li from C
+		time.start(P.ACC, M.online_read);
 		byte[] Li = new byte[0];
 		if (OTi.getTreeIndex() > 0)
 			Li = con2.read();
-		step0.stop();
+		time.stop(P.ACC, M.online_read);
 
-		step1.start();
 		// step 1
 		Bucket[] pathBuckets = OTi.getBucketsOnPath(new BigInteger(1, Li).longValue());
 		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
@@ -122,15 +107,13 @@ public class Access extends Protocol {
 			pathTuples[i].setXor(predata.access_p[i]);
 		Object[] objArray = Util.permute(pathTuples, predata.access_sigma);
 		pathTuples = Arrays.copyOf(objArray, objArray.length, Tuple[].class);
-		step1.stop();
 
-		step2.start();
 		// step 2
+		time.start(P.ACC, M.online_write);
 		con2.write(pathTuples);
 		con2.write(Ni);
-		step2.stop();
+		time.stop(P.ACC, M.online_write);
 
-		step3.start();
 		// step 3
 		if (OTi.getTreeIndex() > 0) {
 			byte[][] b = new byte[pathTuples.length][];
@@ -142,35 +125,35 @@ public class Access extends Protocol {
 			}
 
 			SSCOT sscot = new SSCOT(con1, con2);
-			sscot.runD(predata, b);
+			sscot.runD(predata, b, time);
 		}
-		step3.stop();
 
-		step4.start();
 		// step 4
 		if (OTi.getTreeIndex() < OTi.getH() - 1) {
 			SSIOT ssiot = new SSIOT(con1, con2);
-			ssiot.runD(predata, Nip1_pr);
+			ssiot.runD(predata, Nip1_pr, time);
 		}
-		step4.stop();
+
+		time.stop(P.ACC, M.online_comp);
 	}
 
-	public OutAccess runC(Metadata md, int treeIndex, byte[] Li) {
-		step0.start();
+	public OutAccess runC(Metadata md, int treeIndex, byte[] Li, Timing time) {
+		time.start(P.ACC, M.online_comp);
+
 		// step 0: send Li to E and D
+		time.start(P.ACC, M.online_write);
 		if (treeIndex > 0) {
 			con1.write(Li);
 			con2.write(Li);
 		}
-		step0.stop();
+		time.stop(P.ACC, M.online_write);
 
-		step2.start();
 		// step 2
+		time.start(P.ACC, M.online_read);
 		Tuple[] pathTuples = con2.readObject();
 		byte[] Ni = con2.read();
-		step2.stop();
+		time.stop(P.ACC, M.online_read);
 
-		step3.start();
 		// step 3
 		int j1 = 0;
 		byte[] z = null;
@@ -178,20 +161,18 @@ public class Access extends Protocol {
 			z = pathTuples[0].getA();
 		} else {
 			SSCOT sscot = new SSCOT(con1, con2);
-			OutSSCOT je = sscot.runC();
+			OutSSCOT je = sscot.runC(time);
 			j1 = je.t;
 			byte[] d = pathTuples[j1].getA();
 			z = Util.xor(je.m_t, d);
 		}
-		step3.stop();
 
-		step4.start();
 		// step 4
 		int j2 = 0;
 		byte[] Lip1 = null;
 		if (treeIndex < md.getNumTrees() - 1) {
 			SSIOT ssiot = new SSIOT(con1, con2);
-			OutSSIOT jy = ssiot.runC();
+			OutSSIOT jy = ssiot.runC(time);
 
 			// step 5
 			j2 = jy.t;
@@ -199,9 +180,7 @@ public class Access extends Protocol {
 			byte[] z_j2 = Arrays.copyOfRange(z, j2 * lSegBytes, (j2 + 1) * lSegBytes);
 			Lip1 = Util.xor(jy.m_t, z_j2);
 		}
-		step4.stop();
 
-		step5.start();
 		Tuple Ti = null;
 		if (treeIndex == 0) {
 			Ti = pathTuples[0];
@@ -213,9 +192,10 @@ public class Access extends Protocol {
 			Crypto.sr.nextBytes(pathTuples[j1].getL());
 			Crypto.sr.nextBytes(pathTuples[j1].getA());
 		}
-		step5.stop();
 
 		OutAccess outaccess = new OutAccess(Lip1, Ti, pathTuples, null, null);
+
+		time.stop(P.ACC, M.online_comp);
 		return outaccess;
 	}
 
@@ -229,7 +209,7 @@ public class Access extends Protocol {
 		long numInsert = md.getNumInsertRecords();
 		int addrBits = md.getAddrBits();
 
-		StopWatch stopwatch = new StopWatch();
+		Timing time = new Timing();
 
 		sanityCheck();
 
@@ -267,9 +247,7 @@ public class Access extends Protocol {
 						byte[] sD_Nip1_pr = Util.xor(Nip1_pr, sE_Nip1_pr);
 						con1.write(sD_Nip1_pr);
 
-						stopwatch.start();
-						runE(predata, OTi, sE_Ni, sE_Nip1_pr);
-						stopwatch.stop();
+						runE(predata, OTi, sE_Ni, sE_Nip1_pr, time);
 
 						if (ti == numTrees - 1)
 							con2.write(N);
@@ -282,18 +260,14 @@ public class Access extends Protocol {
 
 						byte[] sD_Nip1_pr = con1.read();
 
-						stopwatch.start();
-						runD(predata, OTi, sD_Ni, sD_Nip1_pr);
-						stopwatch.stop();
+						runD(predata, OTi, sD_Ni, sD_Nip1_pr, time);
 
 					} else if (party == Party.Charlie) {
 						preaccess.runC();
 
 						System.out.println("L" + ti + "=" + new BigInteger(1, Li).toString(2));
 
-						stopwatch.start();
-						OutAccess outaccess = runC(md, ti, Li);
-						stopwatch.stop();
+						OutAccess outaccess = runC(md, ti, Li, time);
 
 						Li = outaccess.C_Lip1;
 
@@ -315,13 +289,6 @@ public class Access extends Protocol {
 			}
 		}
 
-		System.out.println(stopwatch.toMS());
-
-		System.out.println("step0\n" + step0.toMS());
-		System.out.println("step1\n" + step1.toMS());
-		System.out.println("step2\n" + step2.toMS());
-		System.out.println("step3\n" + step3.toMS());
-		System.out.println("step4\n" + step4.toMS());
-		System.out.println("step5\n" + step5.toMS());
+		time.print();
 	}
 }
