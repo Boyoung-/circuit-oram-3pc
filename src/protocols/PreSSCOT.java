@@ -31,15 +31,29 @@ public class PreSSCOT extends Protocol {
 		con1.write(predata.sscot_r);
 		timer.stop(P.COT, M.offline_write);
 
+		predata.sscot_F_k = new PRF(Crypto.secParam);
+		predata.sscot_F_k.init(predata.sscot_k);
+		predata.sscot_F_kprime = new PRF(Crypto.secParam);
+		predata.sscot_F_kprime.init(predata.sscot_kprime);
+
 		timer.stop(P.COT, M.offline_comp);
 	}
 
 	public void runD(PreData predata, Timer timer) {
+		timer.start(P.COT, M.offline_comp);
+
 		timer.start(P.COT, M.offline_read);
 		predata.sscot_k = con1.read();
 		predata.sscot_kprime = con1.read();
 		predata.sscot_r = con1.readObject();
 		timer.stop(P.COT, M.offline_read);
+
+		predata.sscot_F_k = new PRF(Crypto.secParam);
+		predata.sscot_F_k.init(predata.sscot_k);
+		predata.sscot_F_kprime = new PRF(Crypto.secParam);
+		predata.sscot_F_kprime.init(predata.sscot_kprime);
+
+		timer.stop(P.COT, M.offline_comp);
 	}
 
 	public void runC() {

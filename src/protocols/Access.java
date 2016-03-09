@@ -17,6 +17,7 @@ import oram.Forest;
 import oram.Metadata;
 import oram.Tree;
 import oram.Tuple;
+import util.StopWatch;
 import util.Util;
 
 public class Access extends Protocol {
@@ -210,6 +211,7 @@ public class Access extends Protocol {
 		int addrBits = md.getAddrBits();
 
 		Timer timer = new Timer();
+		StopWatch sw = new StopWatch();
 
 		sanityCheck();
 
@@ -247,7 +249,9 @@ public class Access extends Protocol {
 						byte[] sD_Nip1_pr = Util.xor(Nip1_pr, sE_Nip1_pr);
 						con1.write(sD_Nip1_pr);
 
+						sw.start();
 						runE(predata, OTi, sE_Ni, sE_Nip1_pr, timer);
+						sw.stop();
 
 						if (ti == numTrees - 1)
 							con2.write(N);
@@ -260,14 +264,18 @@ public class Access extends Protocol {
 
 						byte[] sD_Nip1_pr = con1.read();
 
+						sw.start();
 						runD(predata, OTi, sD_Ni, sD_Nip1_pr, timer);
+						sw.stop();
 
 					} else if (party == Party.Charlie) {
 						preaccess.runC(timer);
 
 						System.out.println("L" + ti + "=" + new BigInteger(1, Li).toString(2));
 
+						sw.start();
 						OutAccess outaccess = runC(md, ti, Li, timer);
+						sw.stop();
 
 						Li = outaccess.C_Lip1;
 
@@ -290,5 +298,8 @@ public class Access extends Protocol {
 		}
 
 		timer.print();
+
+		System.out.println();
+		System.out.println(sw.toMS());
 	}
 }

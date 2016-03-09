@@ -2,7 +2,6 @@ package protocols;
 
 import communication.Communication;
 import crypto.Crypto;
-import crypto.PRF;
 import crypto.PRG;
 import exceptions.NoSuchPartyException;
 import exceptions.SSIOTException;
@@ -27,10 +26,6 @@ public class SSIOT extends Protocol {
 		byte[][] x = new byte[n][];
 		byte[][] e = new byte[n][];
 		byte[][] v = new byte[n][];
-		PRF F_k = new PRF(Crypto.secParam);
-		F_k.init(predata.ssiot_k);
-		PRF F_kprime = new PRF(Crypto.secParam);
-		F_kprime.init(predata.ssiot_kprime);
 		PRG G = new PRG(l);
 
 		for (int i = 0; i < n; i++) {
@@ -39,8 +34,8 @@ public class SSIOT extends Protocol {
 			for (int j = 0; j < Nip1_pr.length; j++)
 				x[i][x[i].length - 1 - j] ^= Nip1_pr[Nip1_pr.length - 1 - j] ^ i_bytes[i_bytes.length - 1 - j];
 
-			e[i] = Util.xor(G.compute(F_k.compute(x[i])), y[i]);
-			v[i] = F_kprime.compute(x[i]);
+			e[i] = Util.xor(G.compute(predata.ssiot_F_k.compute(x[i])), y[i]);
+			v[i] = predata.ssiot_F_kprime.compute(x[i]);
 		}
 
 		timer.start(P.IOT, M.online_write);
@@ -55,16 +50,11 @@ public class SSIOT extends Protocol {
 		timer.start(P.IOT, M.online_comp);
 
 		// step 2
-		PRF F_k = new PRF(Crypto.secParam);
-		F_k.init(predata.ssiot_k);
-		PRF F_kprime = new PRF(Crypto.secParam);
-		F_kprime.init(predata.ssiot_kprime);
-
 		byte[] y = predata.ssiot_r;
 		for (int i = 0; i < Nip1_pr.length; i++)
 			y[y.length - 1 - i] ^= Nip1_pr[Nip1_pr.length - 1 - i];
-		byte[] p = F_k.compute(y);
-		byte[] w = F_kprime.compute(y);
+		byte[] p = predata.ssiot_F_k.compute(y);
+		byte[] w = predata.ssiot_F_kprime.compute(y);
 
 		timer.start(P.IOT, M.online_write);
 		con2.write(p);

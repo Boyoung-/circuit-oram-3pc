@@ -2,7 +2,6 @@ package protocols;
 
 import communication.Communication;
 import crypto.Crypto;
-import crypto.PRF;
 import crypto.PRG;
 import exceptions.NoSuchPartyException;
 import exceptions.SSCOTException;
@@ -27,18 +26,14 @@ public class SSCOT extends Protocol {
 		byte[][] x = predata.sscot_r;
 		byte[][] e = new byte[n][];
 		byte[][] v = new byte[n][];
-		PRF F_k = new PRF(Crypto.secParam);
-		F_k.init(predata.sscot_k);
-		PRF F_kprime = new PRF(Crypto.secParam);
-		F_kprime.init(predata.sscot_kprime);
 		PRG G = new PRG(l);
 
 		for (int i = 0; i < n; i++) {
 			for (int j = 0; j < a[i].length; j++)
 				x[i][j] = (byte) (predata.sscot_r[i][j] ^ a[i][j]);
 
-			e[i] = Util.xor(G.compute(F_k.compute(x[i])), m[i]);
-			v[i] = F_kprime.compute(x[i]);
+			e[i] = Util.xor(G.compute(predata.sscot_F_k.compute(x[i])), m[i]);
+			v[i] = predata.sscot_F_kprime.compute(x[i]);
 		}
 
 		timer.start(P.COT, M.online_write);
@@ -57,17 +52,13 @@ public class SSCOT extends Protocol {
 		byte[][] y = predata.sscot_r;
 		byte[][] p = new byte[n][];
 		byte[][] w = new byte[n][];
-		PRF F_k = new PRF(Crypto.secParam);
-		F_k.init(predata.sscot_k);
-		PRF F_kprime = new PRF(Crypto.secParam);
-		F_kprime.init(predata.sscot_kprime);
 
 		for (int i = 0; i < n; i++) {
 			for (int j = 0; j < b[i].length; j++)
 				y[i][j] = (byte) (predata.sscot_r[i][j] ^ b[i][j]);
 
-			p[i] = F_k.compute(y[i]);
-			w[i] = F_kprime.compute(y[i]);
+			p[i] = predata.sscot_F_k.compute(y[i]);
+			w[i] = predata.sscot_F_kprime.compute(y[i]);
 		}
 
 		timer.start(P.COT, M.online_write);

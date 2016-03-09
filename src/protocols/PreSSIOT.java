@@ -28,15 +28,29 @@ public class PreSSIOT extends Protocol {
 		con1.write(predata.ssiot_r);
 		timer.stop(P.IOT, M.offline_write);
 
+		predata.ssiot_F_k = new PRF(Crypto.secParam);
+		predata.ssiot_F_k.init(predata.ssiot_k);
+		predata.ssiot_F_kprime = new PRF(Crypto.secParam);
+		predata.ssiot_F_kprime.init(predata.ssiot_kprime);
+
 		timer.stop(P.IOT, M.offline_comp);
 	}
 
 	public void runD(PreData predata, Timer timer) {
+		timer.start(P.IOT, M.offline_comp);
+
 		timer.start(P.IOT, M.offline_read);
 		predata.ssiot_k = con1.read();
 		predata.ssiot_kprime = con1.read();
 		predata.ssiot_r = con1.read();
 		timer.stop(P.IOT, M.offline_read);
+
+		predata.ssiot_F_k = new PRF(Crypto.secParam);
+		predata.ssiot_F_k.init(predata.ssiot_k);
+		predata.ssiot_F_kprime = new PRF(Crypto.secParam);
+		predata.ssiot_F_kprime.init(predata.ssiot_kprime);
+
+		timer.stop(P.IOT, M.offline_comp);
 	}
 
 	public void runC() {
