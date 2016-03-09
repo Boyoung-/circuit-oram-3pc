@@ -1,7 +1,5 @@
 package protocols;
 
-import java.util.Arrays;
-
 import communication.Communication;
 import crypto.Crypto;
 import oram.Forest;
@@ -44,10 +42,8 @@ public class PreAccess extends Protocol {
 		pressiot.runD(predata);
 
 		// Access
-		predata.access_sigma = con1.readIntArray();
-		//Object[] objArray = con1.readObjectArray();
-		//predata.access_p = Arrays.copyOf(objArray, objArray.length, Tuple[].class);
-		predata.access_p = con1.readTupleArray();
+		predata.access_sigma = con1.readObject();
+		predata.access_p = con1.readObject();
 	}
 
 	public void runC() {

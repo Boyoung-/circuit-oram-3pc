@@ -5,20 +5,17 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StreamCorruptedException;
-import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.lang3.SerializationUtils;
 
-import oram.Tuple;
 import util.Util;
 
 /**
@@ -332,43 +329,8 @@ public class Communication {
 		write(out);
 	}
 
-	public void write(int out) {
-		write(BigInteger.valueOf(out).toByteArray());
-	}
-
-	public void write(byte[][] out) {
-		write(out.length);
-		for (int i = 0; i < out.length; i++)
-			write(out[i]);
-	}
-
-	public void write(int[] out) {
-		write(out.length);
-		for (int i = 0; i < out.length; i++)
-			write(out[i]);
-	}
-
-	private <T> void write(T out) {
+	public <T> void write(T out) {
 		write(SerializationUtils.serialize((Serializable) out));
-	}
-	
-	/*
-	public <T> void write(T[] out) {
-		write(out.length);
-		for (int i = 0; i < out.length; i++)
-			write(out[i]);
-	}
-	*/
-	
-	public void write(Tuple[] tuples) {
-		write(tuples.length);
-		for (int i=0; i<tuples.length; i++) {
-			write(tuples[i].getF().length);
-			write(tuples[i].getN().length);
-			write(tuples[i].getL().length);
-			write(tuples[i].getA().length);
-			write(tuples[i].toByteArray());
-		}
 	}
 
 	public static final Charset defaultCharset = Charset.forName("ASCII");
@@ -451,58 +413,9 @@ public class Communication {
 		return total;
 	}
 
-	public int readInt() {
-		return new BigInteger(read()).intValue();
-	}
-
-	public byte[][] readDoubleByteArray() {
-		int len = readInt();
-		byte[][] data = new byte[len][];
-		for (int i = 0; i < len; i++)
-			data[i] = read();
-		return data;
-	}
-
-	public int[] readIntArray() {
-		int len = readInt();
-		int[] data = new int[len];
-		for (int i = 0; i < len; i++)
-			data[i] = readInt();
-		return data;
-	}
-
-	private <T> T readObject() {
+	public <T> T readObject() {
 		T object = SerializationUtils.deserialize(read());
 		return object;
-	}
-
-	/*
-	public <T> T[] readObjectArray() {
-		int len = readInt();
-		@SuppressWarnings("unchecked")
-		T[] data = (T[]) new Object[len];
-		for (int i = 0; i < len; i++)
-			data[i] = readObject();
-		return data;
-	}
-	*/
-	
-	public Tuple[] readTupleArray() {
-		int len = readInt();
-		Tuple[] tuples = new Tuple[len];
-		for (int i=0; i<len; i++) {
-			int f = readInt();
-			int n = readInt();
-			int l = readInt();
-			int a = readInt();
-			tuples[i] = new Tuple(new byte[f], new byte[n], new byte[l], new byte[a]);
-			byte[] data = read();
-			tuples[i].setF(Arrays.copyOfRange(data, 0, f));
-			tuples[i].setN(Arrays.copyOfRange(data, f, f+n));
-			tuples[i].setL(Arrays.copyOfRange(data, f+n, f+n+l));
-			tuples[i].setA(Arrays.copyOfRange(data, f+n+l, data.length));
-		}
-		return tuples;
 	}
 
 	/**

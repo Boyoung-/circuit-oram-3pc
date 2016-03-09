@@ -18,7 +18,7 @@ import util.StopWatch;
 import util.Util;
 
 public class Access extends Protocol {
-	
+
 	private StopWatch step0;
 	private StopWatch step1;
 	private StopWatch step2;
@@ -28,7 +28,7 @@ public class Access extends Protocol {
 
 	public Access(Communication con1, Communication con2) {
 		super(con1, con2);
-		
+
 		step0 = new StopWatch();
 		step1 = new StopWatch();
 		step2 = new StopWatch();
@@ -124,17 +124,10 @@ public class Access extends Protocol {
 		pathTuples = Arrays.copyOf(objArray, objArray.length, Tuple[].class);
 		step1.stop();
 
-		byte[] test = Util.nextBytes(pathTuples.length*pathTuples[0].getNumBytes(), Crypto.sr);
-		
 		step2.start();
 		// step 2
-		//con2.write(pathTuples);
-		con2.write(pathTuples.length);
-		for (int i=0; i<pathTuples.length; i++)
-			con2.write(pathTuples[i].toByteArray());
+		con2.write(pathTuples);
 		con2.write(Ni);
-		
-		//con2.write(test);
 		step2.stop();
 
 		step3.start();
@@ -173,26 +166,8 @@ public class Access extends Protocol {
 
 		step2.start();
 		// step 2
-		//Object[] objArray = con2.readObjectArray();
-		//Tuple[] pathTuples = Arrays.copyOf(objArray, objArray.length, Tuple[].class);
-		//Tuple[] pathTuples = con2.readTupleArray();
-		int numTuples = con2.readInt();
-		Tuple[] pathTuples = new Tuple[numTuples];
-		for (int i=0; i<numTuples; i++) {
-			byte[] data = con2.read();
-			int f = treeIndex==0?0:1;
-			int n = md.getNBytesOfTree(treeIndex);
-			int l = md.getLBytesOfTree(treeIndex);
-			int a = md.getABytesOfTree(treeIndex);
-			pathTuples[i] = new Tuple(new byte[f], new byte[n], new byte[l], new byte[a]);
-			pathTuples[i].setF(Arrays.copyOfRange(data, 0, f));
-			pathTuples[i].setN(Arrays.copyOfRange(data, f, f+n));
-			pathTuples[i].setL(Arrays.copyOfRange(data, f+n, f+n+l));
-			pathTuples[i].setA(Arrays.copyOfRange(data, f+n+l, data.length));
-		}
+		Tuple[] pathTuples = con2.readObject();
 		byte[] Ni = con2.read();
-		
-		//byte[] test = con2.read();
 		step2.stop();
 
 		step3.start();
@@ -209,7 +184,7 @@ public class Access extends Protocol {
 			z = Util.xor(je.m_t, d);
 		}
 		step3.stop();
-		
+
 		step4.start();
 		// step 4
 		int j2 = 0;
@@ -297,7 +272,7 @@ public class Access extends Protocol {
 						stopwatch.stop();
 
 						if (ti == numTrees - 1)
-							con2.write(BigInteger.valueOf(N).toByteArray());
+							con2.write(N);
 
 					} else if (party == Party.Debbie) {
 						Tree OTi = forest.getTree(ti);
@@ -323,7 +298,7 @@ public class Access extends Protocol {
 						Li = outaccess.C_Lip1;
 
 						if (ti == numTrees - 1) {
-							N = new BigInteger(con1.read()).longValue();
+							N = con1.readObject();
 							long data = new BigInteger(1, outaccess.C_Ti.getA()).longValue();
 							if (N == data) {
 								System.out.println("Access passed");
@@ -341,7 +316,7 @@ public class Access extends Protocol {
 		}
 
 		System.out.println(stopwatch.toMS());
-		
+
 		System.out.println("step0\n" + step0.toMS());
 		System.out.println("step1\n" + step1.toMS());
 		System.out.println("step2\n" + step2.toMS());

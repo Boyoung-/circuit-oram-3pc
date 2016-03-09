@@ -12,7 +12,7 @@ public class TestStopWatch {
 		}
 		sw.stop();
 		System.out.println(sw.toMS());
-		
+
 		sw.start();
 		try {
 			Thread.sleep(1000);

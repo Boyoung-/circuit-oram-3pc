@@ -65,12 +65,12 @@ public class SSCOT extends Protocol {
 
 	public OutSSCOT runC() {
 		// step 1
-		byte[][] e = con1.readDoubleByteArray();
-		byte[][] v = con1.readDoubleByteArray();
+		byte[][] e = con1.readObject();
+		byte[][] v = con1.readObject();
 
 		// step 2
-		byte[][] p = con2.readDoubleByteArray();
-		byte[][] w = con2.readDoubleByteArray();
+		byte[][] p = con2.readObject();
+		byte[][] w = con2.readObject();
 
 		// step 3
 		int n = e.length;
@@ -121,13 +121,13 @@ public class SSCOT extends Protocol {
 				runE(predata, m, a);
 
 			} else if (party == Party.Debbie) {
-				b = con1.readDoubleByteArray();
+				b = con1.readObject();
 				presscot.runD(predata);
 				runD(predata, b);
 
 			} else if (party == Party.Charlie) {
-				m = con1.readDoubleByteArray();
-				index = con1.readInt();
+				m = con1.readObject();
+				index = con1.readObject();
 				presscot.runC();
 				OutSSCOT output = runC();
 				if (output.t == index && Util.equal(output.m_t, m[index]))

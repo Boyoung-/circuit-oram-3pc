@@ -61,8 +61,8 @@ public class SSIOT extends Protocol {
 
 	public OutSSIOT runC() {
 		// step 1
-		byte[][] e = con1.readDoubleByteArray();
-		byte[][] v = con1.readDoubleByteArray();
+		byte[][] e = con1.readObject();
+		byte[][] v = con1.readObject();
 
 		// step 2
 		byte[] p = con2.read();
@@ -118,8 +118,8 @@ public class SSIOT extends Protocol {
 				runD(predata, sD_Nip1_pr);
 
 			} else if (party == Party.Charlie) {
-				y = con1.readDoubleByteArray();
-				index = con1.readInt();
+				y = con1.readObject();
+				index = con1.readObject();
 				pressiot.runC();
 				OutSSIOT output = runC();
 				if (output.t == index && Util.equal(output.m_t, y[index]))

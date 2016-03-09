@@ -27,7 +27,7 @@ public class PreSSCOT extends Protocol {
 	public void runD(PreData predata) {
 		predata.sscot_k = con1.read();
 		predata.sscot_kprime = con1.read();
-		predata.sscot_r = con1.readDoubleByteArray();
+		predata.sscot_r = con1.readObject();
 	}
 
 	public void runC() {
