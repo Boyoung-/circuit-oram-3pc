@@ -124,10 +124,17 @@ public class Access extends Protocol {
 		pathTuples = Arrays.copyOf(objArray, objArray.length, Tuple[].class);
 		step1.stop();
 
+		byte[] test = Util.nextBytes(pathTuples.length*pathTuples[0].getNumBytes(), Crypto.sr);
+		
 		step2.start();
 		// step 2
-		con2.write(pathTuples);
+		//con2.write(pathTuples);
+		con2.write(pathTuples.length);
+		for (int i=0; i<pathTuples.length; i++)
+			con2.write(pathTuples[i].toByteArray());
 		con2.write(Ni);
+		
+		//con2.write(test);
 		step2.stop();
 
 		step3.start();
@@ -168,8 +175,24 @@ public class Access extends Protocol {
 		// step 2
 		//Object[] objArray = con2.readObjectArray();
 		//Tuple[] pathTuples = Arrays.copyOf(objArray, objArray.length, Tuple[].class);
-		Tuple[] pathTuples = con2.readTupleArray();
+		//Tuple[] pathTuples = con2.readTupleArray();
+		int numTuples = con2.readInt();
+		Tuple[] pathTuples = new Tuple[numTuples];
+		for (int i=0; i<numTuples; i++) {
+			byte[] data = con2.read();
+			int f = treeIndex==0?0:1;
+			int n = md.getNBytesOfTree(treeIndex);
+			int l = md.getLBytesOfTree(treeIndex);
+			int a = md.getABytesOfTree(treeIndex);
+			pathTuples[i] = new Tuple(new byte[f], new byte[n], new byte[l], new byte[a]);
+			pathTuples[i].setF(Arrays.copyOfRange(data, 0, f));
+			pathTuples[i].setN(Arrays.copyOfRange(data, f, f+n));
+			pathTuples[i].setL(Arrays.copyOfRange(data, f+n, f+n+l));
+			pathTuples[i].setA(Arrays.copyOfRange(data, f+n+l, data.length));
+		}
 		byte[] Ni = con2.read();
+		
+		//byte[] test = con2.read();
 		step2.stop();
 
 		step3.start();

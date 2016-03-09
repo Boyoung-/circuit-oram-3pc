@@ -12,6 +12,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -362,10 +363,11 @@ public class Communication {
 	public void write(Tuple[] tuples) {
 		write(tuples.length);
 		for (int i=0; i<tuples.length; i++) {
-			write(tuples[i].getF());
-			write(tuples[i].getN());
-			write(tuples[i].getL());
-			write(tuples[i].getA());
+			write(tuples[i].getF().length);
+			write(tuples[i].getN().length);
+			write(tuples[i].getL().length);
+			write(tuples[i].getA().length);
+			write(tuples[i].toByteArray());
 		}
 	}
 
@@ -488,8 +490,18 @@ public class Communication {
 	public Tuple[] readTupleArray() {
 		int len = readInt();
 		Tuple[] tuples = new Tuple[len];
-		for (int i=0; i<len; i++)
-			tuples[i] = new Tuple(read(), read(), read(), read());
+		for (int i=0; i<len; i++) {
+			int f = readInt();
+			int n = readInt();
+			int l = readInt();
+			int a = readInt();
+			tuples[i] = new Tuple(new byte[f], new byte[n], new byte[l], new byte[a]);
+			byte[] data = read();
+			tuples[i].setF(Arrays.copyOfRange(data, 0, f));
+			tuples[i].setN(Arrays.copyOfRange(data, f, f+n));
+			tuples[i].setL(Arrays.copyOfRange(data, f+n, f+n+l));
+			tuples[i].setA(Arrays.copyOfRange(data, f+n+l, data.length));
+		}
 		return tuples;
 	}
 

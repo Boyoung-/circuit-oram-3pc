@@ -4,8 +4,10 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import crypto.Crypto;
 import oram.Forest;
 import oram.Metadata;
+import util.StopWatch;
 import util.Util;
 
 public class HelloWorld {
@@ -33,9 +35,25 @@ public class HelloWorld {
 		 * byte aa = 1; aa ^= 1; System.out.println(aa);
 		 */
 
-		Metadata md = new Metadata();
+		/*Metadata md = new Metadata();
 		Forest forest = Forest.readFromFile(md.getDefaultForestFileName());
-		forest.print();
+		forest.print();*/
+		
+		StopWatch sw1 = new StopWatch();
+		StopWatch sw2 = new StopWatch();
+		byte[] arr1 = Util.nextBytes((int) Math.pow(2, 20), Crypto.sr);
+		byte[] arr2 = Util.nextBytes((int) Math.pow(2, 20), Crypto.sr);
+		
+		sw1.start();
+		Util.xor(arr1, arr2);
+		sw1.stop();
+		
+		sw2.start();
+		new BigInteger(1, arr1).xor(new BigInteger(1, arr2)).toByteArray();
+		sw2.stop();
+		
+		System.out.println(sw1.toMS());
+		System.out.println(sw2.toMS());
 	}
 
 }
