@@ -104,6 +104,7 @@ public class SSCOT extends Protocol {
 		return output;
 	}
 
+	// for testing correctness
 	@Override
 	public void run(Party party, Metadata md, Forest forest) {
 		Timer timer = new Timer();
@@ -153,5 +154,7 @@ public class SSCOT extends Protocol {
 				throw new NoSuchPartyException(party + "");
 			}
 		}
+
+		// timer.print();
 	}
 }

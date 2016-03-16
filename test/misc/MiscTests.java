@@ -10,7 +10,7 @@ import oram.Metadata;
 import util.StopWatch;
 import util.Util;
 
-public class HelloWorld {
+public class MiscTests {
 
 	public static void main(String[] args) {
 		/*

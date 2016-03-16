@@ -18,4 +18,12 @@ public class PreData {
 
 	public int[] access_sigma;
 	public Tuple[] access_p;
+
+	public Tuple[] ssxot_delta;
+	public int[] ssxot_E_pi;
+	public int[] ssxot_C_pi;
+	public int[] ssxot_E_pi_ivs;
+	public int[] ssxot_C_pi_ivs;
+	public Tuple[] ssxot_E_r;
+	public Tuple[] ssxot_C_r;
 }

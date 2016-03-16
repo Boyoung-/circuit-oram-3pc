@@ -16,6 +16,7 @@ import protocols.Party;
 import protocols.Protocol;
 import protocols.SSCOT;
 import protocols.SSIOT;
+import protocols.SSXOT;
 import protocols.Access;
 
 public class CLI {
@@ -71,6 +72,8 @@ public class CLI {
 			operation = SSCOT.class;
 		} else if (protocol.equals("ssiot")) {
 			operation = SSIOT.class;
+		} else if (protocol.equals("ssxot")) {
+			operation = SSXOT.class;
 		} else if (protocol.equals("access")) {
 			operation = Access.class;
 		} else {

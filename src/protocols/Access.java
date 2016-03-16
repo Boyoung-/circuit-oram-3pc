@@ -200,6 +200,7 @@ public class Access extends Protocol {
 		return outaccess;
 	}
 
+	// for testing correctness
 	@Override
 	public void run(Party party, Metadata md, Forest forest) {
 		int records = 5;

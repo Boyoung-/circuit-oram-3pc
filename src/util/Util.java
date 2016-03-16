@@ -108,6 +108,13 @@ public class Util {
 		return array;
 	}
 
+	public static int[] inversePermutation(int[] p) {
+		int[] ip = new int[p.length];
+		for (int i = 0; i < p.length; i++)
+			ip[p[i]] = i;
+		return ip;
+	}
+
 	public static <T> T[] permute(T[] original, int[] p) {
 		@SuppressWarnings("unchecked")
 		T[] permuted = (T[]) new Object[original.length];
