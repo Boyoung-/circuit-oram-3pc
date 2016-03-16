@@ -117,12 +117,12 @@ public class Util {
 		return ip;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <T> T[] permute(T[] original, int[] p) {
-		@SuppressWarnings("unchecked")
 		T[] permuted = (T[]) new Object[original.length];
 		for (int i = 0; i < original.length; i++)
 			permuted[p[i]] = original[i];
-		return permuted;
+		return (T[]) Arrays.copyOf(permuted, permuted.length, original.getClass());
 	}
 
 	public static byte[] longToBytes(long l, int numBytes) {

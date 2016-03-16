@@ -15,14 +15,12 @@ public class PrePostProcessT extends Protocol {
 	}
 
 	public void runE(PreData predata, Timer timer) {
-		timer.start(P.PPT, M.offline_comp);
-
+		timer.start(P.PPT, M.offline_read);
 		predata.ppt_Li = con1.read();
 		predata.ppt_Lip1 = con1.read();
 
 		predata.ppt_s = con1.readObject();
-
-		timer.stop(P.PPT, M.offline_comp);
+		timer.stop(P.PPT, M.offline_read);
 	}
 
 	public void runD(PreData predata, PreData prev, int LiBytes, int Lip1Bytes, int tau, Timer timer) {
@@ -44,12 +42,14 @@ public class PrePostProcessT extends Protocol {
 		}
 		predata.ppt_s[predata.ppt_alpha] = Util.xor(predata.ppt_r[predata.ppt_alpha], predata.ppt_Lip1);
 
+		timer.start(P.PPT, M.offline_write);
 		con1.write(predata.ppt_Li);
 		con1.write(predata.ppt_Lip1);
 
 		con2.write(predata.ppt_alpha);
 		con2.write(predata.ppt_r);
 		con1.write(predata.ppt_s);
+		timer.stop(P.PPT, M.offline_write);
 
 		timer.stop(P.PPT, M.offline_comp);
 	}
@@ -63,8 +63,10 @@ public class PrePostProcessT extends Protocol {
 			predata.ppt_Li = Util.nextBytes(LiBytes, Crypto.sr);
 		predata.ppt_Lip1 = Util.nextBytes(Lip1Bytes, Crypto.sr);
 
+		timer.start(P.PPT, M.offline_read);
 		predata.ppt_alpha = con2.readObject();
 		predata.ppt_r = con2.readObject();
+		timer.stop(P.PPT, M.offline_read);
 
 		timer.stop(P.PPT, M.offline_comp);
 	}

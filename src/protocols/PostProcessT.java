@@ -33,7 +33,9 @@ public class PostProcessT extends Protocol {
 		}
 
 		// step 1
+		timer.start(P.PPT, M.online_read);
 		int delta = con2.readObject();
+		timer.stop(P.PPT, M.online_read);
 
 		// step 3
 		int twoTauPow = predata.ppt_s.length;
@@ -70,7 +72,9 @@ public class PostProcessT extends Protocol {
 		int twoTauPow = predata.ppt_r.length;
 		int delta = (predata.ppt_alpha - j2 + twoTauPow) % twoTauPow;
 
+		timer.start(P.PPT, M.online_write);
 		con1.write(delta);
+		timer.stop(P.PPT, M.online_write);
 
 		// step 2
 		byte[][] c = new byte[twoTauPow][];

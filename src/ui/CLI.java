@@ -16,6 +16,7 @@ import protocols.Party;
 import protocols.Protocol;
 import protocols.SSCOT;
 import protocols.SSIOT;
+import protocols.Reshuffle;
 import protocols.PostProcessT;
 import protocols.SSXOT;
 import protocols.Access;
@@ -73,6 +74,8 @@ public class CLI {
 			operation = SSCOT.class;
 		} else if (protocol.equals("ssiot")) {
 			operation = SSIOT.class;
+		} else if (protocol.equals("reshuffle")) {
+			operation = Reshuffle.class;
 		} else if (protocol.equals("ppt")) {
 			operation = PostProcessT.class;
 		} else if (protocol.equals("ssxot")) {

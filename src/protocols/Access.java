@@ -41,8 +41,7 @@ public class Access extends Protocol {
 		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
 		for (int i = 0; i < pathTuples.length; i++)
 			pathTuples[i].setXor(predata.access_p[i]);
-		Object[] objArray = Util.permute(pathTuples, predata.access_sigma);
-		pathTuples = Arrays.copyOf(objArray, objArray.length, Tuple[].class);
+		pathTuples = Util.permute(pathTuples, predata.access_sigma);
 
 		// step 3
 		byte[] y = null;
@@ -106,8 +105,7 @@ public class Access extends Protocol {
 		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
 		for (int i = 0; i < pathTuples.length; i++)
 			pathTuples[i].setXor(predata.access_p[i]);
-		Object[] objArray = Util.permute(pathTuples, predata.access_sigma);
-		pathTuples = Arrays.copyOf(objArray, objArray.length, Tuple[].class);
+		pathTuples = Util.permute(pathTuples, predata.access_sigma);
 
 		// step 2
 		timer.start(P.ACC, M.online_write);

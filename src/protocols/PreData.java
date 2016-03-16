@@ -32,4 +32,9 @@ public class PreData {
 	public int ppt_alpha;
 	public byte[][] ppt_r;
 	public byte[][] ppt_s;
+
+	public int[] reshuffle_pi;
+	public Tuple[] reshuffle_p;
+	public Tuple[] reshuffle_r;
+	public Tuple[] reshuffle_a_prime;
 }

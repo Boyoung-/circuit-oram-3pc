@@ -157,6 +157,12 @@ public class Tuple implements Serializable {
 		return numBytes == t.getNumBytes();
 	}
 
+	public boolean equals(Tuple t) {
+		if (!sameLength(t))
+			return false;
+		return Util.equal(toByteArray(), t.toByteArray());
+	}
+
 	public byte[] toByteArray() {
 		byte[] tuple = new byte[numBytes];
 		int offset = 0;
