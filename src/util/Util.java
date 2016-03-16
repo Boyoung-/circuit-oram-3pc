@@ -12,6 +12,8 @@ import exceptions.LengthNotMatchException;
 
 public class Util {
 	public static boolean equal(byte[] a, byte[] b) {
+		if (a.length == 0 && b.length == 0)
+			return true;
 		if (a.length != b.length)
 			return false;
 		return new BigInteger(a).compareTo(new BigInteger(b)) == 0;

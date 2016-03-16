@@ -26,4 +26,10 @@ public class PreData {
 	public int[] ssxot_C_pi_ivs;
 	public Tuple[] ssxot_E_r;
 	public Tuple[] ssxot_C_r;
+
+	public byte[] ppt_Li;
+	public byte[] ppt_Lip1;
+	public int ppt_alpha;
+	public byte[][] ppt_r;
+	public byte[][] ppt_s;
 }

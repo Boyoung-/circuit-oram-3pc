@@ -83,9 +83,9 @@ public class Access extends Protocol {
 		if (OTi.getTreeIndex() == 0)
 			Ti = pathTuples[0];
 		else
-			Ti = new Tuple(new byte[0], Ni, Li, y);
+			Ti = new Tuple(new byte[1], Ni, Li, y);
 
-		OutAccess outaccess = new OutAccess(null, null, null, Ti, pathTuples);
+		OutAccess outaccess = new OutAccess(null, null, null, null, Ti, pathTuples);
 
 		timer.stop(P.ACC, M.online_comp);
 		return outaccess;
@@ -194,7 +194,7 @@ public class Access extends Protocol {
 			Crypto.sr.nextBytes(pathTuples[j1].getA());
 		}
 
-		OutAccess outaccess = new OutAccess(Lip1, Ti, pathTuples, null, null);
+		OutAccess outaccess = new OutAccess(Lip1, Ti, pathTuples, j2, null, null);
 
 		timer.stop(P.ACC, M.online_comp);
 		return outaccess;
