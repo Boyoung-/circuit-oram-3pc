@@ -23,15 +23,6 @@ public class GCEva extends GCEvaComp {
 		gtt[1][1] = GCSignal.newInstance(new byte[10]);
 	}
 
-	public GCEva(GCEva env) {
-		super(env.channel, Mode.REAL);
-		gb = new Garbler();
-		gtt[0][0] = GCSignal.ZERO;
-		gtt[0][1] = GCSignal.newInstance(new byte[10]);
-		gtt[1][0] = GCSignal.newInstance(new byte[10]);
-		gtt[1][1] = GCSignal.newInstance(new byte[10]);
-	}
-
 	public void setEvaluate() {
 		evaluate = true;
 		curr = this;
@@ -70,7 +61,7 @@ public class GCEva extends GCEvaComp {
 				if (curr == null) {
 					curr = this;
 				} else {
-					curr.next = new GCEva(this);
+					curr.next = new GCEva(channel);
 					curr = curr.next;
 				}
 				curr.receiveGTT();
