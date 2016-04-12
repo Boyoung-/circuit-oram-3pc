@@ -5,12 +5,18 @@ package com.oblivm.backend.gc;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
 import com.oblivm.backend.network.Network;
 
-public class GCSignal {
+public class GCSignal implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public static final int len = 10;
 	public byte[] bytes;
 	public boolean v;
@@ -71,7 +77,10 @@ public class GCSignal {
 
 	// 'send' and 'receive' are supposed to be used only for secret signals
 	public void send(Network channel) {
-		channel.writeByte(bytes, len);
+		if (channel.receiver == null)
+			channel.writeByte(bytes, len);
+		else
+			channel.receiver.write(bytes);
 	}
 
 	// 'send' and 'receive' are supposed to be used only for secret signals
@@ -91,9 +100,12 @@ public class GCSignal {
 	}
 
 	public static void receive(Network channel, GCSignal s) {
-		if (s.bytes == null)
-			s.bytes = new byte[len];
-		channel.readBytes(s.bytes);
+		if (channel.sender == null) {
+			if (s.bytes == null)
+				s.bytes = new byte[len];
+			channel.readBytes(s.bytes);
+		} else
+			s.bytes = channel.sender.read();
 	}
 
 	@Override

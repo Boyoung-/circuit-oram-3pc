@@ -12,6 +12,8 @@ import com.oblivm.backend.flexsc.CompEnv;
 import com.oblivm.backend.flexsc.Mode;
 import com.oblivm.backend.gc.GCSignal;
 
+import communication.Communication;
+
 public class Network {
 	protected Socket sock;
 	protected ServerSocket serverSock;
@@ -22,6 +24,9 @@ public class Network {
 	Thread thd;
 	boolean THREADEDIO = true;
 	static int NetworkThreadedQueueSize = 1024 * 256;
+
+	public Communication sender;
+	public Communication receiver;
 
 	public void setUpThread() {
 		if (THREADEDIO) {
@@ -34,6 +39,11 @@ public class Network {
 
 	public Network() {
 
+	}
+
+	public Network(Communication s, Communication r) {
+		sender = s;
+		receiver = r;
 	}
 
 	public Network(InputStream is, OutputStream os, Socket sock) {

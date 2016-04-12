@@ -20,6 +20,7 @@ import protocols.Reshuffle;
 import protocols.PostProcessT;
 import protocols.SSXOT;
 import protocols.Access;
+import protocols.GarbledCircuit;
 
 public class CLI {
 	public static final int DEFAULT_PORT = 8000;
@@ -82,6 +83,8 @@ public class CLI {
 			operation = SSXOT.class;
 		} else if (protocol.equals("access")) {
 			operation = Access.class;
+		} else if (protocol.equals("gc")) {
+			operation = GarbledCircuit.class;
 		} else {
 			System.out.println("Protocol " + protocol + " not supported");
 			System.exit(-1);

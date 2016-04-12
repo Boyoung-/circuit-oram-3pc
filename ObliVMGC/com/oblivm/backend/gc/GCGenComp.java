@@ -27,12 +27,14 @@ public abstract class GCGenComp extends GCCompEnv {
 	public GCGenComp(Network channel, Mode mode) {
 		super(channel, Party.Alice, mode);
 
-		if (Flag.FakeOT)
-			snd = new FakeOTSender(80, channel);
-		else if (Flag.ProprocessOT)
-			snd = new OTPreprocessSender(80, channel);
-		else
-			snd = new OTExtSender(80, channel);
+		if (channel.sender == null && channel.receiver == null) {
+			if (Flag.FakeOT)
+				snd = new FakeOTSender(80, channel);
+			else if (Flag.ProprocessOT)
+				snd = new OTPreprocessSender(80, channel);
+			else
+				snd = new OTExtSender(80, channel);
+		}
 	}
 
 	public static GCSignal[] genPairForLabel(Mode mode) {

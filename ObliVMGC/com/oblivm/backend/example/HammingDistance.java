@@ -84,7 +84,7 @@ public class HammingDistance {
 
 		private T[] compute(CompEnv<T> gen, T[] inputA, T[] inputB) {
 			IntegerLib<T> il = new IntegerLib<T>(gen);
-			il.hammingDistance(inputA, inputB);
+			il.hammingDistance(inputB, inputB);
 			gen.setEvaluate();
 			return il.hammingDistance(inputA, inputB);
 		}

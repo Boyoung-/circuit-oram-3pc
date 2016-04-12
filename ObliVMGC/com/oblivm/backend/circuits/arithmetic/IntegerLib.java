@@ -117,6 +117,14 @@ public class IntegerLib<T> extends CircuitLib<T> implements ArithmeticLib<T> {
 		return geq(y, x);
 	}
 
+	public T greater(T[] x, T[] y) {
+		return not(leq(x, y));
+	}
+
+	public T less(T[] x, T[] y) {
+		return not(geq(x, y));
+	}
+
 	public T[] multiply(T[] x, T[] y) {
 		return Arrays.copyOf(multiplyInternal(x, y), x.length);// res;
 	}
