@@ -14,11 +14,11 @@ import exceptions.NoSuchPartyException;
 import oram.Forest;
 import oram.Metadata;
 
-public class GarbledCircuit extends Protocol {
+public class GarbledCircuitTest extends Protocol {
 
-	private int totalLength = 1000;
+	private int totalLength = 2;
 
-	public GarbledCircuit(Communication con1, Communication con2) {
+	public GarbledCircuitTest(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
 
@@ -45,8 +45,8 @@ public class GarbledCircuit extends Protocol {
 		boolean[] input2 = new boolean[totalLength];
 		boolean[] input = new boolean[totalLength];
 		for (int i = 0; i < input1.length; ++i) {
-			input1[i] = CompEnv.rnd.nextBoolean();
-			input2[i] = CompEnv.rnd.nextBoolean();
+			input1[i] = false;
+			input2[i] = true;
 			input[i] = input1[i] ^ input2[i];
 		}
 
@@ -66,7 +66,7 @@ public class GarbledCircuit extends Protocol {
 			inputD[i] = input2[i] ? inputKeyPairs2[i][1] : inputKeyPairs2[i][0];
 		}
 
-		GCSignal[] outputE = new IntegerLib<GCSignal>(gen).hammingDistance(localInputKeys1, localInputKeys2);
+		GCSignal[] outputE = new GCSignal[] { new IntegerLib<GCSignal>(gen).less(localInputKeys1, localInputKeys2) };
 
 		con1.write(inputE);
 		con1.write(inputD);
@@ -85,9 +85,10 @@ public class GarbledCircuit extends Protocol {
 				System.err.println("ERROR on GC output!");
 		}
 
-		int inCnt = countOnes(input);
-		int outCnt = booleansToInt(output);
-		System.out.println((inCnt == outCnt) + " " + inCnt + " " + outCnt);
+		// int inCnt = countOnes(input);
+		// int outCnt = booleansToInt(output);
+		// System.out.println((inCnt == outCnt) + " " + inCnt + " " + outCnt);
+		System.out.println(output[0]);
 	}
 
 	public void runD() {
@@ -98,13 +99,13 @@ public class GarbledCircuit extends Protocol {
 		for (int i = 0; i < randomInput.length; i++)
 			randomInput[i] = GCSignal.freshLabel(Crypto.sr);
 		IntegerLib<GCSignal> il = new IntegerLib<GCSignal>(gen);
-		il.hammingDistance(randomInput, randomInput);
+		il.less(randomInput, randomInput);
 
 		GCSignal[] inputE = con1.readObject();
 		GCSignal[] inputD = con1.readObject();
 
 		gen.setEvaluate();
-		GCSignal[] outputD = il.hammingDistance(inputE, inputD);
+		GCSignal[] outputD = new GCSignal[] { il.less(inputE, inputD) };
 
 		con1.write(outputD);
 	}

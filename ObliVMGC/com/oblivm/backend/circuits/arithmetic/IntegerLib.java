@@ -57,6 +57,10 @@ public class IntegerLib<T> extends CircuitLib<T> implements ArithmeticLib<T> {
 		return res;
 	}
 
+	public T[] addFull(T[] x, T[] y) {
+		return addFull(x, y, false);
+	}
+
 	public T[] add(T[] x, T[] y, boolean cin) {
 		return Arrays.copyOf(addFull(x, y, cin), x.length);
 	}
@@ -106,6 +110,17 @@ public class IntegerLib<T> extends CircuitLib<T> implements ArithmeticLib<T> {
 		return sub(x, one);
 	}
 
+	public T less(T[] x, T[] y) {
+		assert (x.length == y.length) : "bad input";
+
+		T[] result = sub(x, y);
+		return result[result.length - 1];
+	}
+
+	public T greater(T[] x, T[] y) {
+		return less(y, x);
+	}
+
 	public T geq(T[] x, T[] y) {
 		assert (x.length == y.length) : "bad input";
 
@@ -115,14 +130,6 @@ public class IntegerLib<T> extends CircuitLib<T> implements ArithmeticLib<T> {
 
 	public T leq(T[] x, T[] y) {
 		return geq(y, x);
-	}
-
-	public T greater(T[] x, T[] y) {
-		return not(leq(x, y));
-	}
-
-	public T less(T[] x, T[] y) {
-		return not(geq(x, y));
 	}
 
 	public T[] multiply(T[] x, T[] y) {

@@ -1,5 +1,8 @@
 package gc;
 
+import java.math.BigInteger;
+import java.util.Arrays;
+
 import com.oblivm.backend.circuits.arithmetic.IntegerLib;
 import com.oblivm.backend.flexsc.CompEnv;
 
@@ -27,27 +30,37 @@ public class GarbledCircuitLib<T> extends IntegerLib<T> {
 		}
 	}
 
-	public T[][] deepestAndEmptyTuples(long i, T[] pathLabel, T[] feBits, T[][] tupleLabels) {
-		T[] l = toSignals(1L << (d - 1 - i) - 1L, d - 1);
-		T[] j1 = toSignals(Util.nextLong(w, Crypto.sr), logW);
+	public T[][] deepestAndEmptyTuples(int i, byte[] Li, T[] E_feBits, T[] C_feBits, T[][] E_tupleLabels,
+			T[][] C_tupleLabels) {
+		T[] pathLabel = toSignals(new BigInteger(1, Li).longValue(), d - 1); // no
+																				// sign
+																				// bit
+		T[] feBits = xor(E_feBits, C_feBits);
+		T[][] tupleLabels = env.newTArray(E_tupleLabels.length, 0);
+		for (int j = 0; j < tupleLabels.length; j++)
+			tupleLabels[j] = xor(E_tupleLabels[j], C_tupleLabels[j]);
+
+		T[] l = padSignal(ones(d - 1 - i), d); // has sign bit 0
+		T[] j1 = toSignals(Util.nextLong(w, Crypto.sr), logW); // no sign bit
 		T[] j2 = toSignals(Util.nextLong(w, Crypto.sr), logW);
-		T[] et = zeros(1);
+		T[] et = zeros(1); // no sign bit
 		for (int j = 0; j < w; j++) {
 			T[] tupleIndex = toSignals(j, logW);
-			T[] lz = xor(pathLabel, tupleLabels[j]);
+			T[] lz = xor(pathLabel, tupleLabels[j]); // no sign bit
 			zerosFollowedByOnes(lz);
+			lz = padSignal(lz, d); // has sign bit
 			T firstIf = and(feBits[j], less(lz, l));
 			l = mux(l, lz, firstIf);
 			j1 = mux(j1, tupleIndex, firstIf);
 			et = mux(ones(1), et, feBits[j]);
 			j2 = mux(tupleIndex, j2, feBits[j]);
 		}
-		T[] l_p = numberOfOnes(not(l)); // TODO: set length to logD?
+		T[] l_p = numberOfOnes(not(Arrays.copyOf(l, d - 1))); // has sign bit
 
 		T[][] output = env.newTArray(4, 0);
 		output[0] = l_p;
-		output[1] = j1;
-		output[2] = j2;
+		output[1] = padSignal(j1, logW + 1);
+		output[2] = padSignal(j2, logW + 1);
 		output[3] = et;
 		return output;
 	}
