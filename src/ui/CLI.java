@@ -22,6 +22,7 @@ import protocols.SSXOT;
 import protocols.Access;
 import protocols.GarbledCircuit;
 import protocols.GarbledCircuitTest;
+import protocols.DeepestAndEmpty;
 
 public class CLI {
 	public static final int DEFAULT_PORT = 8000;
@@ -88,6 +89,8 @@ public class CLI {
 			operation = GarbledCircuit.class;
 		} else if (protocol.equals("gctest")) {
 			operation = GarbledCircuitTest.class;
+		} else if (protocol.equals("dae")) {
+			operation = DeepestAndEmpty.class;
 		} else {
 			System.out.println("Protocol " + protocol + " not supported");
 			System.exit(-1);

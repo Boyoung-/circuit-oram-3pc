@@ -373,12 +373,14 @@ public class IntegerLib<T> extends CircuitLib<T> implements ArithmeticLib<T> {
 
 	public T[] numberOfOnes(T[] t) {
 		if (t.length == 0) {
-			T[] res = env.newTArray(1);
-			res[0] = SIGNAL_ZERO;
-			return res;
+			// T[] res = env.newTArray(1);
+			// res[0] = SIGNAL_ZERO;
+			// return res;
+			return zeros(2);
 		}
 		if (t.length == 1) {
-			return t;
+			// return t;
+			return padSignal(t, 2);
 		} else {
 			int length = 1;
 			int w = 1;
