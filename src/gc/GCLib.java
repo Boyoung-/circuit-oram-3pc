@@ -66,4 +66,33 @@ public class GCLib<T> extends IntegerLib<T> {
 		return output;
 	}
 
+	public T[][][] prepareDeepest(byte[] Li, T[][] E_feBits, T[][] C_feBits, T[][][] E_tupleLabels,
+			T[][][] C_tupleLabels) {
+		T[][][] output = env.newTArray(4, d, 0);
+
+		T[][] deepest = env.newTArray(d, 0);
+		for (int j = 0; j < d; j++)
+			deepest[j] = ones(logD + 1);
+		T[] src = ones(logD + 1);
+		T[] goal = ones(logD + 1); // -1 in 2's complement form
+
+		for (int i = 0; i < d; i++) {
+			T[] index = toSignals(i, logD + 1);
+			deepest[i] = mux(deepest[i], src, geq(goal, index));
+
+			T[][] dae = deepestAndEmptyTuples(i, Li, E_feBits[i], C_feBits[i], E_tupleLabels[i], C_tupleLabels[i]);
+			T[] l = dae[0];
+			output[1][i] = dae[1];
+			output[2][i] = dae[2];
+			output[3][i] = dae[3];
+
+			T secondIf = greater(l, goal);
+			goal = mux(goal, l, secondIf);
+			src = mux(src, index, secondIf);
+		}
+
+		output[0] = deepest;
+		return output;
+	}
+
 }

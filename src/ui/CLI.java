@@ -12,17 +12,7 @@ import org.apache.commons.cli.ParseException;
 
 import communication.Communication;
 import exceptions.NoSuchPartyException;
-import protocols.Party;
-import protocols.Protocol;
-import protocols.SSCOT;
-import protocols.SSIOT;
-import protocols.Reshuffle;
-import protocols.PostProcessT;
-import protocols.SSXOT;
-import protocols.Access;
-import protocols.GarbledCircuit;
-import protocols.GarbledCircuitTest;
-import protocols.DeepestAndEmpty;
+import protocols.*;
 
 public class CLI {
 	public static final int DEFAULT_PORT = 8000;
@@ -91,6 +81,8 @@ public class CLI {
 			operation = GarbledCircuitTest.class;
 		} else if (protocol.equals("dae")) {
 			operation = DeepestAndEmpty.class;
+		} else if (protocol.equals("pd")) {
+			operation = PrepareDeepest.class;
 		} else {
 			System.out.println("Protocol " + protocol + " not supported");
 			System.exit(-1);
