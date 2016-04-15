@@ -173,4 +173,43 @@ public class GCLib<T> extends IntegerLib<T> {
 		return prepareTarget(out[0], out[1], out[2], out[3]);
 	}
 
+	public T[][] makeCycle(T[][] target, T[] nTop, T[] nBot, T[] eTop, T[] eBot) {
+		T[] perpD = ones(logD + 1);
+		T[] nPrev = perpD;
+
+		for (int i = 0; i < d; i++) {
+			T[] index = toSignals(i, logD + 1);
+
+			T nTopEqPerp = eq(nTop, perpD);
+			T iEqEBot = eq(index, eBot);
+			target[i] = mux(target[i], eTop, and(nTopEqPerp, iEqEBot));
+
+			T thirdIf = and(not(nTopEqPerp), iEqEBot);
+			target[i] = mux(target[i], nBot, thirdIf);
+
+			T fourthIf = and(not(or(nTopEqPerp, iEqEBot)), eq(target[i], perpD));
+			T iEqNTop = eq(index, nTop);
+			T fifthIf = and(fourthIf, iEqNTop);
+			T eTopEqPerp = eq(eTop, perpD);
+			target[i] = mux(target[i], nBot, and(fifthIf, eTopEqPerp));
+			target[i] = mux(target[i], eTop, and(fifthIf, not(eTopEqPerp)));
+
+			target[i] = mux(target[i], nPrev, and(fourthIf, not(iEqNTop)));
+
+			nPrev = mux(nPrev, index, fourthIf);
+		}
+
+		return target;
+	}
+
+	public T[][][] combineDeepestTargetCycle(byte[] Li, T[][] E_feBits, T[][] C_feBits, T[][][] E_tupleLabels,
+			T[][][] C_tupleLabels) {
+		T[][][] out = combineDeepestAndTarget(Li, E_feBits, C_feBits, E_tupleLabels, C_tupleLabels);
+		makeCycle(out[0], out[2][0], out[2][1], out[2][2], out[2][3]);
+
+		T[][][] output = env.newTArray(2, 0, 0);
+		output[0] = out[0];
+		output[1] = out[1];
+		return output;
+	}
 }
