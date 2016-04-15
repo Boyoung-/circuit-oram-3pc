@@ -83,6 +83,8 @@ public class CLI {
 			operation = DeepestAndEmpty.class;
 		} else if (protocol.equals("pd")) {
 			operation = PrepareDeepest.class;
+		} else if (protocol.equals("pt")) {
+			operation = PrepareTarget.class;
 		} else {
 			System.out.println("Protocol " + protocol + " not supported");
 			System.exit(-1);

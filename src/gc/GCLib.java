@@ -8,6 +8,8 @@ import com.oblivm.backend.flexsc.CompEnv;
 
 public class GCLib<T> extends IntegerLib<T> {
 
+	// TODO: take root bucket width into account
+
 	private int d;
 	private int w;
 	private int logD;
@@ -18,7 +20,8 @@ public class GCLib<T> extends IntegerLib<T> {
 		this.d = d;
 		this.w = w;
 		logD = (int) Math.ceil(Math.log(d) / Math.log(2));
-		logW = (int) Math.ceil(Math.log(w) / Math.log(2));
+		logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2)); // includes fake
+																// empty tuple
 	}
 
 	private void zerosFollowedByOnes(T[] input) {
@@ -47,9 +50,11 @@ public class GCLib<T> extends IntegerLib<T> {
 			T[] lz = xor(pathLabel, tupleLabels[j]);
 			zerosFollowedByOnes(lz);
 			lz = padSignal(lz, d); // add sign bit
+
 			T firstIf = and(feBits[j], less(lz, l));
 			l = mux(l, lz, firstIf);
 			j1 = mux(j1, tupleIndex, firstIf);
+
 			et = mux(ones(1), et, feBits[j]);
 			j2 = mux(tupleIndex, j2, feBits[j]);
 		}
@@ -68,13 +73,14 @@ public class GCLib<T> extends IntegerLib<T> {
 
 	public T[][][] prepareDeepest(byte[] Li, T[][] E_feBits, T[][] C_feBits, T[][][] E_tupleLabels,
 			T[][][] C_tupleLabels) {
+		T[] perpD = ones(logD + 1);
 		T[][][] output = env.newTArray(4, d, 0);
 
 		T[][] deepest = env.newTArray(d, 0);
 		for (int j = 0; j < d; j++)
-			deepest[j] = ones(logD + 1);
-		T[] src = ones(logD + 1);
-		T[] goal = ones(logD + 1); // -1 in 2's complement form
+			deepest[j] = perpD;
+		T[] src = perpD;
+		T[] goal = perpD; // \perp = -1 in 2's complement form
 
 		for (int i = 0; i < d; i++) {
 			T[] index = toSignals(i, logD + 1);
@@ -86,13 +92,85 @@ public class GCLib<T> extends IntegerLib<T> {
 			output[2][i] = dae[2];
 			output[3][i] = dae[3];
 
-			T secondIf = greater(l, goal);
-			goal = mux(goal, l, secondIf);
-			src = mux(src, index, secondIf);
+			T lGreaterGoal = greater(l, goal);
+			goal = mux(goal, l, lGreaterGoal);
+			src = mux(src, index, lGreaterGoal);
 		}
 
 		output[0] = deepest;
 		return output;
+	}
+
+	public T[][][] prepareTarget(T[][] deepest, T[][] j1, T[][] j2, T[][] et) {
+		// TODO: root bucket ft?
+		T[] ft = toSignals(w, logW + 1);
+		T[] perpD = ones(logD + 1);
+		T[] perpW = ones(logW + 1);
+		T[][][] output = env.newTArray(3, 4, 0);
+
+		T[] nTop = perpD;
+		T[] nBot = perpD;
+		T[] eTop = perpD;
+		T[] eBot = perpD;
+		T[] src = perpD;
+		T[] dest = perpD;
+		T[][] target = env.newTArray(d, 0);
+		T[][] f = env.newTArray(d, 0);
+		for (int i = 0; i < d; i++) {
+			target[i] = perpD;
+			f[i] = perpW;
+		}
+
+		for (int i = d - 1; i >= 0; i--) {
+			T[] index = toSignals(i, logD + 1);
+
+			T iEqSrc = eq(index, src);
+			target[i] = mux(target[i], dest, iEqSrc);
+			f[i] = mux(f[i], j1[i], iEqSrc);
+			src = mux(src, perpD, iEqSrc);
+
+			T deepestEqPerp = eq(deepest[i], perpD);
+			dest = mux(dest, index, and(iEqSrc, deepestEqPerp));
+			dest = mux(dest, perpD, and(iEqSrc, not(deepestEqPerp)));
+
+			T destEqPerp = eq(dest, perpD);
+			T srcEqPerp = eq(src, perpD);
+			T fourthIf = and(not(deepestEqPerp), and(not(destEqPerp), srcEqPerp));
+			target[i] = mux(target[i], dest, fourthIf);
+			f[i] = mux(f[i], j2[i], fourthIf);
+
+			T targetEqPerp = eq(target[i], perpD);
+			T fifthIf = and(not(deepestEqPerp), or(and(destEqPerp, et[i][0]), not(targetEqPerp)));
+			src = mux(src, deepest[i], fifthIf);
+			dest = mux(dest, index, fifthIf);
+			eTop = mux(eTop, src, fifthIf);
+
+			T eBotEqPerp = eq(eBot, perpD);
+			T sixthIf = and(fifthIf, eBotEqPerp);
+			eBot = mux(eBot, dest, sixthIf);
+			f[i] = mux(f[i], j2[i], sixthIf);
+
+			T fEqPerp = eq(f[i], perpW);
+			f[i] = mux(f[i], ft, fEqPerp);
+			nTop = mux(nTop, index, fEqPerp);
+
+			T nBotEqPerp = eq(nBot, perpD);
+			nBot = mux(nBot, index, and(fEqPerp, nBotEqPerp));
+		}
+
+		output[0] = target;
+		output[1] = f;
+		output[2][0] = nTop;
+		output[2][1] = nBot;
+		output[2][2] = eTop;
+		output[2][3] = eBot;
+		return output;
+	}
+
+	public T[][][] combineDeepestAndTarget(byte[] Li, T[][] E_feBits, T[][] C_feBits, T[][][] E_tupleLabels,
+			T[][][] C_tupleLabels) {
+		T[][][] out = prepareDeepest(Li, E_feBits, C_feBits, E_tupleLabels, C_tupleLabels);
+		return prepareTarget(out[0], out[1], out[2], out[3]);
 	}
 
 }
