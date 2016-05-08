@@ -7,7 +7,6 @@ import measure.P;
 import measure.Timer;
 import oram.Forest;
 import oram.Metadata;
-import oram.Tree;
 import oram.Tuple;
 import util.Util;
 
@@ -16,7 +15,7 @@ public class PreAccess extends Protocol {
 		super(con1, con2);
 	}
 
-	public void runE(PreData predata, Tree OT, int numTuples, Timer timer) {
+	public void runE(PreData predata, int twotaupow, int numTuples, int[] tupleParam, Timer timer) {
 		timer.start(P.ACC, M.offline_comp);
 
 		// SSCOT
@@ -25,13 +24,13 @@ public class PreAccess extends Protocol {
 
 		// SSIOT
 		PreSSIOT pressiot = new PreSSIOT(con1, con2);
-		pressiot.runE(predata, OT.getTwoTauPow(), timer);
+		pressiot.runE(predata, twotaupow, timer);
 
 		// Access
 		predata.access_sigma = Util.randomPermutation(numTuples, Crypto.sr);
 		predata.access_p = new Tuple[numTuples];
 		for (int i = 0; i < numTuples; i++)
-			predata.access_p[i] = new Tuple(OT.getFBytes(), OT.getNBytes(), OT.getLBytes(), OT.getABytes(), Crypto.sr);
+			predata.access_p[i] = new Tuple(tupleParam[0], tupleParam[1], tupleParam[2], tupleParam[3], Crypto.sr);
 
 		timer.start(P.ACC, M.offline_write);
 		con1.write(predata.access_sigma);

@@ -95,8 +95,7 @@ public class Retrieve extends Protocol {
 
 					if (party == Party.Eddie) {
 						Tree OTi = forest.getTree(ti);
-						int numTuples = (OTi.getD() - 1) * OTi.getW() + OTi.getStashSize();
-						preretrieve.runE(predata, md, ti, OTi, numTuples, timer);
+						preretrieve.runE(predata, md, ti, timer);
 
 						byte[] sE_Ni = Util.nextBytes(Ni.length, Crypto.sr);
 						byte[] sD_Ni = Util.xor(Ni, sE_Ni);
@@ -115,9 +114,7 @@ public class Retrieve extends Protocol {
 
 					} else if (party == Party.Debbie) {
 						Tree OTi = forest.getTree(ti);
-						int[] tupleParam = new int[] { ti == 0 ? 0 : 1, md.getNBytesOfTree(ti), md.getLBytesOfTree(ti),
-								md.getABytesOfTree(ti) };
-						preretrieve.runD(predata, md, ti, prev, tupleParam, timer);
+						preretrieve.runD(predata, md, ti, prev, timer);
 
 						byte[] sD_Ni = con1.read();
 

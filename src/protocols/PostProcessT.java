@@ -136,7 +136,9 @@ public class PostProcessT extends Protocol {
 					if (party == Party.Eddie) {
 						Tree OTi = forest.getTree(ti);
 						int numTuples = (OTi.getD() - 1) * OTi.getW() + OTi.getStashSize();
-						preaccess.runE(predata, OTi, numTuples, timer);
+						int[] tupleParam = new int[] { ti == 0 ? 0 : 1, md.getNBytesOfTree(ti), md.getLBytesOfTree(ti),
+								md.getABytesOfTree(ti) };
+						preaccess.runE(predata, md.getTwoTauPow(), numTuples, tupleParam, timer);
 
 						byte[] sE_Ni = Util.nextBytes(Ni.length, Crypto.sr);
 						byte[] sD_Ni = Util.xor(Ni, sE_Ni);
