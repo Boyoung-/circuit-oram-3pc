@@ -87,6 +87,8 @@ public class CLI {
 			operation = PrepareTarget.class;
 		} else if (protocol.equals("mc")) {
 			operation = MakeCycle.class;
+		} else if (protocol.equals("rtv")) {
+			operation = Retrieve.class;
 		} else {
 			System.out.println("Protocol " + protocol + " not supported");
 			System.exit(-1);
