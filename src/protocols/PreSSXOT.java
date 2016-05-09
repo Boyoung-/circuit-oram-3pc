@@ -11,41 +11,46 @@ import oram.Tuple;
 import util.Util;
 
 public class PreSSXOT extends Protocol {
-	public PreSSXOT(Communication con1, Communication con2) {
+
+	private int id;
+
+	public PreSSXOT(Communication con1, Communication con2, int id) {
 		super(con1, con2);
+		this.id = id;
 	}
 
 	public void runE(PreData predata, Timer timer) {
 		timer.start(P.XOT, M.offline_read);
-		predata.ssxot_E_pi = con1.readObject();
-		predata.ssxot_E_r = con1.readObject();
+		predata.ssxot_E_pi[id] = con1.readObject();
+		predata.ssxot_E_r[id] = con1.readObject();
 		timer.stop(P.XOT, M.offline_read);
 	}
 
 	public void runD(PreData predata, int n, int k, int[] tupleParam, Timer timer) {
 		timer.start(P.XOT, M.offline_comp);
 
-		predata.ssxot_delta = new Tuple[k];
+		predata.ssxot_delta[id] = new Tuple[k];
 		for (int i = 0; i < k; i++)
-			predata.ssxot_delta[i] = new Tuple(tupleParam[0], tupleParam[1], tupleParam[2], tupleParam[3], Crypto.sr);
+			predata.ssxot_delta[id][i] = new Tuple(tupleParam[0], tupleParam[1], tupleParam[2], tupleParam[3],
+					Crypto.sr);
 
-		predata.ssxot_E_pi = Util.randomPermutation(n, Crypto.sr);
-		predata.ssxot_C_pi = Util.randomPermutation(n, Crypto.sr);
-		predata.ssxot_E_pi_ivs = Util.inversePermutation(predata.ssxot_E_pi);
-		predata.ssxot_C_pi_ivs = Util.inversePermutation(predata.ssxot_C_pi);
+		predata.ssxot_E_pi[id] = Util.randomPermutation(n, Crypto.sr);
+		predata.ssxot_C_pi[id] = Util.randomPermutation(n, Crypto.sr);
+		predata.ssxot_E_pi_ivs[id] = Util.inversePermutation(predata.ssxot_E_pi[id]);
+		predata.ssxot_C_pi_ivs[id] = Util.inversePermutation(predata.ssxot_C_pi[id]);
 
-		predata.ssxot_E_r = new Tuple[n];
-		predata.ssxot_C_r = new Tuple[n];
+		predata.ssxot_E_r[id] = new Tuple[n];
+		predata.ssxot_C_r[id] = new Tuple[n];
 		for (int i = 0; i < n; i++) {
-			predata.ssxot_E_r[i] = new Tuple(tupleParam[0], tupleParam[1], tupleParam[2], tupleParam[3], Crypto.sr);
-			predata.ssxot_C_r[i] = new Tuple(tupleParam[0], tupleParam[1], tupleParam[2], tupleParam[3], Crypto.sr);
+			predata.ssxot_E_r[id][i] = new Tuple(tupleParam[0], tupleParam[1], tupleParam[2], tupleParam[3], Crypto.sr);
+			predata.ssxot_C_r[id][i] = new Tuple(tupleParam[0], tupleParam[1], tupleParam[2], tupleParam[3], Crypto.sr);
 		}
 
 		timer.start(P.XOT, M.offline_write);
-		con1.write(predata.ssxot_E_pi);
-		con1.write(predata.ssxot_E_r);
-		con2.write(predata.ssxot_C_pi);
-		con2.write(predata.ssxot_C_r);
+		con1.write(predata.ssxot_E_pi[id]);
+		con1.write(predata.ssxot_E_r[id]);
+		con2.write(predata.ssxot_C_pi[id]);
+		con2.write(predata.ssxot_C_r[id]);
 		timer.stop(P.XOT, M.offline_write);
 
 		timer.stop(P.XOT, M.offline_comp);
@@ -53,8 +58,8 @@ public class PreSSXOT extends Protocol {
 
 	public void runC(PreData predata, Timer timer) {
 		timer.start(P.XOT, M.offline_read);
-		predata.ssxot_C_pi = con2.readObject();
-		predata.ssxot_C_r = con2.readObject();
+		predata.ssxot_C_pi[id] = con2.readObject();
+		predata.ssxot_C_r[id] = con2.readObject();
 		timer.stop(P.XOT, M.offline_read);
 	}
 

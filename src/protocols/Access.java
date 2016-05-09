@@ -84,13 +84,13 @@ public class Access extends Protocol {
 		else
 			Ti = new Tuple(new byte[1], Ni, Li, y);
 
-		OutAccess outaccess = new OutAccess(null, null, null, null, Ti, pathTuples);
+		OutAccess outaccess = new OutAccess(Li, null, null, null, null, Ti, pathTuples);
 
 		timer.stop(P.ACC, M.online_comp);
 		return outaccess;
 	}
 
-	public void runD(PreData predata, Tree OTi, byte[] Ni, byte[] Nip1_pr, Timer timer) {
+	public byte[] runD(PreData predata, Tree OTi, byte[] Ni, byte[] Nip1_pr, Timer timer) {
 		timer.start(P.ACC, M.online_comp);
 
 		// step 0: get Li from C
@@ -134,6 +134,8 @@ public class Access extends Protocol {
 		}
 
 		timer.stop(P.ACC, M.online_comp);
+
+		return Li;
 	}
 
 	public OutAccess runC(Metadata md, int treeIndex, byte[] Li, Timer timer) {
@@ -192,7 +194,7 @@ public class Access extends Protocol {
 			Crypto.sr.nextBytes(pathTuples[j1].getA());
 		}
 
-		OutAccess outaccess = new OutAccess(Lip1, Ti, pathTuples, j2, null, null);
+		OutAccess outaccess = new OutAccess(Li, Lip1, Ti, pathTuples, j2, null, null);
 
 		timer.stop(P.ACC, M.online_comp);
 		return outaccess;

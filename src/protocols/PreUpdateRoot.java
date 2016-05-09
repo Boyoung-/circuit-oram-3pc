@@ -20,12 +20,14 @@ public class PreUpdateRoot extends Protocol {
 		super(con1, con2);
 	}
 
-	public void runE(PreData predata, int sw, int lBits, byte[] Li, Timer timer) {
+	public void runE(PreData predata, int sw, int lBits, Timer timer) {
 		int sLogW = (int) Math.ceil(Math.log(sw) / Math.log(2));
 		predata.ur_j1KeyPairs = GCUtil.genKeyPairs(sLogW);
+		predata.ur_LiKeyPairs = GCUtil.genKeyPairs(lBits);
 		predata.ur_E_feKeyPairs = GCUtil.genKeyPairs(sw);
 		predata.ur_C_feKeyPairs = GCUtil.genKeyPairs(sw);
 		GCSignal[] j1ZeroKeys = GCUtil.getZeroKeys(predata.ur_j1KeyPairs);
+		GCSignal[] LiZeroKeys = GCUtil.getZeroKeys(predata.ur_LiKeyPairs);
 		GCSignal[] E_feZeroKeys = GCUtil.getZeroKeys(predata.ur_E_feKeyPairs);
 		GCSignal[] C_feZeroKeys = GCUtil.getZeroKeys(predata.ur_C_feKeyPairs);
 		predata.ur_E_labelKeyPairs = new GCSignal[sw][][];
@@ -41,8 +43,8 @@ public class PreUpdateRoot extends Protocol {
 
 		Network channel = new Network(null, con1);
 		CompEnv<GCSignal> gen = new GCGen(channel);
-		GCSignal[][] outZeroKeys = new GCLib<GCSignal>(gen, lBits + 1, sw).rootFindDeepestAndEmpty(Li, j1ZeroKeys,
-				E_feZeroKeys, C_feZeroKeys, E_labelZeroKeys, C_labelZeroKeys);
+		GCSignal[][] outZeroKeys = new GCLib<GCSignal>(gen, lBits + 1, sw).rootFindDeepestAndEmpty(j1ZeroKeys,
+				LiZeroKeys, E_feZeroKeys, C_feZeroKeys, E_labelZeroKeys, C_labelZeroKeys);
 
 		predata.ur_outKeyHashes = new BigInteger[outZeroKeys.length][];
 		for (int i = 0; i < outZeroKeys.length; i++)
@@ -51,11 +53,15 @@ public class PreUpdateRoot extends Protocol {
 		con2.write(predata.ur_C_feKeyPairs);
 		con2.write(predata.ur_C_labelKeyPairs);
 		con1.write(predata.ur_outKeyHashes);
+
+		PreSSXOT pressxot = new PreSSXOT(con1, con2, 0);
+		pressxot.runE(predata, timer);
 	}
 
-	public void runD(PreData predata, int sw, int lBits, byte[] Li, Timer timer) {
+	public void runD(PreData predata, int sw, int lBits, int[] tupleParam, Timer timer) {
 		int sLogW = (int) Math.ceil(Math.log(sw) / Math.log(2));
 		GCSignal[] j1ZeroKeys = GCUtil.genEmptyKeys(sLogW);
+		GCSignal[] LiZeroKeys = GCUtil.genEmptyKeys(lBits);
 		GCSignal[] E_feZeroKeys = GCUtil.genEmptyKeys(sw);
 		GCSignal[] C_feZeroKeys = GCUtil.genEmptyKeys(sw);
 		GCSignal[][] E_labelZeroKeys = new GCSignal[sw][];
@@ -68,16 +74,22 @@ public class PreUpdateRoot extends Protocol {
 		Network channel = new Network(con1, null);
 		CompEnv<GCSignal> eva = new GCEva(channel);
 		predata.ur_gc = new GCLib<GCSignal>(eva, lBits + 1, sw);
-		predata.ur_gc.rootFindDeepestAndEmpty(Li, j1ZeroKeys, E_feZeroKeys, C_feZeroKeys, E_labelZeroKeys,
+		predata.ur_gc.rootFindDeepestAndEmpty(j1ZeroKeys, LiZeroKeys, E_feZeroKeys, C_feZeroKeys, E_labelZeroKeys,
 				C_labelZeroKeys);
 		eva.setEvaluate();
 
 		predata.ur_outKeyHashes = con1.readObject();
+
+		PreSSXOT pressxot = new PreSSXOT(con1, con2, 0);
+		pressxot.runD(predata, sw + 1, sw, tupleParam, timer);
 	}
 
 	public void runC(PreData predata, Timer timer) {
 		predata.ur_C_feKeyPairs = con1.readObject();
 		predata.ur_C_labelKeyPairs = con1.readObject();
+
+		PreSSXOT pressxot = new PreSSXOT(con1, con2, 0);
+		pressxot.runC(predata, timer);
 	}
 
 	@Override

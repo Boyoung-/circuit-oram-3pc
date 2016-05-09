@@ -24,13 +24,13 @@ public class PreData {
 	public int[] access_sigma;
 	public Tuple[] access_p;
 
-	public Tuple[] ssxot_delta;
-	public int[] ssxot_E_pi;
-	public int[] ssxot_C_pi;
-	public int[] ssxot_E_pi_ivs;
-	public int[] ssxot_C_pi_ivs;
-	public Tuple[] ssxot_E_r;
-	public Tuple[] ssxot_C_r;
+	public Tuple[][] ssxot_delta = new Tuple[2][];
+	public int[][] ssxot_E_pi = new int[2][];
+	public int[][] ssxot_C_pi = new int[2][];
+	public int[][] ssxot_E_pi_ivs = new int[2][];
+	public int[][] ssxot_C_pi_ivs = new int[2][];
+	public Tuple[][] ssxot_E_r = new Tuple[2][];
+	public Tuple[][] ssxot_C_r = new Tuple[2][];
 
 	public byte[] ppt_Li;
 	public byte[] ppt_Lip1;
@@ -44,6 +44,7 @@ public class PreData {
 	public Tuple[] reshuffle_a_prime;
 
 	public GCSignal[][] ur_j1KeyPairs;
+	public GCSignal[][] ur_LiKeyPairs;
 	public GCSignal[][] ur_E_feKeyPairs;
 	public GCSignal[][] ur_C_feKeyPairs;
 	public GCSignal[][][] ur_E_labelKeyPairs;

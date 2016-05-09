@@ -30,17 +30,14 @@ public class GCLib<T> extends IntegerLib<T> {
 		}
 	}
 
-	public T[][] rootFindDeepestAndEmpty(byte[] Li, T[] j1, T[] E_feBits, T[] C_feBits, T[][] E_tupleLabels,
+	public T[][] rootFindDeepestAndEmpty(T[] j1, T[] pathLabel, T[] E_feBits, T[] C_feBits, T[][] E_tupleLabels,
 			T[][] C_tupleLabels) {
 		int sLogW = (int) Math.ceil(Math.log(w) / Math.log(2));
-		T[] pathLabel = toSignals(new BigInteger(1, Li).longValue(), d - 1); // no
-																				// sign
-																				// bit
 		T[] feBits = xor(E_feBits, C_feBits);
 		T[][] tupleLabels = env.newTArray(w, 0);
 		for (int j = 0; j < w; j++)
 			tupleLabels[j] = xor(E_tupleLabels[j], C_tupleLabels[j]);
-		
+
 		T[] l = padSignal(ones(d - 1), d); // has sign bit
 		T[] j2 = zeros(sLogW); // no sign bit
 
@@ -56,7 +53,7 @@ public class GCLib<T> extends IntegerLib<T> {
 
 			j2 = mux(tupleIndex, j2, feBits[j]);
 		}
-		
+
 		T[][] output = env.newTArray(2, 0);
 		output[0] = j1;
 		output[1] = j2;

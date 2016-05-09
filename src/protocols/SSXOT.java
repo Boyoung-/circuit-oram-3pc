@@ -14,8 +14,16 @@ import util.Util;
 
 public class SSXOT extends Protocol {
 
+	private int id;
+
 	public SSXOT(Communication con1, Communication con2) {
 		super(con1, con2);
+		this.id = 0;
+	}
+
+	public SSXOT(Communication con1, Communication con2, int id) {
+		super(con1, con2);
+		this.id = id;
 	}
 
 	public Tuple[] runE(PreData predata, Tuple[] m, Timer timer) {
@@ -24,7 +32,7 @@ public class SSXOT extends Protocol {
 		// step 1
 		Tuple[] a = new Tuple[m.length];
 		for (int i = 0; i < m.length; i++)
-			a[i] = m[predata.ssxot_E_pi[i]].xor(predata.ssxot_E_r[i]);
+			a[i] = m[predata.ssxot_E_pi[id][i]].xor(predata.ssxot_E_r[id][i]);
 
 		timer.start(P.XOT, M.online_write);
 		con2.write(a);
@@ -57,10 +65,10 @@ public class SSXOT extends Protocol {
 		Tuple[] E_p = new Tuple[k];
 		Tuple[] C_p = new Tuple[k];
 		for (int i = 0; i < k; i++) {
-			E_j[i] = predata.ssxot_E_pi_ivs[index[i]];
-			C_j[i] = predata.ssxot_C_pi_ivs[index[i]];
-			E_p[i] = predata.ssxot_E_r[E_j[i]].xor(predata.ssxot_delta[i]);
-			C_p[i] = predata.ssxot_C_r[C_j[i]].xor(predata.ssxot_delta[i]);
+			E_j[i] = predata.ssxot_E_pi_ivs[id][index[i]];
+			C_j[i] = predata.ssxot_C_pi_ivs[id][index[i]];
+			E_p[i] = predata.ssxot_E_r[id][E_j[i]].xor(predata.ssxot_delta[id][i]);
+			C_p[i] = predata.ssxot_C_r[id][C_j[i]].xor(predata.ssxot_delta[id][i]);
 		}
 
 		timer.start(P.XOT, M.online_write);
@@ -79,7 +87,7 @@ public class SSXOT extends Protocol {
 		// step 1
 		Tuple[] a = new Tuple[m.length];
 		for (int i = 0; i < m.length; i++)
-			a[i] = m[predata.ssxot_C_pi[i]].xor(predata.ssxot_C_r[i]);
+			a[i] = m[predata.ssxot_C_pi[id][i]].xor(predata.ssxot_C_r[id][i]);
 
 		timer.start(P.XOT, M.online_write);
 		con1.write(a);
@@ -120,7 +128,7 @@ public class SSXOT extends Protocol {
 			}
 
 			PreData predata = new PreData();
-			PreSSXOT pressxot = new PreSSXOT(con1, con2);
+			PreSSXOT pressxot = new PreSSXOT(con1, con2, 0);
 
 			if (party == Party.Eddie) {
 				pressxot.runE(predata, timer);

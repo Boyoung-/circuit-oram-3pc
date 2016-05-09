@@ -1,6 +1,7 @@
 package protocols;
 
 import java.math.BigInteger;
+import java.util.Arrays;
 
 import communication.Communication;
 import crypto.Crypto;
@@ -24,10 +25,13 @@ public class Retrieve extends Protocol {
 		Access access = new Access(con1, con2);
 		Reshuffle reshuffle = new Reshuffle(con1, con2);
 		PostProcessT postprocesst = new PostProcessT(con1, con2);
+		UpdateRoot updateroot = new UpdateRoot(con1, con2);
 
 		OutAccess outaccess = access.runE(predata, OTi, Ni, Nip1_pr, timer);
 		Tuple[] path = reshuffle.runE(predata, outaccess.E_P, OTi.getTreeIndex() == 0, timer);
 		Tuple Ti = postprocesst.runE(predata, outaccess.E_Ti, OTi.getTreeIndex() == h - 1, timer);
+		Tuple[] root = Arrays.copyOfRange(path, 0, OTi.getStashSize());
+		root = updateroot.runE(predata, OTi.getTreeIndex() == 0, outaccess.Li, root, Ti, timer);
 
 		return outaccess;
 	}
@@ -36,20 +40,25 @@ public class Retrieve extends Protocol {
 		Access access = new Access(con1, con2);
 		Reshuffle reshuffle = new Reshuffle(con1, con2);
 		PostProcessT postprocesst = new PostProcessT(con1, con2);
+		UpdateRoot updateroot = new UpdateRoot(con1, con2);
 
-		access.runD(predata, OTi, Ni, Nip1_pr, timer);
+		byte[] Li = access.runD(predata, OTi, Ni, Nip1_pr, timer);
 		reshuffle.runD();
 		postprocesst.runD();
+		updateroot.runD(predata, OTi.getTreeIndex() == 0, Li, OTi.getW(), timer);
 	}
 
 	public OutAccess runC(PreData predata, Metadata md, int ti, byte[] Li, int h, Timer timer) {
 		Access access = new Access(con1, con2);
 		Reshuffle reshuffle = new Reshuffle(con1, con2);
 		PostProcessT postprocesst = new PostProcessT(con1, con2);
+		UpdateRoot updateroot = new UpdateRoot(con1, con2);
 
 		OutAccess outaccess = access.runC(md, ti, Li, timer);
 		Tuple[] path = reshuffle.runC(predata, outaccess.C_P, ti == 0, timer);
 		Tuple Ti = postprocesst.runC(predata, outaccess.C_Ti, Li, outaccess.C_Lip1, outaccess.C_j2, ti == h - 1, timer);
+		Tuple[] root = Arrays.copyOfRange(path, 0, md.getStashSizeOfTree(ti));
+		root = updateroot.runC(predata, ti == 0, root, Ti, timer);
 
 		return outaccess;
 	}
