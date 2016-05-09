@@ -67,6 +67,12 @@ public class MiscTests {
 		for (int i = 0; i < n; i++) {
 			System.out.println(oldArr[i] + " " + newArr[i]);
 		}
+
+		BigInteger b = new BigInteger("101", 2);
+		int[] p = Util.getXorPermutation(b, 3);
+		for (int i = 0; i < p.length; i++)
+			System.out.print(p[i] + " ");
+		System.out.println();
 	}
 
 }

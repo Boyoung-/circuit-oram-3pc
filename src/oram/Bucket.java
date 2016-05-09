@@ -1,6 +1,7 @@
 package oram;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Random;
 
 import exceptions.LengthNotMatchException;
@@ -42,6 +43,10 @@ public class Bucket implements Serializable {
 
 	public int getNumTuples() {
 		return tuples.length;
+	}
+
+	public Tuple[] getTuples() {
+		return tuples;
 	}
 
 	public Tuple getTuple(int i) {
@@ -106,5 +111,18 @@ public class Bucket implements Serializable {
 			}
 
 		return tuples;
+	}
+
+	public static Bucket[] tuplesToBuckets(Tuple[] tuples, int d, int sw, int w) {
+		if (tuples.length != sw + (d - 1) * w)
+			throw new LengthNotMatchException(tuples.length + " != " + (sw + (d - 1) * w));
+
+		Bucket[] buckets = new Bucket[d];
+		for (int i = 0; i < d; i++) {
+			int start = i == 0 ? 0 : sw + (i - 1) * w;
+			int end = i == 0 ? sw : start + w;
+			buckets[i] = new Bucket(Arrays.copyOfRange(tuples, start, end));
+		}
+		return buckets;
 	}
 }

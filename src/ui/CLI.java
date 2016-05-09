@@ -89,6 +89,8 @@ public class CLI {
 			operation = MakeCycle.class;
 		} else if (protocol.equals("update")) {
 			operation = UpdateRoot.class;
+		} else if (protocol.equals("evict")) {
+			operation = Eviction.class;
 		} else if (protocol.equals("retrieve")) {
 			operation = Retrieve.class;
 		} else {

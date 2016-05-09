@@ -138,6 +138,15 @@ public class Util {
 		}
 	}
 
+	public static int[] getXorPermutation(BigInteger b, int bits) {
+		int len = (int) Math.pow(2, bits);
+		int[] p = new int[len];
+		for (int i = 0; i < len; i++) {
+			p[i] = BigInteger.valueOf(i).xor(b).intValue();
+		}
+		return p;
+	}
+
 	public static String addZeros(String a, int n) {
 		String out = a;
 		for (int i = 0; i < n - a.length(); i++)
