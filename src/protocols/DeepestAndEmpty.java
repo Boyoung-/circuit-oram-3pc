@@ -89,10 +89,13 @@ public class DeepestAndEmpty extends Protocol {
 		for (int j = 0; j < w; j++)
 			tupleLabels[j] = Util.nextBytes((d - 1 + 7) / 8, Crypto.sr);
 
+		GCSignal[][] LiKeyPairs = genKeyPairs(d - 1);
 		GCSignal[][] E_feKeyPairs = genKeyPairs(w);
 		GCSignal[][] C_feKeyPairs = genKeyPairs(w);
+		GCSignal[] LiZeroKeys = getZeroKeys(LiKeyPairs);
 		GCSignal[] E_feZeroKeys = getZeroKeys(E_feKeyPairs);
 		GCSignal[] C_feZeroKeys = getZeroKeys(C_feKeyPairs);
+		GCSignal[] LiKeyInput = revSelectKeys(LiKeyPairs, Li);
 		GCSignal[] E_feKeyInput = selectKeys(E_feKeyPairs, feBits);
 
 		GCSignal[][][] E_labelKeyPairs = new GCSignal[w][][];
@@ -109,7 +112,7 @@ public class DeepestAndEmpty extends Protocol {
 		}
 
 		con1.write(i);
-		con1.write(Li);
+		con1.write(LiKeyInput);
 		con1.write(E_feKeyInput);
 		con1.write(C_feZeroKeys);
 		con1.write(E_labelKeyInput);
@@ -117,8 +120,8 @@ public class DeepestAndEmpty extends Protocol {
 
 		Network channel = new Network(null, con1);
 		CompEnv<GCSignal> gen = new GCGen(channel);
-		GCSignal[][] E_out = new GCLib<GCSignal>(gen, d, w).findDeepestAndEmpty(i, Li, E_feZeroKeys, C_feZeroKeys,
-				E_labelZeroKeys, C_labelZeroKeys);
+		GCSignal[][] E_out = new GCLib<GCSignal>(gen, d, w).findDeepestAndEmpty(i, LiZeroKeys, E_feZeroKeys,
+				C_feZeroKeys, E_labelZeroKeys, C_labelZeroKeys);
 
 		GCSignal[][] D_out = con1.readObject();
 
@@ -157,7 +160,7 @@ public class DeepestAndEmpty extends Protocol {
 
 	public void runD() {
 		int i = con1.readObject();
-		byte[] Li = con1.read();
+		GCSignal[] LiKeyInput = con1.readObject();
 		GCSignal[] E_feKeyInput = con1.readObject();
 		GCSignal[] C_feZeroKeys = con1.readObject();
 		GCSignal[][] E_labelKeyInput = con1.readObject();
@@ -166,10 +169,10 @@ public class DeepestAndEmpty extends Protocol {
 		Network channel = new Network(con1, null);
 		CompEnv<GCSignal> gen = new GCEva(channel);
 		GCLib<GCSignal> dae = new GCLib<GCSignal>(gen, d, w);
-		dae.findDeepestAndEmpty(i, Li, E_feKeyInput, C_feZeroKeys, E_labelKeyInput, C_labelZeroKeys);
+		dae.findDeepestAndEmpty(i, LiKeyInput, E_feKeyInput, C_feZeroKeys, E_labelKeyInput, C_labelZeroKeys);
 
 		gen.setEvaluate();
-		GCSignal[][] D_out = dae.findDeepestAndEmpty(i, Li, E_feKeyInput, C_feZeroKeys, E_labelKeyInput,
+		GCSignal[][] D_out = dae.findDeepestAndEmpty(i, LiKeyInput, E_feKeyInput, C_feZeroKeys, E_labelKeyInput,
 				C_labelZeroKeys);
 
 		con1.write(D_out);

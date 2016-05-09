@@ -88,6 +88,10 @@ public class PrepareDeepest extends Protocol {
 		byte[][] feBits = new byte[d][];
 		byte[][][] tupleLabels = new byte[d][w][];
 
+		GCSignal[][] LiKeyPairs = genKeyPairs(d - 1);
+		GCSignal[] LiZeroKeys = getZeroKeys(LiKeyPairs);
+		GCSignal[] LiKeyInput = revSelectKeys(LiKeyPairs, Li);
+
 		GCSignal[][][] E_feKeyPairs = new GCSignal[d][][];
 		GCSignal[][][] C_feKeyPairs = new GCSignal[d][][];
 		GCSignal[][] E_feZeroKeys = new GCSignal[d][];
@@ -120,7 +124,7 @@ public class PrepareDeepest extends Protocol {
 			}
 		}
 
-		con1.write(Li);
+		con1.write(LiKeyInput);
 		con1.write(E_feKeyInput);
 		con1.write(C_feZeroKeys);
 		con1.write(E_labelKeyInput);
@@ -128,7 +132,7 @@ public class PrepareDeepest extends Protocol {
 
 		Network channel = new Network(null, con1);
 		CompEnv<GCSignal> gen = new GCGen(channel);
-		GCSignal[][][] E_out = new GCLib<GCSignal>(gen, d, w).prepareDeepest(Li, E_feZeroKeys, C_feZeroKeys,
+		GCSignal[][][] E_out = new GCLib<GCSignal>(gen, d, w).prepareDeepest(LiZeroKeys, E_feZeroKeys, C_feZeroKeys,
 				E_labelZeroKeys, C_labelZeroKeys);
 
 		GCSignal[][][] D_out = con1.readObject();
@@ -178,7 +182,7 @@ public class PrepareDeepest extends Protocol {
 	}
 
 	public void runD() {
-		byte[] Li = con1.read();
+		GCSignal[] LiKeyInput = con1.readObject();
 		GCSignal[][] E_feKeyInput = con1.readObject();
 		GCSignal[][] C_feZeroKeys = con1.readObject();
 		GCSignal[][][] E_labelKeyInput = con1.readObject();
@@ -187,10 +191,11 @@ public class PrepareDeepest extends Protocol {
 		Network channel = new Network(con1, null);
 		CompEnv<GCSignal> gen = new GCEva(channel);
 		GCLib<GCSignal> dae = new GCLib<GCSignal>(gen, d, w);
-		dae.prepareDeepest(Li, E_feKeyInput, C_feZeroKeys, E_labelKeyInput, C_labelZeroKeys);
+		dae.prepareDeepest(LiKeyInput, E_feKeyInput, C_feZeroKeys, E_labelKeyInput, C_labelZeroKeys);
 
 		gen.setEvaluate();
-		GCSignal[][][] D_out = dae.prepareDeepest(Li, E_feKeyInput, C_feZeroKeys, E_labelKeyInput, C_labelZeroKeys);
+		GCSignal[][][] D_out = dae.prepareDeepest(LiKeyInput, E_feKeyInput, C_feZeroKeys, E_labelKeyInput,
+				C_labelZeroKeys);
 
 		con1.write(D_out);
 	}

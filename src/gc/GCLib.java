@@ -1,6 +1,5 @@
 package gc;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 
 import com.oblivm.backend.circuits.arithmetic.IntegerLib;
@@ -60,14 +59,11 @@ public class GCLib<T> extends IntegerLib<T> {
 		return output;
 	}
 
-	public T[][] findDeepestAndEmpty(int i, byte[] Li, T[] E_feBits, T[] C_feBits, T[][] E_tupleLabels,
+	public T[][] findDeepestAndEmpty(int i, T[] pathLabel, T[] E_feBits, T[] C_feBits, T[][] E_tupleLabels,
 			T[][] C_tupleLabels) {
-		T[] pathLabel = toSignals(new BigInteger(1, Li).longValue(), d - 1); // no
-																				// sign
-																				// bit
 		T[] feBits = xor(E_feBits, C_feBits);
-		T[][] tupleLabels = env.newTArray(E_tupleLabels.length, 0);
-		for (int j = 0; j < tupleLabels.length; j++)
+		T[][] tupleLabels = env.newTArray(w, 0);
+		for (int j = 0; j < w; j++)
 			tupleLabels[j] = xor(E_tupleLabels[j], C_tupleLabels[j]);
 
 		T[] l = padSignal(ones(d - 1 - i), d); // has sign bit
@@ -101,7 +97,7 @@ public class GCLib<T> extends IntegerLib<T> {
 		return output;
 	}
 
-	public T[][][] prepareDeepest(byte[] Li, T[][] E_feBits, T[][] C_feBits, T[][][] E_tupleLabels,
+	public T[][][] prepareDeepest(T[] Li, T[][] E_feBits, T[][] C_feBits, T[][][] E_tupleLabels,
 			T[][][] C_tupleLabels) {
 		T[] perpD = ones(logD + 1);
 		T[][][] output = env.newTArray(4, d, 0);
@@ -132,7 +128,6 @@ public class GCLib<T> extends IntegerLib<T> {
 	}
 
 	public T[][][] prepareTarget(T[][] deepest, T[][] j1, T[][] j2, T[][] et) {
-		// TODO: root bucket ft?
 		T[] ft = toSignals(w, logW + 1);
 		T[] perpD = ones(logD + 1);
 		T[] perpW = ones(logW + 1);
@@ -197,7 +192,7 @@ public class GCLib<T> extends IntegerLib<T> {
 		return output;
 	}
 
-	public T[][][] combineDeepestAndTarget(byte[] Li, T[][] E_feBits, T[][] C_feBits, T[][][] E_tupleLabels,
+	public T[][][] combineDeepestAndTarget(T[] Li, T[][] E_feBits, T[][] C_feBits, T[][][] E_tupleLabels,
 			T[][][] C_tupleLabels) {
 		T[][][] out = prepareDeepest(Li, E_feBits, C_feBits, E_tupleLabels, C_tupleLabels);
 		return prepareTarget(out[0], out[1], out[2], out[3]);
@@ -232,7 +227,7 @@ public class GCLib<T> extends IntegerLib<T> {
 		return target;
 	}
 
-	public T[][][] combineDeepestTargetCycle(byte[] Li, T[][] E_feBits, T[][] C_feBits, T[][][] E_tupleLabels,
+	public T[][][] combineDeepestTargetCycle(T[] Li, T[][] E_feBits, T[][] C_feBits, T[][][] E_tupleLabels,
 			T[][][] C_tupleLabels) {
 		T[][][] out = combineDeepestAndTarget(Li, E_feBits, C_feBits, E_tupleLabels, C_tupleLabels);
 		makeCycle(out[0], out[2][0], out[2][1], out[2][2], out[2][3]);
