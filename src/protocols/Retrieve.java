@@ -88,10 +88,28 @@ public class Retrieve extends Protocol {
 				System.out.println("Test: " + i + " " + j);
 				System.out.println("N=" + BigInteger.valueOf(N).toString(2));
 
+				System.out.print("Precomputation... ");
+				PreData[] predata = new PreData[numTrees];
+				PreRetrieve preretrieve = new PreRetrieve(con1, con2);
+				for (int ti = 0; ti < numTrees; ti++) {
+					predata[ti] = new PreData();
+
+					if (party == Party.Eddie) {
+						preretrieve.runE(predata[ti], md, ti, timer);
+
+					} else if (party == Party.Debbie) {
+						preretrieve.runD(predata[ti], md, ti, ti == 0 ? null : predata[ti - 1], timer);
+
+					} else if (party == Party.Charlie) {
+						preretrieve.runC(predata[ti], md, ti, ti == 0 ? null : predata[ti - 1], timer);
+
+					} else {
+						throw new NoSuchPartyException(party + "");
+					}
+				}
+				System.out.println("done!");
+
 				byte[] Li = new byte[0];
-
-				PreData prev = null;
-
 				for (int ti = 0; ti < numTrees; ti++) {
 					long Ni_value = Util.getSubBits(N, addrBits, addrBits - md.getNBitsOfTree(ti));
 					long Nip1_pr_value = Util.getSubBits(N, addrBits - md.getNBitsOfTree(ti),
@@ -99,12 +117,8 @@ public class Retrieve extends Protocol {
 					byte[] Ni = Util.longToBytes(Ni_value, md.getNBytesOfTree(ti));
 					byte[] Nip1_pr = Util.longToBytes(Nip1_pr_value, (tau + 7) / 8);
 
-					PreData predata = new PreData();
-					PreRetrieve preretrieve = new PreRetrieve(con1, con2);
-
 					if (party == Party.Eddie) {
 						Tree OTi = forest.getTree(ti);
-						preretrieve.runE(predata, md, ti, timer);
 
 						byte[] sE_Ni = Util.nextBytes(Ni.length, Crypto.sr);
 						byte[] sD_Ni = Util.xor(Ni, sE_Ni);
@@ -115,7 +129,7 @@ public class Retrieve extends Protocol {
 						con1.write(sD_Nip1_pr);
 
 						sw.start();
-						runE(predata, OTi, sE_Ni, sE_Nip1_pr, numTrees, timer);
+						runE(predata[ti], OTi, sE_Ni, sE_Nip1_pr, numTrees, timer);
 						sw.stop();
 
 						if (ti == numTrees - 1)
@@ -123,23 +137,19 @@ public class Retrieve extends Protocol {
 
 					} else if (party == Party.Debbie) {
 						Tree OTi = forest.getTree(ti);
-						preretrieve.runD(predata, md, ti, prev, timer);
 
 						byte[] sD_Ni = con1.read();
-
 						byte[] sD_Nip1_pr = con1.read();
 
 						sw.start();
-						runD(predata, OTi, sD_Ni, sD_Nip1_pr, timer);
+						runD(predata[ti], OTi, sD_Ni, sD_Nip1_pr, timer);
 						sw.stop();
 
 					} else if (party == Party.Charlie) {
-						preretrieve.runC(predata, md, ti, prev, timer);
-
 						System.out.println("L" + ti + "=" + new BigInteger(1, Li).toString(2));
 
 						sw.start();
-						OutAccess outaccess = runC(predata, md, ti, Li, numTrees, timer);
+						OutAccess outaccess = runC(predata[ti], md, ti, Li, numTrees, timer);
 						sw.stop();
 
 						Li = outaccess.C_Lip1;
@@ -158,8 +168,6 @@ public class Retrieve extends Protocol {
 					} else {
 						throw new NoSuchPartyException(party + "");
 					}
-
-					prev = predata;
 				}
 			}
 		}
