@@ -87,6 +87,8 @@ public class CLI {
 			operation = PrepareTarget.class;
 		} else if (protocol.equals("mc")) {
 			operation = MakeCycle.class;
+		} else if (protocol.equals("update")) {
+			operation = UpdateRoot.class;
 		} else if (protocol.equals("retrieve")) {
 			operation = Retrieve.class;
 		} else {

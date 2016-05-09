@@ -1,6 +1,11 @@
 package protocols;
 
+import java.math.BigInteger;
+
+import com.oblivm.backend.gc.GCSignal;
+
 import crypto.PRF;
+import gc.GCLib;
 import oram.Tuple;
 
 public class PreData {
@@ -37,4 +42,12 @@ public class PreData {
 	public Tuple[] reshuffle_p;
 	public Tuple[] reshuffle_r;
 	public Tuple[] reshuffle_a_prime;
+
+	public GCSignal[][] ur_j1KeyPairs;
+	public GCSignal[][] ur_E_feKeyPairs;
+	public GCSignal[][] ur_C_feKeyPairs;
+	public GCSignal[][][] ur_E_labelKeyPairs;
+	public GCSignal[][][] ur_C_labelKeyPairs;
+	public BigInteger[][] ur_outKeyHashes;
+	public GCLib<GCSignal> ur_gc;
 }

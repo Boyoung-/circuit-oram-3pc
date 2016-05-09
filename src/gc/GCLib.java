@@ -30,7 +30,40 @@ public class GCLib<T> extends IntegerLib<T> {
 		}
 	}
 
-	public T[][] deepestAndEmptyTuples(int i, byte[] Li, T[] E_feBits, T[] C_feBits, T[][] E_tupleLabels,
+	public T[][] rootFindDeepestAndEmpty(byte[] Li, T[] j1, T[] E_feBits, T[] C_feBits, T[][] E_tupleLabels,
+			T[][] C_tupleLabels) {
+		int sLogW = (int) Math.ceil(Math.log(w) / Math.log(2));
+		T[] pathLabel = toSignals(new BigInteger(1, Li).longValue(), d - 1); // no
+																				// sign
+																				// bit
+		T[] feBits = xor(E_feBits, C_feBits);
+		T[][] tupleLabels = env.newTArray(w, 0);
+		for (int j = 0; j < w; j++)
+			tupleLabels[j] = xor(E_tupleLabels[j], C_tupleLabels[j]);
+		
+		T[] l = padSignal(ones(d - 1), d); // has sign bit
+		T[] j2 = zeros(sLogW); // no sign bit
+
+		for (int j = 0; j < w; j++) {
+			T[] tupleIndex = toSignals(j, sLogW);
+			T[] lz = xor(pathLabel, tupleLabels[j]);
+			zerosFollowedByOnes(lz);
+			lz = padSignal(lz, d); // add sign bit
+
+			T firstIf = and(feBits[j], less(lz, l));
+			l = mux(l, lz, firstIf);
+			j1 = mux(j1, tupleIndex, firstIf);
+
+			j2 = mux(tupleIndex, j2, feBits[j]);
+		}
+		
+		T[][] output = env.newTArray(2, 0);
+		output[0] = j1;
+		output[1] = j2;
+		return output;
+	}
+
+	public T[][] findDeepestAndEmpty(int i, byte[] Li, T[] E_feBits, T[] C_feBits, T[][] E_tupleLabels,
 			T[][] C_tupleLabels) {
 		T[] pathLabel = toSignals(new BigInteger(1, Li).longValue(), d - 1); // no
 																				// sign
@@ -86,7 +119,7 @@ public class GCLib<T> extends IntegerLib<T> {
 			T[] index = toSignals(i, logD + 1);
 			deepest[i] = mux(deepest[i], src, geq(goal, index));
 
-			T[][] dae = deepestAndEmptyTuples(i, Li, E_feBits[i], C_feBits[i], E_tupleLabels[i], C_tupleLabels[i]);
+			T[][] dae = findDeepestAndEmpty(i, Li, E_feBits[i], C_feBits[i], E_tupleLabels[i], C_tupleLabels[i]);
 			T[] l = dae[0];
 			output[1][i] = dae[1];
 			output[2][i] = dae[2];

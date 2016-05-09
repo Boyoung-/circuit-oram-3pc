@@ -24,11 +24,11 @@ public class Retrieve extends Protocol {
 		Access access = new Access(con1, con2);
 		Reshuffle reshuffle = new Reshuffle(con1, con2);
 		PostProcessT postprocesst = new PostProcessT(con1, con2);
-		
-		OutAccess outaccess =  access.runE(predata, OTi, Ni, Nip1_pr, timer);
+
+		OutAccess outaccess = access.runE(predata, OTi, Ni, Nip1_pr, timer);
 		Tuple[] path = reshuffle.runE(predata, outaccess.E_P, OTi.getTreeIndex() == 0, timer);
-		postprocesst.runE(predata, outaccess.E_Ti, OTi.getTreeIndex() == h-1, timer);
-		
+		Tuple Ti = postprocesst.runE(predata, outaccess.E_Ti, OTi.getTreeIndex() == h - 1, timer);
+
 		return outaccess;
 	}
 
@@ -36,7 +36,7 @@ public class Retrieve extends Protocol {
 		Access access = new Access(con1, con2);
 		Reshuffle reshuffle = new Reshuffle(con1, con2);
 		PostProcessT postprocesst = new PostProcessT(con1, con2);
-		
+
 		access.runD(predata, OTi, Ni, Nip1_pr, timer);
 		reshuffle.runD();
 		postprocesst.runD();
@@ -46,11 +46,11 @@ public class Retrieve extends Protocol {
 		Access access = new Access(con1, con2);
 		Reshuffle reshuffle = new Reshuffle(con1, con2);
 		PostProcessT postprocesst = new PostProcessT(con1, con2);
-		
+
 		OutAccess outaccess = access.runC(md, ti, Li, timer);
 		Tuple[] path = reshuffle.runC(predata, outaccess.C_P, ti == 0, timer);
-		postprocesst.runC(predata, outaccess.C_Ti, Li, outaccess.C_Lip1, outaccess.C_j2, ti == h-1, timer);
-		
+		Tuple Ti = postprocesst.runC(predata, outaccess.C_Ti, Li, outaccess.C_Lip1, outaccess.C_j2, ti == h - 1, timer);
+
 		return outaccess;
 	}
 
@@ -155,9 +155,9 @@ public class Retrieve extends Protocol {
 			}
 		}
 
-		//timer.print();
+		// timer.print();
 
-		//System.out.println();
-		//System.out.println(sw.toMS());
+		// System.out.println();
+		// System.out.println(sw.toMS());
 	}
 }

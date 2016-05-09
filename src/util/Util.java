@@ -137,6 +137,13 @@ public class Util {
 			return out;
 		}
 	}
+	
+	public static String addZeros(String a, int n) {
+		String out = a;
+		for (int i = 0; i < n - a.length(); i++)
+			out = "0" + out;
+		return out;
+	}
 
 	public static void debug(String s) {
 		// only to make Communication.java compile

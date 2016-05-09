@@ -117,7 +117,7 @@ public class DeepestAndEmpty extends Protocol {
 
 		Network channel = new Network(null, con1);
 		CompEnv<GCSignal> gen = new GCGen(channel);
-		GCSignal[][] E_out = new GCLib<GCSignal>(gen, d, w).deepestAndEmptyTuples(i, Li, E_feZeroKeys, C_feZeroKeys,
+		GCSignal[][] E_out = new GCLib<GCSignal>(gen, d, w).findDeepestAndEmpty(i, Li, E_feZeroKeys, C_feZeroKeys,
 				E_labelZeroKeys, C_labelZeroKeys);
 
 		GCSignal[][] D_out = con1.readObject();
@@ -166,10 +166,10 @@ public class DeepestAndEmpty extends Protocol {
 		Network channel = new Network(con1, null);
 		CompEnv<GCSignal> gen = new GCEva(channel);
 		GCLib<GCSignal> dae = new GCLib<GCSignal>(gen, d, w);
-		dae.deepestAndEmptyTuples(i, Li, E_feKeyInput, C_feZeroKeys, E_labelKeyInput, C_labelZeroKeys);
+		dae.findDeepestAndEmpty(i, Li, E_feKeyInput, C_feZeroKeys, E_labelKeyInput, C_labelZeroKeys);
 
 		gen.setEvaluate();
-		GCSignal[][] D_out = dae.deepestAndEmptyTuples(i, Li, E_feKeyInput, C_feZeroKeys, E_labelKeyInput,
+		GCSignal[][] D_out = dae.findDeepestAndEmpty(i, Li, E_feKeyInput, C_feZeroKeys, E_labelKeyInput,
 				C_labelZeroKeys);
 
 		con1.write(D_out);
