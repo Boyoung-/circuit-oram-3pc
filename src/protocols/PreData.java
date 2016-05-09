@@ -51,4 +51,10 @@ public class PreData {
 	public GCSignal[][][] ur_C_labelKeyPairs;
 	public BigInteger[][] ur_outKeyHashes;
 	public GCLib<GCSignal> ur_gc;
+
+	public GCSignal[][] evict_LiKeyPairs;
+	public GCSignal[][][] evict_E_feKeyPairs;
+	public GCSignal[][][] evict_C_feKeyPairs;
+	public GCSignal[][][][] evict_E_labelKeyPairs;
+	public GCSignal[][][][] evict_C_labelKeyPairs;
 }

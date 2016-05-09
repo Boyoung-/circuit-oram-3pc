@@ -83,6 +83,7 @@ public class MakeCycle extends Protocol {
 	}
 
 	public void runE() {
+		int logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2));
 		byte[] Li = Util.nextBytes((d - 1 + 7) / 8, Crypto.sr);
 
 		byte[][] feBits = new byte[d][];
@@ -91,6 +92,9 @@ public class MakeCycle extends Protocol {
 		GCSignal[][] LiKeyPairs = genKeyPairs(d - 1);
 		GCSignal[] LiZeroKeys = getZeroKeys(LiKeyPairs);
 		GCSignal[] LiKeyInput = revSelectKeys(LiKeyPairs, Li);
+
+		GCSignal[][][] deltaKeyPairs = new GCSignal[d][][];
+		GCSignal[][] deltaZeroKeys = new GCSignal[d][];
 
 		GCSignal[][][] E_feKeyPairs = new GCSignal[d][][];
 		GCSignal[][][] C_feKeyPairs = new GCSignal[d][][];
@@ -105,6 +109,9 @@ public class MakeCycle extends Protocol {
 		GCSignal[][][] E_labelKeyInput = new GCSignal[d][w][];
 
 		for (int i = 0; i < d; i++) {
+			deltaKeyPairs[i] = genKeyPairs(logW);
+			deltaZeroKeys[i] = getZeroKeys(deltaKeyPairs[i]);
+
 			feBits[i] = Util.nextBytes((w + 7) / 8, Crypto.sr);
 			// feBits[i] = new byte[(w + 7) / 8];
 			for (int j = 0; j < w; j++)
@@ -130,18 +137,19 @@ public class MakeCycle extends Protocol {
 		con1.write(C_feZeroKeys);
 		con1.write(E_labelKeyInput);
 		con1.write(C_labelZeroKeys);
+		con1.write(deltaZeroKeys);
 
 		Network channel = new Network(null, con1);
 
 		CompEnv<GCSignal> gen1 = new GCGen(channel);
 		GCSignal[][][] E_out1 = new GCLib<GCSignal>(gen1, d, w).combineDeepestAndTarget(LiZeroKeys, E_feZeroKeys,
-				C_feZeroKeys, E_labelZeroKeys, C_labelZeroKeys);
+				C_feZeroKeys, E_labelZeroKeys, C_labelZeroKeys, deltaZeroKeys);
 
 		GCSignal[][][] D_out1 = con1.readObject();
 
 		CompEnv<GCSignal> gen = new GCGen(channel);
 		GCSignal[][][] E_out = new GCLib<GCSignal>(gen, d, w).combineDeepestTargetCycle(LiZeroKeys, E_feZeroKeys,
-				C_feZeroKeys, E_labelZeroKeys, C_labelZeroKeys);
+				C_feZeroKeys, E_labelZeroKeys, C_labelZeroKeys, deltaZeroKeys);
 
 		GCSignal[][][] D_out = con1.readObject();
 
@@ -205,26 +213,29 @@ public class MakeCycle extends Protocol {
 		GCSignal[][] C_feZeroKeys = con1.readObject();
 		GCSignal[][][] E_labelKeyInput = con1.readObject();
 		GCSignal[][][] C_labelZeroKeys = con1.readObject();
+		GCSignal[][] deltaZeroKeys = con1.readObject();
 
 		Network channel = new Network(con1, null);
 
 		CompEnv<GCSignal> gen1 = new GCEva(channel);
 		GCLib<GCSignal> dae1 = new GCLib<GCSignal>(gen1, d, w);
-		dae1.combineDeepestAndTarget(LiKeyInput, E_feKeyInput, C_feZeroKeys, E_labelKeyInput, C_labelZeroKeys);
+		dae1.combineDeepestAndTarget(LiKeyInput, E_feKeyInput, C_feZeroKeys, E_labelKeyInput, C_labelZeroKeys,
+				deltaZeroKeys);
 
 		gen1.setEvaluate();
 		GCSignal[][][] D_out1 = dae1.combineDeepestAndTarget(LiKeyInput, E_feKeyInput, C_feZeroKeys, E_labelKeyInput,
-				C_labelZeroKeys);
+				C_labelZeroKeys, deltaZeroKeys);
 
 		con1.write(D_out1);
 
 		CompEnv<GCSignal> gen = new GCEva(channel);
 		GCLib<GCSignal> dae = new GCLib<GCSignal>(gen, d, w);
-		dae.combineDeepestTargetCycle(LiKeyInput, E_feKeyInput, C_feZeroKeys, E_labelKeyInput, C_labelZeroKeys);
+		dae.combineDeepestTargetCycle(LiKeyInput, E_feKeyInput, C_feZeroKeys, E_labelKeyInput, C_labelZeroKeys,
+				deltaZeroKeys);
 
 		gen.setEvaluate();
 		GCSignal[][][] D_out = dae.combineDeepestTargetCycle(LiKeyInput, E_feKeyInput, C_feZeroKeys, E_labelKeyInput,
-				C_labelZeroKeys);
+				C_labelZeroKeys, deltaZeroKeys);
 
 		con1.write(D_out);
 	}
