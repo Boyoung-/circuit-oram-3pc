@@ -89,6 +89,15 @@ public class Util {
 			a[i] = (byte) (a[i] ^ b[i]);
 	}
 
+	public static BigInteger[] xor(BigInteger[] a, BigInteger[] b) {
+		if (a.length != b.length)
+			throw new LengthNotMatchException(a.length + " != " + b.length);
+		BigInteger[] c = new BigInteger[a.length];
+		for (int i = 0; i < a.length; i++)
+			c[i] = a[i].xor(b[i]);
+		return c;
+	}
+
 	public static byte[] intToBytes(int i) {
 		ByteBuffer bb = ByteBuffer.allocate(4);
 		bb.putInt(i);

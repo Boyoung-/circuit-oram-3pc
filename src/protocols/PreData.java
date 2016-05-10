@@ -67,8 +67,13 @@ public class PreData {
 	public int[][] evict_delta_p;
 	public int[][] evict_rho_p;
 	// public BigInteger[][] tmpKeyHashes;
-	
+
+	// PermuteTargetI
 	public BigInteger[][] pt_maskT;
 	public BigInteger[][] pt_keyT;
 	public BigInteger[][] pt_targetT;
+	// PermuteTargetII
+	public BigInteger[] pt_p;
+	public BigInteger[] pt_r;
+	public BigInteger[] pt_a;
 }

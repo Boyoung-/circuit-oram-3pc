@@ -28,6 +28,7 @@ public class PermuteTarget extends Protocol {
 		if (firstTree)
 			return null;
 
+		// PermuteTargetI
 		int d = targetOutKeys.length;
 		int I[] = new int[d];
 		BigInteger[] target = new BigInteger[d];
@@ -42,8 +43,18 @@ public class PermuteTarget extends Protocol {
 				}
 			}
 		}
-		
-		for (int j=0; j<d; j++) {
+
+		// PermuteTargetII
+		BigInteger[] z = Util.xor(target, predata.pt_p);
+
+		con2.write(z);
+		con2.write(I);
+
+		BigInteger[] g = con2.readObject();
+
+		target = Util.xor(predata.pt_a, g);
+
+		for (int j = 0; j < d; j++) {
 			System.out.print(target[j].intValue() + " ");
 		}
 		System.out.println();
@@ -55,6 +66,18 @@ public class PermuteTarget extends Protocol {
 		if (firstTree)
 			return;
 
+		// PermuteTargetII
+		BigInteger[] z = con2.readObject();
+		int[] I = con2.readObject();
+
+		BigInteger[] mk = new BigInteger[z.length];
+		for (int i = 0; i < mk.length; i++) {
+			mk[i] = predata.pt_maskT[i][I[i]].xor(z[i]);
+			mk[i] = predata.pt_r[i].xor(mk[i]);
+		}
+		BigInteger[] g = Util.permute(mk, predata.evict_pi);
+
+		con2.write(g);
 	}
 
 	// for testing correctness
@@ -88,14 +111,18 @@ public class PermuteTarget extends Protocol {
 				con1.write(predata.evict_targetOutKeyPairs);
 				con1.write(targetOutKeys);
 
+				con2.write(predata.evict_pi);
+
 				prepermutetarget.runE(predata, d, timer);
-				
+
 				runE(predata, false, timer);
-				
-				int[] piTarget = new int[d];
-				for (int j=0; j<d; j++) {
-					piTarget[j] = predata.evict_pi[target[j]];
-					System.out.print(piTarget[j] + " ");
+
+				int[] pi_ivs = Util.inversePermutation(predata.evict_pi);
+
+				int[] piTargetPiIvs = new int[d];
+				for (int j = 0; j < d; j++) {
+					piTargetPiIvs[j] = predata.evict_pi[target[pi_ivs[j]]];
+					System.out.print(piTargetPiIvs[j] + " ");
 				}
 				System.out.println();
 
@@ -106,12 +133,14 @@ public class PermuteTarget extends Protocol {
 				GCSignal[][] targetOutKeys = con1.readObject();
 
 				prepermutetarget.runD(predata, d, timer);
-				
+
 				runD(predata, false, targetOutKeys, timer);
 
 			} else if (party == Party.Charlie) {
+				predata.evict_pi = con1.readObject();
+
 				prepermutetarget.runC(predata, timer);
-				
+
 				runC(predata, false, timer);
 
 			} else {

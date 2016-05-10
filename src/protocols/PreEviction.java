@@ -73,10 +73,10 @@ public class PreEviction extends Protocol {
 			// predata.tmpKeyHashes[i] =
 			// GCUtil.genOutKeyHashes(outZeroKeys[0][i]);
 		}
-		
+
 		con2.write(predata.evict_C_feKeyPairs);
 		con2.write(predata.evict_C_labelKeyPairs);
-		
+
 		con1.write(predata.evict_tiOutKeyHashes);
 		con1.write(predata.evict_targetOutKeyPairs);
 		// con1.write(predata.tmpKeyHashes);
