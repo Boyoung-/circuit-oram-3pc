@@ -7,6 +7,7 @@ import com.oblivm.backend.gc.GCSignal;
 
 import crypto.Crypto;
 import oram.Tuple;
+import util.Util;
 
 public class GCUtil {
 
@@ -80,5 +81,27 @@ public class GCUtil {
 			}
 		}
 		return output;
+	}
+	
+	public static GCSignal[][] recoverOutKeyPairs(GCSignal[] outZeroKeys) {
+		GCSignal[][] pairs = new GCSignal[outZeroKeys.length][2];
+		for (int i=0; i<outZeroKeys.length; i++) {
+			pairs[i][0] = outZeroKeys[i];
+			pairs[i][1] = GCGenComp.R.xor(pairs[i][0]);
+		}
+		return pairs;
+	}
+	
+	public static byte[] xorAll(GCSignal[] keys) {
+		byte[] out = keys[0].bytes.clone();
+		for (int i=1; i<keys.length; i++)
+			Util.setXor(out, keys[i].bytes);
+		return out;
+	}
+	
+	public static byte[] hashAll(GCSignal[] keys) {
+		for (int i=0; i<keys.length; i++)
+			Crypto.sha1.update(keys[i].bytes);
+		return Crypto.sha1.digest();
 	}
 }

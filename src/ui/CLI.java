@@ -85,6 +85,8 @@ public class CLI {
 			operation = PrepareDeepest.class;
 		} else if (protocol.equals("pt")) {
 			operation = PrepareTarget.class;
+		} else if (protocol.equals("permt")) {
+			operation = PermuteTarget.class;
 		} else if (protocol.equals("mc")) {
 			operation = MakeCycle.class;
 		} else if (protocol.equals("update")) {

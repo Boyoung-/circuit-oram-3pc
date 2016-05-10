@@ -65,16 +65,20 @@ public class PreEviction extends Protocol {
 				E_labelZeroKeys, C_labelZeroKeys, deltaZeroKeys);
 
 		predata.evict_tiOutKeyHashes = new BigInteger[d][];
+		predata.evict_targetOutKeyPairs = new GCSignal[d][][];
 		// predata.tmpKeyHashes = new BigInteger[d][];
 		for (int i = 0; i < d; i++) {
 			predata.evict_tiOutKeyHashes[i] = GCUtil.genOutKeyHashes(outZeroKeys[1][i]);
+			predata.evict_targetOutKeyPairs[i] = GCUtil.recoverOutKeyPairs(outZeroKeys[0][i]);
 			// predata.tmpKeyHashes[i] =
 			// GCUtil.genOutKeyHashes(outZeroKeys[0][i]);
 		}
-
+		
 		con2.write(predata.evict_C_feKeyPairs);
 		con2.write(predata.evict_C_labelKeyPairs);
+		
 		con1.write(predata.evict_tiOutKeyHashes);
+		con1.write(predata.evict_targetOutKeyPairs);
 		// con1.write(predata.tmpKeyHashes);
 
 		// Permutation
@@ -96,9 +100,6 @@ public class PreEviction extends Protocol {
 		con2.write(predata.evict_rho);
 		con2.write(predata.evict_delta_p);
 		con2.write(predata.evict_rho_p);
-
-		// PreSSXOT pressxot = new PreSSXOT(con1, con2, 0);
-		// pressxot.runE(predata, timer);
 	}
 
 	public void runD(PreData predata, int d, int w, int[] tupleParam, Timer timer) {
@@ -131,10 +132,8 @@ public class PreEviction extends Protocol {
 		eva.setEvaluate();
 
 		predata.evict_tiOutKeyHashes = con1.readObject();
+		predata.evict_targetOutKeyPairs = con1.readObject();
 		// predata.tmpKeyHashes = con1.readObject();
-
-		// PreSSXOT pressxot = new PreSSXOT(con1, con2, 0);
-		// pressxot.runD(predata, sw + 1, sw, tupleParam, timer);
 	}
 
 	public void runC(PreData predata, Timer timer) {
@@ -148,9 +147,6 @@ public class PreEviction extends Protocol {
 		predata.evict_rho = con1.readObject();
 		predata.evict_delta_p = con1.readObject();
 		predata.evict_rho_p = con1.readObject();
-
-		// PreSSXOT pressxot = new PreSSXOT(con1, con2, 0);
-		// pressxot.runC(predata, timer);
 	}
 
 	@Override
