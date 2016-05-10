@@ -18,6 +18,7 @@ public class PrePermuteTarget extends Protocol {
 	}
 
 	public void runE(PreData predata, int d, Timer timer) {
+		// PermuteTargetI
 		int logD = (int) Math.ceil(Math.log(d) / Math.log(2));
 
 		predata.pt_keyT = new BigInteger[d][d];
@@ -46,6 +47,7 @@ public class PrePermuteTarget extends Protocol {
 
 		con2.write(predata.pt_maskT);
 
+		// PermuteTargetII
 		predata.pt_p = new BigInteger[d];
 		predata.pt_r = new BigInteger[d];
 		predata.pt_a = new BigInteger[d];

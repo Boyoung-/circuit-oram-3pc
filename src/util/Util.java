@@ -134,6 +134,13 @@ public class Util {
 		return (T[]) Arrays.copyOf(permuted, permuted.length, original.getClass());
 	}
 
+	public static int[] permute(int[] original, int[] p) {
+		int[] permuted = new int[original.length];
+		for (int i = 0; i < original.length; i++)
+			permuted[p[i]] = original[i];
+		return permuted;
+	}
+
 	public static byte[] longToBytes(long l, int numBytes) {
 		byte[] bytes = BigInteger.valueOf(l).toByteArray();
 		if (bytes.length == numBytes)
