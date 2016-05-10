@@ -18,13 +18,10 @@ public class PermuteTarget extends Protocol {
 		super(con1, con2);
 	}
 
-	public void runE(PreData predata, boolean firstTree, Timer timer) {
-		if (firstTree)
-			return;
-
+	public void runE() {
 	}
 
-	public BigInteger[] runD(PreData predata, boolean firstTree, GCSignal[][] targetOutKeys, Timer timer) {
+	public int[] runD(PreData predata, boolean firstTree, GCSignal[][] targetOutKeys, Timer timer) {
 		if (firstTree)
 			return null;
 
@@ -54,12 +51,11 @@ public class PermuteTarget extends Protocol {
 
 		target = Util.xor(predata.pt_a, g);
 
-		for (int j = 0; j < d; j++) {
-			System.out.print(target[j].intValue() + " ");
-		}
-		System.out.println();
-
-		return target;
+		int[] target_pp = new int[d];
+		for (int i=0; i<d; i++)
+			target_pp[i] = target[i].intValue();
+		
+		return target_pp;
 	}
 
 	public void runC(PreData predata, boolean firstTree, Timer timer) {
@@ -115,7 +111,7 @@ public class PermuteTarget extends Protocol {
 
 				prepermutetarget.runE(predata, d, timer);
 
-				runE(predata, false, timer);
+				runE();
 
 				int[] pi_ivs = Util.inversePermutation(predata.evict_pi);
 
@@ -134,7 +130,11 @@ public class PermuteTarget extends Protocol {
 
 				prepermutetarget.runD(predata, d, timer);
 
-				runD(predata, false, targetOutKeys, timer);
+				int[] target_pp = runD(predata, false, targetOutKeys, timer);
+				for (int j = 0; j < d; j++) {
+					System.out.print(target_pp[j] + " ");
+				}
+				System.out.println();
 
 			} else if (party == Party.Charlie) {
 				predata.evict_pi = con1.readObject();
