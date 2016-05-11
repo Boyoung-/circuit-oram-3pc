@@ -2,7 +2,6 @@ package com.oblivm.backend.util;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Arrays;
 import java.util.Scanner;
 
 import org.apache.commons.cli.ParseException;

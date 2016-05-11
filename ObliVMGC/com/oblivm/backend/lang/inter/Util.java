@@ -6,7 +6,6 @@ import java.util.Arrays;
 import com.oblivm.backend.circuits.arithmetic.IntegerLib;
 import com.oblivm.backend.flexsc.CompEnv;
 import com.oblivm.backend.oram.SecureArray;
-import com.oblivm.backend.util.Utils;
 
 public class Util {
 	public static <T> T[][] intToArray(T[] intInput, int bitSize, int arraySize) {

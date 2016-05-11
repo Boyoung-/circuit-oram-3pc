@@ -22,7 +22,6 @@ import protocols.struct.Party;
 import protocols.struct.PreData;
 import util.M;
 import util.P;
-import util.StopWatch;
 import util.Timer;
 import util.Util;
 
@@ -36,14 +35,14 @@ public class Access extends Protocol {
 		timer.start(P.ACC, M.online_comp);
 
 		// step 0: get Li from C
-		timer.start(P.ACC, M.online_read);
 		byte[] Li = new byte[0];
+		timer.start(P.ACC, M.online_read);
 		if (OTi.getTreeIndex() > 0)
 			Li = con2.read();
 		timer.stop(P.ACC, M.online_read);
 
 		// step 1
-		Bucket[] pathBuckets = OTi.getBucketsOnPath(new BigInteger(1, Li).longValue());
+		Bucket[] pathBuckets = OTi.getBucketsOnPath(Li);
 		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
 		for (int i = 0; i < pathTuples.length; i++)
 			pathTuples[i].setXor(predata.access_p[i]);
@@ -100,14 +99,14 @@ public class Access extends Protocol {
 		timer.start(P.ACC, M.online_comp);
 
 		// step 0: get Li from C
-		timer.start(P.ACC, M.online_read);
 		byte[] Li = new byte[0];
+		timer.start(P.ACC, M.online_read);
 		if (OTi.getTreeIndex() > 0)
 			Li = con2.read();
 		timer.stop(P.ACC, M.online_read);
 
 		// step 1
-		Bucket[] pathBuckets = OTi.getBucketsOnPath(new BigInteger(1, Li).longValue());
+		Bucket[] pathBuckets = OTi.getBucketsOnPath(Li);
 		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
 		for (int i = 0; i < pathTuples.length; i++)
 			pathTuples[i].setXor(predata.access_p[i]);
@@ -218,7 +217,6 @@ public class Access extends Protocol {
 		int addrBits = md.getAddrBits();
 
 		Timer timer = new Timer();
-		StopWatch sw = new StopWatch();
 
 		sanityCheck();
 
@@ -258,9 +256,7 @@ public class Access extends Protocol {
 						byte[] sD_Nip1_pr = Util.xor(Nip1_pr, sE_Nip1_pr);
 						con1.write(sD_Nip1_pr);
 
-						sw.start();
 						runE(predata, OTi, sE_Ni, sE_Nip1_pr, timer);
-						sw.stop();
 
 						if (ti == numTrees - 1)
 							con2.write(N);
@@ -273,18 +269,14 @@ public class Access extends Protocol {
 
 						byte[] sD_Nip1_pr = con1.read();
 
-						sw.start();
 						runD(predata, OTi, sD_Ni, sD_Nip1_pr, timer);
-						sw.stop();
 
 					} else if (party == Party.Charlie) {
 						preaccess.runC(timer);
 
 						System.out.println("L" + ti + "=" + new BigInteger(1, Li).toString(2));
 
-						sw.start();
 						OutAccess outaccess = runC(md, ti, Li, timer);
-						sw.stop();
 
 						Li = outaccess.C_Lip1;
 
@@ -306,9 +298,6 @@ public class Access extends Protocol {
 			}
 		}
 
-		timer.print();
-
-		System.out.println();
-		System.out.println(sw.toMS());
+		//timer.print();
 	}
 }

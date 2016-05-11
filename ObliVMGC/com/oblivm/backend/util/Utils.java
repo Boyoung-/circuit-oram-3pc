@@ -242,6 +242,7 @@ public class Utils {
 		return ret;
 	}
 
+	@SafeVarargs
 	public static <T> T[] flatten(CompEnv<T> env, T[]... data) {
 		int length = 0;
 		for (int i = 0; i < data.length; i++) {
@@ -256,6 +257,7 @@ public class Utils {
 		return ret;
 	}
 
+	@SafeVarargs
 	public static <T> T[][] flatten(CompEnv<T> env, T[][]... data) {
 		int length = 0;
 		for (int i = 0; i < data.length; i++) {
@@ -272,6 +274,7 @@ public class Utils {
 		return ret;
 	}
 
+	@SafeVarargs
 	public static <T> void unflatten(T[][] flat, T[][]... x) {
 		int pos = 0;
 		for (int i = 0; i < x.length; i++) {
@@ -282,6 +285,7 @@ public class Utils {
 		}
 	}
 
+	@SafeVarargs
 	public static <T> void unflatten(T[] flat, T[]... x) {
 		int pos = 0;
 		for (int i = 0; i < x.length; i++) {
@@ -300,6 +304,7 @@ public class Utils {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private static double getMega(double bytes) {
 		return bytes / (1024.0 * 1024);
 	}

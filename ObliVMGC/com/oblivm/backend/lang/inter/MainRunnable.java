@@ -7,7 +7,6 @@ import com.oblivm.backend.flexsc.CompEnv;
 /***
  * Copyright (C) 2015 by Chang Liu <liuchang@cs.umd.edu>
  */
-import com.oblivm.backend.gc.BadLabelException;
 import com.oblivm.backend.lang.inter.input.BitFileInput;
 import com.oblivm.backend.util.EvaRunnable;
 import com.oblivm.backend.util.GenRunnable;

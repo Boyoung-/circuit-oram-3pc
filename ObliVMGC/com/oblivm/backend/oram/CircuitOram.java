@@ -5,7 +5,6 @@ import java.util.Arrays;
 
 import com.oblivm.backend.flexsc.CompEnv;
 import com.oblivm.backend.flexsc.Party;
-import com.oblivm.backend.util.Utils;
 
 public class CircuitOram<T> extends TreeBasedOramParty<T> {
 	public CircuitOramLib<T> lib;
