@@ -7,12 +7,16 @@ import communication.Communication;
 import crypto.Crypto;
 import exceptions.AccessException;
 import exceptions.NoSuchPartyException;
-import measure.Timer;
 import oram.Forest;
 import oram.Metadata;
 import oram.Tree;
 import oram.Tuple;
+import protocols.precomputation.PreRetrieve;
+import protocols.struct.OutAccess;
+import protocols.struct.Party;
+import protocols.struct.PreData;
 import util.StopWatch;
+import util.Timer;
 import util.Util;
 
 public class Retrieve extends Protocol {

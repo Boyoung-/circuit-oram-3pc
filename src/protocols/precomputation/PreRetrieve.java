@@ -1,9 +1,12 @@
-package protocols;
+package protocols.precomputation;
 
 import communication.Communication;
-import measure.Timer;
 import oram.Forest;
 import oram.Metadata;
+import protocols.Protocol;
+import protocols.struct.Party;
+import protocols.struct.PreData;
+import util.Timer;
 
 public class PreRetrieve extends Protocol {
 	public PreRetrieve(Communication con1, Communication con2) {

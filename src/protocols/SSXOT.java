@@ -5,11 +5,14 @@ import java.math.BigInteger;
 import communication.Communication;
 import crypto.Crypto;
 import exceptions.NoSuchPartyException;
-import measure.M;
-import measure.P;
-import measure.Timer;
 import oram.Metadata;
 import oram.Tuple;
+import protocols.precomputation.PreSSXOT;
+import protocols.struct.Party;
+import protocols.struct.PreData;
+import util.M;
+import util.P;
+import util.Timer;
 import util.Util;
 
 public class SSXOT extends Protocol {
@@ -112,7 +115,7 @@ public class SSXOT extends Protocol {
 
 	// for testing correctness
 	@Override
-	public void run(protocols.Party party, Metadata md, oram.Forest forest) {
+	public void run(protocols.struct.Party party, Metadata md, oram.Forest forest) {
 		Timer timer = new Timer();
 
 		for (int j = 0; j < 100; j++) {

@@ -6,6 +6,7 @@ import com.oblivm.backend.gc.GCGenComp;
 import com.oblivm.backend.gc.GCSignal;
 
 import crypto.Crypto;
+import exceptions.LengthNotMatchException;
 import oram.Tuple;
 import util.Util;
 
@@ -40,14 +41,17 @@ public class GCUtil {
 		return out;
 	}
 
-	/*
-	 * public static GCSignal[] selectKeys(GCSignal[][] pairs, byte[] input) {
-	 * BigInteger in = new BigInteger(1, input); GCSignal[] out = new
-	 * GCSignal[pairs.length]; for (int i = 0; i < pairs.length; i++) out[i] =
-	 * pairs[i][in.testBit(pairs.length - 1 - i) ? 1 : 0]; return out; }
-	 */
+	public static GCSignal[] selectKeys(GCSignal[][] pairs, byte[] input) {
+		BigInteger in = new BigInteger(1, input);
+		GCSignal[] out = new GCSignal[pairs.length];
+		for (int i = 0; i < pairs.length; i++)
+			out[i] = pairs[i][in.testBit(pairs.length - 1 - i) ? 1 : 0];
+		return out;
+	}
 
 	public static GCSignal[][] selectLabelKeys(GCSignal[][][] labelPairs, Tuple[] tuples) {
+		if (tuples.length != labelPairs.length)
+			throw new LengthNotMatchException(tuples.length + " != " + labelPairs.length);
 		GCSignal[][] out = new GCSignal[tuples.length][];
 		for (int i = 0; i < tuples.length; i++)
 			out[i] = revSelectKeys(labelPairs[i], tuples[i].getL());
@@ -55,6 +59,8 @@ public class GCUtil {
 	}
 
 	public static GCSignal[] selectFeKeys(GCSignal[][] pairs, Tuple[] tuples) {
+		if (tuples.length != pairs.length)
+			throw new LengthNotMatchException(tuples.length + " != " + pairs.length);
 		GCSignal[] out = new GCSignal[pairs.length];
 		for (int i = 0; i < pairs.length; i++)
 			out[i] = pairs[i][new BigInteger(tuples[i].getF()).testBit(0) ? 1 : 0];
@@ -70,6 +76,8 @@ public class GCUtil {
 	}
 
 	public static BigInteger evaOutKeys(GCSignal[] outKeys, BigInteger[] genHashes) {
+		if (outKeys.length != genHashes.length)
+			throw new LengthNotMatchException(outKeys.length + " != " + genHashes.length);
 		BigInteger[] evaHashes = genOutKeyHashes(outKeys);
 		BigInteger output = BigInteger.ZERO;
 		for (int i = 0; i < outKeys.length; i++) {
@@ -90,13 +98,6 @@ public class GCUtil {
 			pairs[i][1] = GCGenComp.R.xor(pairs[i][0]);
 		}
 		return pairs;
-	}
-
-	public static byte[] xorAll(GCSignal[] keys) {
-		byte[] out = keys[0].bytes.clone();
-		for (int i = 1; i < keys.length; i++)
-			Util.setXor(out, keys[i].bytes);
-		return out;
 	}
 
 	public static byte[] hashAll(GCSignal[] keys) {

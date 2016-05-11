@@ -4,9 +4,11 @@ import communication.Communication;
 import exceptions.NoSuchPartyException;
 import oram.Forest;
 import oram.Metadata;
+import protocols.struct.Party;
 
 public abstract class Protocol {
-	Communication con1, con2;
+	protected Communication con1;
+	protected Communication con2;
 
 	/*
 	 * Connections are alphabetized so:

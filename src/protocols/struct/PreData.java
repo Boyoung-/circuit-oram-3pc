@@ -1,4 +1,4 @@
-package protocols;
+package protocols.struct;
 
 import java.math.BigInteger;
 

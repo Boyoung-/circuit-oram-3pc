@@ -5,11 +5,15 @@ import crypto.Crypto;
 import crypto.PRG;
 import exceptions.NoSuchPartyException;
 import exceptions.SSCOTException;
-import measure.M;
-import measure.P;
-import measure.Timer;
 import oram.Forest;
 import oram.Metadata;
+import protocols.precomputation.PreSSCOT;
+import protocols.struct.OutSSCOT;
+import protocols.struct.Party;
+import protocols.struct.PreData;
+import util.M;
+import util.P;
+import util.Timer;
 import util.Util;
 
 public class SSCOT extends Protocol {

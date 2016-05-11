@@ -13,6 +13,7 @@ import org.apache.commons.cli.ParseException;
 import communication.Communication;
 import exceptions.NoSuchPartyException;
 import protocols.*;
+import protocols.struct.Party;
 
 public class CLI {
 	public static final int DEFAULT_PORT = 8000;

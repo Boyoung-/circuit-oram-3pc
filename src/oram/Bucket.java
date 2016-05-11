@@ -53,11 +53,6 @@ public class Bucket implements Serializable {
 		return tuples;
 	}
 
-	public void setTuples(Tuple[] tuples) {
-		// TODO: add checks
-		this.tuples = tuples;
-	}
-
 	public Tuple getTuple(int i) {
 		return tuples[i];
 	}
@@ -92,24 +87,6 @@ public class Bucket implements Serializable {
 		return numBytes == b.getNumBytes();
 	}
 
-	public byte[] toByteArray() {
-		int tupleBytes = tuples[0].getNumBytes();
-		byte[] bucket = new byte[numBytes];
-		for (int i = 0; i < tuples.length; i++) {
-			byte[] tuple = tuples[i].toByteArray();
-			System.arraycopy(tuple, 0, bucket, i * tupleBytes, tupleBytes);
-		}
-		return bucket;
-	}
-
-	@Override
-	public String toString() {
-		String str = "Bucket:";
-		for (int i = 0; i < tuples.length; i++)
-			str += ("\n  " + tuples[i]);
-		return str;
-	}
-
 	public static Tuple[] bucketsToTuples(Bucket[] buckets) {
 		int numTuples = 0;
 		for (int i = 0; i < buckets.length; i++)
@@ -136,15 +113,19 @@ public class Bucket implements Serializable {
 			int end = i == 0 ? sw : start + w;
 			buckets[i] = new Bucket(Arrays.copyOfRange(tuples, start, end));
 		}
+
 		return buckets;
 	}
 
 	public void expand(Tuple[] ts) {
-		// TODO: add check
+		if (!tuples[0].sameLength(ts[0]))
+			throw new LengthNotMatchException(tuples[0].getNumBytes() + " != " + ts[0].getNumBytes());
+
 		tuples = ArrayUtils.addAll(tuples, ts);
 		numBytes = tuples.length * tuples[0].getNumBytes();
 	}
 
+	// append empty random content tuples
 	public void expand(int numTuples) {
 		if (tuples.length >= numTuples)
 			return;
@@ -170,5 +151,23 @@ public class Bucket implements Serializable {
 			return;
 		tuples = Arrays.copyOfRange(tuples, 0, numTuples);
 		numBytes = tuples.length * tuples[0].getNumBytes();
+	}
+
+	public byte[] toByteArray() {
+		int tupleBytes = tuples[0].getNumBytes();
+		byte[] bucket = new byte[numBytes];
+		for (int i = 0; i < tuples.length; i++) {
+			byte[] tuple = tuples[i].toByteArray();
+			System.arraycopy(tuple, 0, bucket, i * tupleBytes, tupleBytes);
+		}
+		return bucket;
+	}
+
+	@Override
+	public String toString() {
+		String str = "Bucket:";
+		for (int i = 0; i < tuples.length; i++)
+			str += ("\n  " + tuples[i]);
+		return str;
 	}
 }

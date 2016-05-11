@@ -1,12 +1,15 @@
-package protocols;
+package protocols.precomputation;
 
 import java.math.BigInteger;
 
 import communication.Communication;
 import crypto.Crypto;
-import measure.Timer;
 import oram.Forest;
 import oram.Metadata;
+import protocols.Protocol;
+import protocols.struct.Party;
+import protocols.struct.PreData;
+import util.Timer;
 import util.Util;
 
 public class PrePermuteIndex extends Protocol {

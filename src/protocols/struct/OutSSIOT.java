@@ -1,4 +1,4 @@
-package protocols;
+package protocols.struct;
 
 public class OutSSIOT {
 	public int t;

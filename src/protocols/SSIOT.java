@@ -5,11 +5,15 @@ import crypto.Crypto;
 import crypto.PRG;
 import exceptions.NoSuchPartyException;
 import exceptions.SSIOTException;
-import measure.M;
-import measure.P;
-import measure.Timer;
 import oram.Forest;
 import oram.Metadata;
+import protocols.precomputation.PreSSIOT;
+import protocols.struct.OutSSIOT;
+import protocols.struct.Party;
+import protocols.struct.PreData;
+import util.M;
+import util.P;
+import util.Timer;
 import util.Util;
 
 public class SSIOT extends Protocol {

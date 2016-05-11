@@ -115,19 +115,14 @@ public class Tree implements Serializable {
 		return numBytes == t.getNumBytes();
 	}
 
-	private long[] getBucketIndicesOnPath(long L) {
+	private long[] getBucketIndicesOnPath(BigInteger L) {
 		if (treeIndex == 0)
 			return new long[] { 0 };
 
-		// if (L < 0 || L > numBuckets / 2)
-		// throw new
-		// InvalidPathLabelException(BigInteger.valueOf(L).toString(2));
 		L = Util.getSubBits(L, lBits, 0);
-
-		BigInteger biL = BigInteger.valueOf(L);
 		long[] indices = new long[d];
 		for (int i = 1; i < d; i++) {
-			if (biL.testBit(d - i - 1))
+			if (L.testBit(d - i - 1))
 				indices[i] = indices[i - 1] * 2 + 2;
 			else
 				indices[i] = indices[i - 1] * 2 + 1;
@@ -135,7 +130,7 @@ public class Tree implements Serializable {
 		return indices;
 	}
 
-	public Bucket[] getBucketsOnPath(long L) {
+	public Bucket[] getBucketsOnPath(BigInteger L) {
 		long[] indices = getBucketIndicesOnPath(L);
 		Bucket[] buckets = new Bucket[indices.length];
 		for (int i = 0; i < indices.length; i++)
@@ -143,12 +138,28 @@ public class Tree implements Serializable {
 		return buckets;
 	}
 
-	public void setBucketsOnPath(long L, Bucket[] buckets) {
+	public Bucket[] getBucketsOnPath(byte[] L) {
+		return getBucketsOnPath(new BigInteger(1, L));
+	}
+
+	public Bucket[] getBucketsOnPath(long L) {
+		return getBucketsOnPath(BigInteger.valueOf(L));
+	}
+
+	public void setBucketsOnPath(BigInteger L, Bucket[] buckets) {
 		long[] indices = getBucketIndicesOnPath(L);
 		if (indices.length != buckets.length)
 			throw new LengthNotMatchException(indices.length + " != " + buckets.length);
 		for (int i = 0; i < indices.length; i++)
 			setBucket(indices[i], buckets[i]);
+	}
+
+	public void setBucketsOnPath(byte[] L, Bucket[] buckets) {
+		setBucketsOnPath(new BigInteger(1, L), buckets);
+	}
+
+	public void setBucketsOnPath(long L, Bucket[] buckets) {
+		setBucketsOnPath(BigInteger.valueOf(L), buckets);
 	}
 
 	public int getTau() {

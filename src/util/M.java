@@ -1,4 +1,4 @@
-package measure;
+package util;
 
 public class M {
 	public static final int size = 6;

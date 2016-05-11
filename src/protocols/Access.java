@@ -9,15 +9,21 @@ import communication.Communication;
 import crypto.Crypto;
 import exceptions.AccessException;
 import exceptions.NoSuchPartyException;
-import measure.M;
-import measure.P;
-import measure.Timer;
 import oram.Bucket;
 import oram.Forest;
 import oram.Metadata;
 import oram.Tree;
 import oram.Tuple;
+import protocols.precomputation.PreAccess;
+import protocols.struct.OutAccess;
+import protocols.struct.OutSSCOT;
+import protocols.struct.OutSSIOT;
+import protocols.struct.Party;
+import protocols.struct.PreData;
+import util.M;
+import util.P;
 import util.StopWatch;
+import util.Timer;
 import util.Util;
 
 public class Access extends Protocol {

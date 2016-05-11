@@ -28,7 +28,7 @@ public class Metadata {
 	private int addrBits;
 	private int w;
 	private int dBytes;
-	private int tempStashSize;
+	private int stashSize;
 	private int numTrees;
 	private long maxNumRecords;
 	private long numInsertRecords;
@@ -73,7 +73,7 @@ public class Metadata {
 		w = Integer.parseInt(configMap.get(W).toString());
 		dBytes = Integer.parseInt(configMap.get(DBYTES).toString());
 		numInsertRecords = Long.parseLong(configMap.get(INSERT).toString(), 10);
-		tempStashSize = Integer.parseInt(configMap.get(STASH).toString());
+		stashSize = Integer.parseInt(configMap.get(STASH).toString());
 
 		init();
 		setDefaultForestFileName();
@@ -128,7 +128,7 @@ public class Metadata {
 				treeBytes[i] = tupleBytes[i];
 			} else {
 				tupleBytes[i] = 1 + nBytes[i] + lBytes[i] + aBytes[i];
-				stashSizes[i] = tempStashSize;
+				stashSizes[i] = stashSize;
 				treeBytes[i] = ((numBuckets[i] - 1) * w + stashSizes[i]) * tupleBytes[i];
 			}
 
@@ -184,7 +184,7 @@ public class Metadata {
 		configMap.put(W, "" + w);
 		configMap.put(DBYTES, "" + dBytes);
 		configMap.put(INSERT, "" + numInsertRecords);
-		configMap.put(STASH, "" + tempStashSize);
+		configMap.put(STASH, "" + stashSize);
 
 		yaml.dump(configMap, writer);
 	}
@@ -200,7 +200,7 @@ public class Metadata {
 		defaultForestFileName += "w" + w;
 		defaultForestFileName += "d" + dBytes;
 		defaultForestFileName += "_i" + numInsertRecords;
-		defaultForestFileName += "s" + tempStashSize;
+		defaultForestFileName += "s" + stashSize;
 		defaultForestFileName += ".bin";
 	}
 
@@ -237,7 +237,7 @@ public class Metadata {
 	}
 
 	public int getTempStashSize() {
-		return tempStashSize;
+		return stashSize;
 	}
 
 	public int getNumTrees() {

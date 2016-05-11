@@ -1,4 +1,4 @@
-package protocols;
+package protocols.struct;
 
 public enum Party {
 	Charlie("charlie"), Debbie("debbie"), Eddie("eddie");

@@ -1,4 +1,4 @@
-package protocols;
+package protocols.precomputation;
 
 import java.math.BigInteger;
 
@@ -11,9 +11,12 @@ import com.oblivm.backend.network.Network;
 import communication.Communication;
 import gc.GCUpdateRoot;
 import gc.GCUtil;
-import measure.Timer;
 import oram.Forest;
 import oram.Metadata;
+import protocols.Protocol;
+import protocols.struct.Party;
+import protocols.struct.PreData;
+import util.Timer;
 
 public class PreUpdateRoot extends Protocol {
 	public PreUpdateRoot(Communication con1, Communication con2) {

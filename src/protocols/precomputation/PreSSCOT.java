@@ -1,13 +1,16 @@
-package protocols;
+package protocols.precomputation;
 
 import communication.Communication;
 import crypto.Crypto;
 import crypto.PRF;
-import measure.M;
-import measure.P;
-import measure.Timer;
 import oram.Forest;
 import oram.Metadata;
+import protocols.Protocol;
+import protocols.struct.Party;
+import protocols.struct.PreData;
+import util.M;
+import util.P;
+import util.Timer;
 
 public class PreSSCOT extends Protocol {
 	public PreSSCOT(Communication con1, Communication con2) {

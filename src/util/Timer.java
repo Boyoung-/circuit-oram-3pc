@@ -1,9 +1,8 @@
-package measure;
+package util;
 
 import java.util.Stack;
 
 import exceptions.TimingException;
-import util.StopWatch;
 
 public class Timer {
 	StopWatch[][] watches;
