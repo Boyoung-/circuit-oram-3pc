@@ -157,7 +157,8 @@ public class Retrieve extends Protocol {
 
 					} else if (party == Party.Charlie) {
 						int lBits = md.getLBitsOfTree(ti);
-						System.out.println("L" + ti + "=" + Util.addZeros(Util.getSubBits(new BigInteger(1, Li), lBits, 0).toString(2), lBits));
+						System.out.println("L" + ti + "="
+								+ Util.addZeros(Util.getSubBits(new BigInteger(1, Li), lBits, 0).toString(2), lBits));
 
 						sw.start();
 						OutAccess outaccess = runC(predata[ti], md, ti, Li, numTrees, timer);

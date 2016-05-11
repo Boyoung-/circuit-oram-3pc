@@ -52,9 +52,9 @@ public class PermuteTarget extends Protocol {
 		target = Util.xor(predata.pt_a, g);
 
 		int[] target_pp = new int[d];
-		for (int i=0; i<d; i++)
+		for (int i = 0; i < d; i++)
 			target_pp[i] = target[i].intValue();
-		
+
 		return target_pp;
 	}
 

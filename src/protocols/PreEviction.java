@@ -25,7 +25,7 @@ public class PreEviction extends Protocol {
 	public void runE(PreData predata, boolean firstTree, int d, int w, Timer timer) {
 		if (firstTree)
 			return;
-		
+
 		// GC
 		int logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2));
 
@@ -103,15 +103,15 @@ public class PreEviction extends Protocol {
 		con2.write(predata.evict_rho);
 		con2.write(predata.evict_delta_p);
 		con2.write(predata.evict_rho_p);
-		
+
 		// PermuteTarget
 		PrePermuteTarget prepermutetarget = new PrePermuteTarget(con1, con2);
 		prepermutetarget.runE(predata, d, timer);
-		
+
 		// PermuteIndex
 		PrePermuteIndex prepermuteindex = new PrePermuteIndex(con1, con2);
 		prepermuteindex.runE(predata, d, w, timer);
-		
+
 		// SSXOT
 		PreSSXOT pressxot = new PreSSXOT(con1, con2, 1);
 		pressxot.runE(predata, timer);
@@ -120,7 +120,7 @@ public class PreEviction extends Protocol {
 	public void runD(PreData predata, boolean firstTree, int d, int w, int[] tupleParam, Timer timer) {
 		if (firstTree)
 			return;
-		
+
 		// GC
 		int logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2));
 
@@ -152,25 +152,25 @@ public class PreEviction extends Protocol {
 		predata.evict_tiOutKeyHashes = con1.readObject();
 		predata.evict_targetOutKeyPairs = con1.readObject();
 		// predata.tmpKeyHashes = con1.readObject();
-		
+
 		// PermuteTarget
 		PrePermuteTarget prepermutetarget = new PrePermuteTarget(con1, con2);
 		prepermutetarget.runD(predata, d, timer);
-		
+
 		// PermuteIndex
 		PrePermuteIndex prepermuteindex = new PrePermuteIndex(con1, con2);
 		prepermuteindex.runD(predata, timer);
-		
+
 		// SSXOT
 		int W = (int) Math.pow(2, logW);
 		PreSSXOT pressxot = new PreSSXOT(con1, con2, 1);
-		pressxot.runD(predata, d*W, d*W, tupleParam, timer);
+		pressxot.runD(predata, d * W, d * W, tupleParam, timer);
 	}
 
 	public void runC(PreData predata, boolean firstTree, Timer timer) {
 		if (firstTree)
 			return;
-		
+
 		// GC
 		predata.evict_C_feKeyPairs = con1.readObject();
 		predata.evict_C_labelKeyPairs = con1.readObject();
@@ -181,15 +181,15 @@ public class PreEviction extends Protocol {
 		predata.evict_rho = con1.readObject();
 		predata.evict_delta_p = con1.readObject();
 		predata.evict_rho_p = con1.readObject();
-		
+
 		// PermuteTarget
 		PrePermuteTarget prepermutetarget = new PrePermuteTarget(con1, con2);
 		prepermutetarget.runC(predata, timer);
-		
+
 		// PermuteIndex
 		PrePermuteIndex prepermuteindex = new PrePermuteIndex(con1, con2);
 		prepermuteindex.runC(predata, timer);
-		
+
 		// SSXOT
 		PreSSXOT pressxot = new PreSSXOT(con1, con2, 1);
 		pressxot.runC(predata, timer);

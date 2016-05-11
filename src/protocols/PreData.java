@@ -76,7 +76,7 @@ public class PreData {
 	public BigInteger[] pt_p;
 	public BigInteger[] pt_r;
 	public BigInteger[] pt_a;
-	
+
 	// PermuteIndex
 	public BigInteger[] pi_p;
 	public BigInteger[] pi_r;

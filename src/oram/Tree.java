@@ -118,11 +118,12 @@ public class Tree implements Serializable {
 	private long[] getBucketIndicesOnPath(long L) {
 		if (treeIndex == 0)
 			return new long[] { 0 };
-		
-		//if (L < 0 || L > numBuckets / 2)
-		//	throw new InvalidPathLabelException(BigInteger.valueOf(L).toString(2));
+
+		// if (L < 0 || L > numBuckets / 2)
+		// throw new
+		// InvalidPathLabelException(BigInteger.valueOf(L).toString(2));
 		L = Util.getSubBits(L, lBits, 0);
-		
+
 		BigInteger biL = BigInteger.valueOf(L);
 		long[] indices = new long[d];
 		for (int i = 1; i < d; i++) {

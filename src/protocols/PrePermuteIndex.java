@@ -15,7 +15,7 @@ public class PrePermuteIndex extends Protocol {
 	}
 
 	public void runE(PreData predata, int d, int w, Timer timer) {
-		int logW = (int) Math.ceil(Math.log(w+1) / Math.log(2));
+		int logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2));
 
 		predata.pi_p = new BigInteger[d];
 		predata.pi_r = new BigInteger[d];

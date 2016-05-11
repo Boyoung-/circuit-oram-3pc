@@ -21,9 +21,9 @@ public class PermuteIndex extends Protocol {
 	public int[] runD(PreData predata, boolean firstTree, int[] ti, Timer timer) {
 		if (firstTree)
 			return null;
-		
+
 		BigInteger[] ti_p = new BigInteger[ti.length];
-		for (int i=0; i<ti.length; i++)
+		for (int i = 0; i < ti.length; i++)
 			ti_p[i] = BigInteger.valueOf(ti[i]);
 
 		BigInteger[] z = Util.xor(ti_p, predata.pi_p);
@@ -35,9 +35,9 @@ public class PermuteIndex extends Protocol {
 		ti_p = Util.xor(predata.pi_a, g);
 
 		int[] ti_pp = new int[ti.length];
-		for (int i=0; i<ti.length; i++)
+		for (int i = 0; i < ti.length; i++)
 			ti_pp[i] = ti_p[i].intValue();
-		
+
 		return ti_pp;
 	}
 
@@ -69,13 +69,13 @@ public class PermuteIndex extends Protocol {
 			if (party == Party.Eddie) {
 				int d = Crypto.sr.nextInt(5) + 5;
 				int w = Crypto.sr.nextInt(5) + 5;
-				int logW = (int) Math.ceil(Math.log(w+1) / Math.log(2));
-				
+				int logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2));
+
 				int[] ti = new int[d];
 				predata.evict_pi = Util.randomPermutation(d, Crypto.sr);
 				predata.evict_rho = new BigInteger[d];
-				for (int j=0; j<d; j++) {
-					ti[j] = Crypto.sr.nextInt(w+1);
+				for (int j = 0; j < d; j++) {
+					ti[j] = Crypto.sr.nextInt(w + 1);
 					predata.evict_rho[j] = new BigInteger(logW, Crypto.sr);
 				}
 

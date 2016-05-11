@@ -21,35 +21,35 @@ public class Eviction extends Protocol {
 	public Eviction(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
-	
+
 	private int[] prepareEviction(int target[], int[] ti, int W) {
 		int d = ti.length;
-		int[] evict = new int[W*d];
-		for (int r=0; r<d; r++) {
-			int tupleIndex = r*W + ti[r];
-			for (int c=0; c<W; c++) {
-				int currIndex = r*W + c;
+		int[] evict = new int[W * d];
+		for (int r = 0; r < d; r++) {
+			int tupleIndex = r * W + ti[r];
+			for (int c = 0; c < W; c++) {
+				int currIndex = r * W + c;
 				if (currIndex == tupleIndex) {
-					int targetIndex = target[r]*W + ti[target[r]];
+					int targetIndex = target[r] * W + ti[target[r]];
 					evict[targetIndex] = currIndex;
-				}
-				else
+				} else
 					evict[currIndex] = currIndex;
 			}
 		}
 		return evict;
 	}
 
-	public void runE(PreData predata, boolean firstTree, byte[] Li, Tuple[] originalPath, int d, int w, Tree OTi, Timer timer) {
+	public void runE(PreData predata, boolean firstTree, byte[] Li, Tuple[] originalPath, int d, int w, Tree OTi,
+			Timer timer) {
 		if (firstTree) {
-			OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), new Bucket[]{new Bucket(originalPath)});
+			OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), new Bucket[] { new Bucket(originalPath) });
 			return;
 		}
-		
+
 		int sw = OTi.getStashSize();
-		Tuple[] pathTuples = new Tuple[d*w];
+		Tuple[] pathTuples = new Tuple[d * w];
 		System.arraycopy(originalPath, 0, pathTuples, 0, w);
-		System.arraycopy(originalPath, sw, pathTuples, w, (d-1)*w);
+		System.arraycopy(originalPath, sw, pathTuples, w, (d - 1) * w);
 
 		Bucket[] pathBuckets = Bucket.tuplesToBuckets(pathTuples, d, w, w);
 
@@ -68,41 +68,41 @@ public class Eviction extends Protocol {
 		con1.write(E_feInputKeys);
 		con1.write(E_labelInputKeys);
 		con1.write(deltaInputKeys);
-		
+
 		PermuteTarget permutetarget = new PermuteTarget(con1, con2);
 		permutetarget.runE();
-		
+
 		PermuteIndex permuteindex = new PermuteIndex(con1, con2);
 		permuteindex.runE();
-		
+
 		int logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2));
 		int W = (int) Math.pow(2, logW);
-		for (int i=0; i<d; i++) {
+		for (int i = 0; i < d; i++) {
 			pathBuckets[i].expand(W);
 			pathBuckets[i].permute(predata.evict_delta_p[i]);
 		}
 		pathBuckets = Util.permute(pathBuckets, predata.evict_pi);
-		for (int i=0; i<d; i++) {
+		for (int i = 0; i < d; i++) {
 			pathBuckets[i].permute(predata.evict_rho_p[i]);
 		}
 		pathTuples = Bucket.bucketsToTuples(pathBuckets);
-		
+
 		SSXOT ssxot = new SSXOT(con1, con2, 1);
 		pathTuples = ssxot.runE(predata, pathTuples, timer);
-		
+
 		pathBuckets = Bucket.tuplesToBuckets(pathTuples, d, W, W);
-		for (int i=0; i<d; i++) {
+		for (int i = 0; i < d; i++) {
 			int[] rho_ivs = Util.inversePermutation(predata.evict_rho_p[i]);
 			pathBuckets[i].permute(rho_ivs);
 		}
 		int[] pi_ivs = Util.inversePermutation(predata.evict_pi);
 		pathBuckets = Util.permute(pathBuckets, pi_ivs);
-		for (int i=0; i<d; i++) {
+		for (int i = 0; i < d; i++) {
 			int[] delta_ivs = Util.inversePermutation(predata.evict_delta_p[i]);
 			pathBuckets[i].permute(delta_ivs);
 			pathBuckets[i].shrink(w);
 		}
-		
+
 		pathBuckets[0].expand(Arrays.copyOfRange(originalPath, w, sw));
 		OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), pathBuckets);
 	}
@@ -110,7 +110,7 @@ public class Eviction extends Protocol {
 	public void runD(PreData predata, boolean firstTree, byte[] Li, int w, Tree OTi, Timer timer) {
 		if (firstTree) {
 			Tuple[] originalPath = con2.readObject();
-			OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), new Bucket[]{new Bucket(originalPath)});
+			OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), new Bucket[] { new Bucket(originalPath) });
 			return;
 		}
 
@@ -130,37 +130,36 @@ public class Eviction extends Protocol {
 			ti_p[i] = GCUtil.evaOutKeys(outKeys[1][i], predata.evict_tiOutKeyHashes[i]).intValue();
 		}
 
-		/*System.out.println("ti:");
-		for (int i = 0; i < ti_p.length; i++)
-			System.out.print(ti_p[i] + " ");
-		System.out.println();*/
-		
+		/*
+		 * System.out.println("ti:"); for (int i = 0; i < ti_p.length; i++)
+		 * System.out.print(ti_p[i] + " "); System.out.println();
+		 */
+
 		PermuteTarget permutetarget = new PermuteTarget(con1, con2);
 		int[] target_pp = permutetarget.runD(predata, firstTree, outKeys[0], timer);
-		
+
 		PermuteIndex permuteindex = new PermuteIndex(con1, con2);
 		int[] ti_pp = permuteindex.runD(predata, firstTree, ti_p, timer);
-		
-		/*System.out.println("ti_pp:");
-		for (int i = 0; i < ti_p.length; i++)
-			System.out.print(ti_pp[i] + " ");
-		System.out.println();
-		
-		System.out.println("target_pp:");
-		for (int i = 0; i < ti_p.length; i++)
-			System.out.print(target_pp[i] + " ");
-		System.out.println();*/
-		
+
+		/*
+		 * System.out.println("ti_pp:"); for (int i = 0; i < ti_p.length; i++)
+		 * System.out.print(ti_pp[i] + " "); System.out.println();
+		 * 
+		 * System.out.println("target_pp:"); for (int i = 0; i < ti_p.length;
+		 * i++) System.out.print(target_pp[i] + " "); System.out.println();
+		 */
+
 		int logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2));
 		int W = (int) Math.pow(2, logW);
 		int[] evict = prepareEviction(target_pp, ti_pp, W);
-		/*for (int i = 0; i < evict.length; i++)
-			System.out.print(evict[i] + " ");
-		System.out.println();*/
-		
+		/*
+		 * for (int i = 0; i < evict.length; i++) System.out.print(evict[i] +
+		 * " "); System.out.println();
+		 */
+
 		SSXOT ssxot = new SSXOT(con1, con2, 1);
 		ssxot.runD(predata, evict, timer);
-		
+
 		Bucket[] pathBuckets = con2.readObject();
 		OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), pathBuckets);
 	}
@@ -170,10 +169,10 @@ public class Eviction extends Protocol {
 			con2.write(originalPath);
 			return;
 		}
-		
-		Tuple[] pathTuples = new Tuple[d*w];
+
+		Tuple[] pathTuples = new Tuple[d * w];
 		System.arraycopy(originalPath, 0, pathTuples, 0, w);
-		System.arraycopy(originalPath, sw, pathTuples, w, (d-1)*w);
+		System.arraycopy(originalPath, sw, pathTuples, w, (d - 1) * w);
 
 		Bucket[] pathBuckets = Bucket.tuplesToBuckets(pathTuples, d, w, w);
 
@@ -186,41 +185,41 @@ public class Eviction extends Protocol {
 
 		con2.write(C_feInputKeys);
 		con2.write(C_labelInputKeys);
-		
+
 		PermuteTarget permutetarget = new PermuteTarget(con1, con2);
 		permutetarget.runC(predata, firstTree, timer);
-		
+
 		PermuteIndex permuteindex = new PermuteIndex(con1, con2);
 		permuteindex.runC(predata, firstTree, timer);
-		
+
 		int logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2));
 		int W = (int) Math.pow(2, logW);
-		for (int i=0; i<d; i++) {
+		for (int i = 0; i < d; i++) {
 			pathBuckets[i].expand(W);
 			pathBuckets[i].permute(predata.evict_delta_p[i]);
 		}
 		pathBuckets = Util.permute(pathBuckets, predata.evict_pi);
-		for (int i=0; i<d; i++) {
+		for (int i = 0; i < d; i++) {
 			pathBuckets[i].permute(predata.evict_rho_p[i]);
 		}
 		pathTuples = Bucket.bucketsToTuples(pathBuckets);
-		
+
 		SSXOT ssxot = new SSXOT(con1, con2, 1);
 		pathTuples = ssxot.runC(predata, pathTuples, timer);
-		
+
 		pathBuckets = Bucket.tuplesToBuckets(pathTuples, d, W, W);
-		for (int i=0; i<d; i++) {
+		for (int i = 0; i < d; i++) {
 			int[] rho_ivs = Util.inversePermutation(predata.evict_rho_p[i]);
 			pathBuckets[i].permute(rho_ivs);
 		}
 		int[] pi_ivs = Util.inversePermutation(predata.evict_pi);
 		pathBuckets = Util.permute(pathBuckets, pi_ivs);
-		for (int i=0; i<d; i++) {
+		for (int i = 0; i < d; i++) {
 			int[] delta_ivs = Util.inversePermutation(predata.evict_delta_p[i]);
 			pathBuckets[i].permute(delta_ivs);
 			pathBuckets[i].shrink(w);
 		}
-		
+
 		pathBuckets[0].expand(Arrays.copyOfRange(originalPath, w, sw));
 		con2.write(pathBuckets);
 	}
@@ -256,7 +255,7 @@ public class Eviction extends Protocol {
 				con2.write(w);
 
 				preeviction.runE(predata, false, d, w, timer);
-				//runE(predata, false, Li, path, d, w, null, timer);
+				// runE(predata, false, Li, path, d, w, null, timer);
 
 				int emptyIndex = 0;
 				for (int j = 0; j < d * w; j++) {
@@ -270,17 +269,17 @@ public class Eviction extends Protocol {
 					}
 				}
 				System.out.println("last empty: " + emptyIndex);
-				
+
 				System.out.println("pi:");
 				for (int j = 0; j < d; j++)
 					System.out.print(predata.evict_pi[j] + " ");
 				System.out.println();
-				
+
 				System.out.println("delta:");
 				for (int j = 0; j < d; j++)
 					System.out.print(predata.evict_delta[j].intValue() + " ");
 				System.out.println();
-				
+
 				System.out.println("rho:");
 				for (int j = 0; j < d; j++)
 					System.out.print(predata.evict_rho[j].intValue() + " ");
@@ -293,7 +292,7 @@ public class Eviction extends Protocol {
 				int[] tupleParam = new int[] { 1, 2, (d - 1 + 7) / 8, 3 };
 
 				preeviction.runD(predata, false, d, w, tupleParam, timer);
-				//runD(predata, false, Li, w, null, timer);
+				// runD(predata, false, Li, w, null, timer);
 
 			} else if (party == Party.Charlie) {
 				int d = con1.readObject();
@@ -304,7 +303,7 @@ public class Eviction extends Protocol {
 					path[j] = new Tuple(1, 2, lBytes, 3, null);
 
 				preeviction.runC(predata, false, timer);
-				//runC(predata, false, path, d, w, timer);
+				// runC(predata, false, path, d, w, timer);
 
 			} else {
 				throw new NoSuchPartyException(party + "");

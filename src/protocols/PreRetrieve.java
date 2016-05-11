@@ -27,7 +27,7 @@ public class PreRetrieve extends Protocol {
 		prereshuffle.runE(predata, timer);
 		prepostprocesst.runE(predata, timer);
 		preupdateroot.runE(predata, md.getStashSizeOfTree(ti), md.getLBitsOfTree(ti), timer);
-		preeviction.runE(predata, ti==0, md.getLBitsOfTree(ti)+1, md.getW(), timer);
+		preeviction.runE(predata, ti == 0, md.getLBitsOfTree(ti) + 1, md.getW(), timer);
 	}
 
 	public void runD(PreData predata, Metadata md, int ti, PreData prev, Timer timer) {
@@ -44,7 +44,7 @@ public class PreRetrieve extends Protocol {
 		prereshuffle.runD(predata, tupleParam, timer);
 		prepostprocesst.runD(predata, prev, md.getLBytesOfTree(ti), md.getAlBytesOfTree(ti), md.getTau(), timer);
 		preupdateroot.runD(predata, md.getStashSizeOfTree(ti), md.getLBitsOfTree(ti), tupleParam, timer);
-		preeviction.runD(predata, ti==0, md.getLBitsOfTree(ti)+1, md.getW(), tupleParam, timer);
+		preeviction.runD(predata, ti == 0, md.getLBitsOfTree(ti) + 1, md.getW(), tupleParam, timer);
 	}
 
 	public void runC(PreData predata, Metadata md, int ti, PreData prev, Timer timer) {
@@ -58,7 +58,7 @@ public class PreRetrieve extends Protocol {
 		prereshuffle.runC(predata, timer);
 		prepostprocesst.runC(predata, prev, md.getLBytesOfTree(ti), md.getAlBytesOfTree(ti), timer);
 		preupdateroot.runC(predata, timer);
-		preeviction.runC(predata, ti==0, timer);
+		preeviction.runC(predata, ti == 0, timer);
 	}
 
 	@Override
