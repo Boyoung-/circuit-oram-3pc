@@ -16,6 +16,8 @@ import oram.Tuple;
 import protocols.precomputation.PreUpdateRoot;
 import protocols.struct.Party;
 import protocols.struct.PreData;
+import util.M;
+import util.P;
 import util.Timer;
 import util.Util;
 
@@ -28,6 +30,8 @@ public class UpdateRoot extends Protocol {
 		if (firstTree)
 			return R;
 
+		timer.start(P.UR, M.online_comp);
+
 		// step 1
 		int j1 = Crypto.sr.nextInt(R.length);
 		GCSignal[] j1InputKeys = GCUtil.revSelectKeys(predata.ur_j1KeyPairs, BigInteger.valueOf(j1).toByteArray());
@@ -35,16 +39,19 @@ public class UpdateRoot extends Protocol {
 		GCSignal[] E_feInputKeys = GCUtil.selectFeKeys(predata.ur_E_feKeyPairs, R);
 		GCSignal[][] E_labelInputKeys = GCUtil.selectLabelKeys(predata.ur_E_labelKeyPairs, R);
 
+		timer.start(P.UR, M.online_write);
 		con1.write(j1InputKeys);
 		con1.write(LiInputKeys);
 		con1.write(E_feInputKeys);
 		con1.write(E_labelInputKeys);
+		timer.stop(P.UR, M.online_write);
 
 		// step 4
 		R = ArrayUtils.addAll(R, new Tuple[] { Ti });
 		SSXOT ssxot = new SSXOT(con1, con2, 0);
 		R = ssxot.runE(predata, R, timer);
 
+		timer.stop(P.UR, M.online_comp);
 		return R;
 	}
 
@@ -52,21 +59,23 @@ public class UpdateRoot extends Protocol {
 		if (firstTree)
 			return;
 
+		timer.start(P.UR, M.online_comp);
+
 		// step 1
+		timer.start(P.UR, M.online_read);
 		GCSignal[] j1InputKeys = con1.readObject();
 		GCSignal[] LiInputKeys = con1.readObject();
 		GCSignal[] E_feInputKeys = con1.readObject();
 		GCSignal[][] E_labelInputKeys = con1.readObject();
 		GCSignal[] C_feInputKeys = con2.readObject();
 		GCSignal[][] C_labelInputKeys = con2.readObject();
+		timer.stop(P.UR, M.online_read);
 
 		// step 2
 		GCSignal[][] outKeys = predata.ur_gcur.rootFindDeepestAndEmpty(j1InputKeys, LiInputKeys, E_feInputKeys,
 				C_feInputKeys, E_labelInputKeys, C_labelInputKeys);
 		int j1 = GCUtil.evaOutKeys(outKeys[0], predata.ur_outKeyHashes[0]).intValue();
 		int j2 = GCUtil.evaOutKeys(outKeys[1], predata.ur_outKeyHashes[1]).intValue();
-
-		// System.out.println(j1 + " " + j2);
 
 		// step 3
 		int r = Crypto.sr.nextInt(w);
@@ -82,27 +91,30 @@ public class UpdateRoot extends Protocol {
 		SSXOT ssxot = new SSXOT(con1, con2, 0);
 		ssxot.runD(predata, I, timer);
 
-		// for (int i=0; i<I.length; i++)
-		// System.out.print(I[i] + " ");
-		// System.out.println();
+		timer.stop(P.UR, M.online_comp);
 	}
 
 	public Tuple[] runC(PreData predata, boolean firstTree, Tuple[] R, Tuple Ti, Timer timer) {
 		if (firstTree)
 			return R;
 
+		timer.start(P.UR, M.online_comp);
+
 		// step 1
 		GCSignal[] C_feInputKeys = GCUtil.selectFeKeys(predata.ur_C_feKeyPairs, R);
 		GCSignal[][] C_labelInputKeys = GCUtil.selectLabelKeys(predata.ur_C_labelKeyPairs, R);
 
+		timer.start(P.UR, M.online_write);
 		con2.write(C_feInputKeys);
 		con2.write(C_labelInputKeys);
+		timer.stop(P.UR, M.online_write);
 
 		// step 4
 		R = ArrayUtils.addAll(R, new Tuple[] { Ti });
 		SSXOT ssxot = new SSXOT(con1, con2, 0);
 		R = ssxot.runC(predata, R, timer);
 
+		timer.stop(P.UR, M.online_comp);
 		return R;
 	}
 
@@ -111,7 +123,7 @@ public class UpdateRoot extends Protocol {
 	public void run(Party party, Metadata md, Forest forest) {
 		Timer timer = new Timer();
 
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 20; i++) {
 
 			System.out.println("i=" + i);
 
@@ -119,15 +131,13 @@ public class UpdateRoot extends Protocol {
 			PreUpdateRoot preupdateroot = new PreUpdateRoot(con1, con2);
 
 			if (party == Party.Eddie) {
-				int sw = Crypto.sr.nextInt(25) + 10;
-				int lBits = Crypto.sr.nextInt(30) + 5;
+				int sw = Crypto.sr.nextInt(15) + 10;
+				int lBits = Crypto.sr.nextInt(20) + 5;
 				byte[] Li = Util.nextBytes((lBits + 7) / 8, Crypto.sr);
 				Tuple[] R = new Tuple[sw];
 				for (int j = 0; j < sw; j++)
 					R[j] = new Tuple(1, 2, (lBits + 7) / 8, 3, Crypto.sr);
 				Tuple Ti = new Tuple(1, 2, (lBits + 7) / 8, 3, Crypto.sr);
-
-				System.out.println("sw,lBits: " + sw + " " + lBits);
 
 				con1.write(sw);
 				con1.write(lBits);
@@ -136,20 +146,80 @@ public class UpdateRoot extends Protocol {
 				con2.write(lBits);
 
 				preupdateroot.runE(predata, sw, lBits, timer);
-				runE(predata, false, Li, R, Ti, timer);
+				Tuple[] newR = runE(predata, false, Li, R, Ti, timer);
 
-				int emptyIndex = 0;
+				Tuple[] R_C = con2.readObject();
+				int cnt = 0;
+				int[] index = new int[3];
 				for (int j = 0; j < sw; j++) {
-					if (new BigInteger(R[j].getF()).testBit(0)) {
-						String l = Util.addZeros(
-								Util.getSubBits(new BigInteger(1, Util.xor(R[j].getL(), Li)), lBits, 0).toString(2),
-								lBits);
-						System.out.println(j + ":\t" + l);
-					} else {
-						emptyIndex = j;
+					newR[j].setXor(R_C[j]);
+					if (!R[j].equals(newR[j])) {
+						index[cnt] = j;
+						cnt++;
 					}
 				}
-				System.out.println("last empty: " + emptyIndex);
+
+				if (cnt == 1) {
+					if (newR[index[0]].equals(Ti) && (R[index[0]].getF()[0] & 1) == 0)
+						System.out.println("UpdateRoot test passed");
+					else
+						System.err.println("UpdateRoot test failed 1");
+				} else if (cnt == 2) {
+					int u = -1;
+					for (int k = 0; k < cnt; k++) {
+						if (newR[index[k]].equals(Ti)) {
+							u = k;
+							break;
+						}
+					}
+					if (u == -1)
+						System.err.println("UpdateRoot test failed 2");
+					else {
+						int a1 = index[u];
+						int a2 = index[1 - u];
+						if (!R[a1].equals(newR[a2]) || (R[u].getF()[0] & 1) == 1)
+							System.err.println("UpdateRoot test failed 3");
+						else
+							System.out.println("UpdateRoot test passed");
+					}
+				} else if (cnt == 3) {
+					int u = -1;
+					for (int k = 0; k < cnt; k++) {
+						if (newR[index[k]].equals(Ti)) {
+							u = k;
+							break;
+						}
+					}
+					if (u == -1)
+						System.err.println("UpdateRoot test failed 4");
+					else {
+						int a1, a2;
+						if (u == 0) {
+							a1 = 1;
+							a2 = 2;
+						} else if (u == 1) {
+							a1 = 0;
+							a2 = 2;
+						} else {
+							a1 = 0;
+							a2 = 1;
+						}
+						u = index[u];
+						a1 = index[a1];
+						a2 = index[a2];
+						if ((R[u].getF()[0] & 1) == 1)
+							System.err.println("UpdateRoot test failed 5");
+						else if (!R[a1].equals(newR[a2]))
+							System.err.println("UpdateRoot test failed 6");
+						else if (!R[a1].equals(newR[a2]) || !R[a2].equals(newR[a1]))
+							System.err.println("UpdateRoot test failed 7");
+						else
+							System.out.println("UpdateRoot test passed");
+					}
+				} else {
+					System.err.println("UpdateRoot test failed 8");
+				}
+				System.out.println();
 
 			} else if (party == Party.Debbie) {
 				int sw = con1.readObject();
@@ -169,7 +239,9 @@ public class UpdateRoot extends Protocol {
 				Tuple Ti = new Tuple(1, 2, (lBits + 7) / 8, 3, null);
 
 				preupdateroot.runC(predata, timer);
-				runC(predata, false, R, Ti, timer);
+				R = runC(predata, false, R, Ti, timer);
+
+				con1.write(R);
 
 			} else {
 				throw new NoSuchPartyException(party + "");
