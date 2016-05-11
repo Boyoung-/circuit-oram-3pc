@@ -122,8 +122,8 @@ public class Eviction extends Protocol {
 		GCSignal[][] C_feInputKeys = con2.readObject();
 		GCSignal[][][] C_labelInputKeys = con2.readObject();
 
-		GCSignal[][][] outKeys = predata.evict_gc.routing(LiInputKeys, E_feInputKeys, C_feInputKeys, E_labelInputKeys,
-				C_labelInputKeys, deltaInputKeys);
+		GCSignal[][][] outKeys = predata.evict_gcroute.routing(LiInputKeys, E_feInputKeys, C_feInputKeys,
+				E_labelInputKeys, C_labelInputKeys, deltaInputKeys);
 
 		int[] ti_p = new int[deltaInputKeys.length];
 		for (int i = 0; i < ti_p.length; i++) {

@@ -14,7 +14,7 @@ public class TestPermuteIndex_E {
 		String binDir = dir + "\\bin";
 		String libs = dir + "\\lib\\*";
 		try {
-			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol permi eddie");
+			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol pi eddie");
 
 		} catch (IOException e) {
 			e.printStackTrace();

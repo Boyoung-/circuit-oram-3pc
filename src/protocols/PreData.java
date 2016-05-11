@@ -5,7 +5,8 @@ import java.math.BigInteger;
 import com.oblivm.backend.gc.GCSignal;
 
 import crypto.PRF;
-import gc.GCLib;
+import gc.GCRoute;
+import gc.GCUpdateRoot;
 import oram.Tuple;
 
 public class PreData {
@@ -50,7 +51,7 @@ public class PreData {
 	public GCSignal[][][] ur_E_labelKeyPairs;
 	public GCSignal[][][] ur_C_labelKeyPairs;
 	public BigInteger[][] ur_outKeyHashes;
-	public GCLib<GCSignal> ur_gc;
+	public GCUpdateRoot<GCSignal> ur_gcur;
 
 	public GCSignal[][] evict_LiKeyPairs;
 	public GCSignal[][][] evict_E_feKeyPairs;
@@ -60,13 +61,12 @@ public class PreData {
 	public GCSignal[][][] evict_deltaKeyPairs;
 	public BigInteger[][] evict_tiOutKeyHashes;
 	public GCSignal[][][] evict_targetOutKeyPairs;
-	public GCLib<GCSignal> evict_gc;
+	public GCRoute<GCSignal> evict_gcroute;
 	public int[] evict_pi;
 	public BigInteger[] evict_delta;
 	public BigInteger[] evict_rho;
 	public int[][] evict_delta_p;
 	public int[][] evict_rho_p;
-	// public BigInteger[][] tmpKeyHashes;
 
 	// PermuteTargetI
 	public BigInteger[][] pt_maskT;

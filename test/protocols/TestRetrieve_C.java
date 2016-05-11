@@ -14,7 +14,7 @@ public class TestRetrieve_C {
 		String binDir = dir + "\\bin";
 		String libs = dir + "\\lib\\*";
 		try {
-			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol retrieve charlie");
+			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol rtv charlie");
 
 		} catch (IOException e) {
 			e.printStackTrace();

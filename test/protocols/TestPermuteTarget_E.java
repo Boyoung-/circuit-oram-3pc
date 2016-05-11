@@ -14,7 +14,7 @@ public class TestPermuteTarget_E {
 		String binDir = dir + "\\bin";
 		String libs = dir + "\\lib\\*";
 		try {
-			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol permt eddie");
+			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol pt eddie");
 
 		} catch (IOException e) {
 			e.printStackTrace();

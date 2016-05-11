@@ -10,7 +10,7 @@ import com.oblivm.backend.network.Network;
 
 import communication.Communication;
 import crypto.Crypto;
-import gc.GCLib;
+import gc.GCRoute;
 import gc.GCUtil;
 import measure.Timer;
 import oram.Forest;
@@ -64,7 +64,7 @@ public class PreEviction extends Protocol {
 
 		Network channel = new Network(null, con1);
 		CompEnv<GCSignal> gen = new GCGen(channel);
-		GCSignal[][][] outZeroKeys = new GCLib<GCSignal>(gen, d, w).routing(LiZeroKeys, E_feZeroKeys, C_feZeroKeys,
+		GCSignal[][][] outZeroKeys = new GCRoute<GCSignal>(gen, d, w).routing(LiZeroKeys, E_feZeroKeys, C_feZeroKeys,
 				E_labelZeroKeys, C_labelZeroKeys, deltaZeroKeys);
 
 		predata.evict_tiOutKeyHashes = new BigInteger[d][];
@@ -144,8 +144,8 @@ public class PreEviction extends Protocol {
 
 		Network channel = new Network(con1, null);
 		CompEnv<GCSignal> eva = new GCEva(channel);
-		predata.evict_gc = new GCLib<GCSignal>(eva, d, w);
-		predata.evict_gc.routing(LiZeroKeys, E_feZeroKeys, C_feZeroKeys, E_labelZeroKeys, C_labelZeroKeys,
+		predata.evict_gcroute = new GCRoute<GCSignal>(eva, d, w);
+		predata.evict_gcroute.routing(LiZeroKeys, E_feZeroKeys, C_feZeroKeys, E_labelZeroKeys, C_labelZeroKeys,
 				deltaZeroKeys);
 		eva.setEvaluate();
 

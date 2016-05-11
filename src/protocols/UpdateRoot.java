@@ -58,7 +58,7 @@ public class UpdateRoot extends Protocol {
 		GCSignal[][] C_labelInputKeys = con2.readObject();
 
 		// step 2
-		GCSignal[][] outKeys = predata.ur_gc.rootFindDeepestAndEmpty(j1InputKeys, LiInputKeys, E_feInputKeys,
+		GCSignal[][] outKeys = predata.ur_gcur.rootFindDeepestAndEmpty(j1InputKeys, LiInputKeys, E_feInputKeys,
 				C_feInputKeys, E_labelInputKeys, C_labelInputKeys);
 		int j1 = GCUtil.evaOutKeys(outKeys[0], predata.ur_outKeyHashes[0]).intValue();
 		int j2 = GCUtil.evaOutKeys(outKeys[1], predata.ur_outKeyHashes[1]).intValue();

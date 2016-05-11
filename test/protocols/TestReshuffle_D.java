@@ -14,7 +14,7 @@ public class TestReshuffle_D {
 		String binDir = dir + "\\bin";
 		String libs = dir + "\\lib\\*";
 		try {
-			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol reshuffle debbie");
+			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol rsf debbie");
 
 		} catch (IOException e) {
 			e.printStackTrace();

@@ -14,7 +14,7 @@ public class TestEviction_D {
 		String binDir = dir + "\\bin";
 		String libs = dir + "\\lib\\*";
 		try {
-			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol evict debbie");
+			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol evi debbie");
 
 		} catch (IOException e) {
 			e.printStackTrace();

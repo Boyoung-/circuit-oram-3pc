@@ -14,7 +14,7 @@ public class TestUpdateRoot_C {
 		String binDir = dir + "\\bin";
 		String libs = dir + "\\lib\\*";
 		try {
-			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol update charlie");
+			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol ur charlie");
 
 		} catch (IOException e) {
 			e.printStackTrace();

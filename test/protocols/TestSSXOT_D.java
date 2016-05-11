@@ -14,7 +14,7 @@ public class TestSSXOT_D {
 		String binDir = dir + "\\bin";
 		String libs = dir + "\\lib\\*";
 		try {
-			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol ssxot debbie");
+			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol xot debbie");
 
 		} catch (IOException e) {
 			e.printStackTrace();

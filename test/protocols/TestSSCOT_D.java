@@ -14,7 +14,7 @@ public class TestSSCOT_D {
 		String binDir = dir + "\\bin";
 		String libs = dir + "\\lib\\*";
 		try {
-			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol sscot debbie");
+			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol cot debbie");
 
 		} catch (IOException e) {
 			e.printStackTrace();

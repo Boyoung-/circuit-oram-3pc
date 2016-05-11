@@ -9,7 +9,7 @@ import com.oblivm.backend.gc.regular.GCGen;
 import com.oblivm.backend.network.Network;
 
 import communication.Communication;
-import gc.GCLib;
+import gc.GCUpdateRoot;
 import gc.GCUtil;
 import measure.Timer;
 import oram.Forest;
@@ -43,7 +43,7 @@ public class PreUpdateRoot extends Protocol {
 
 		Network channel = new Network(null, con1);
 		CompEnv<GCSignal> gen = new GCGen(channel);
-		GCSignal[][] outZeroKeys = new GCLib<GCSignal>(gen, lBits + 1, sw).rootFindDeepestAndEmpty(j1ZeroKeys,
+		GCSignal[][] outZeroKeys = new GCUpdateRoot<GCSignal>(gen, lBits + 1, sw).rootFindDeepestAndEmpty(j1ZeroKeys,
 				LiZeroKeys, E_feZeroKeys, C_feZeroKeys, E_labelZeroKeys, C_labelZeroKeys);
 
 		predata.ur_outKeyHashes = new BigInteger[outZeroKeys.length][];
@@ -73,8 +73,8 @@ public class PreUpdateRoot extends Protocol {
 
 		Network channel = new Network(con1, null);
 		CompEnv<GCSignal> eva = new GCEva(channel);
-		predata.ur_gc = new GCLib<GCSignal>(eva, lBits + 1, sw);
-		predata.ur_gc.rootFindDeepestAndEmpty(j1ZeroKeys, LiZeroKeys, E_feZeroKeys, C_feZeroKeys, E_labelZeroKeys,
+		predata.ur_gcur = new GCUpdateRoot<GCSignal>(eva, lBits + 1, sw);
+		predata.ur_gcur.rootFindDeepestAndEmpty(j1ZeroKeys, LiZeroKeys, E_feZeroKeys, C_feZeroKeys, E_labelZeroKeys,
 				C_labelZeroKeys);
 		eva.setEvaluate();
 

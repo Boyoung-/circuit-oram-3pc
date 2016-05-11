@@ -14,7 +14,7 @@ public class TestAccess_D {
 		String binDir = dir + "\\bin";
 		String libs = dir + "\\lib\\*";
 		try {
-			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol access debbie");
+			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol acc debbie");
 
 		} catch (IOException e) {
 			e.printStackTrace();

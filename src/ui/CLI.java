@@ -63,39 +63,27 @@ public class CLI {
 		Class<? extends Protocol> operation = null;
 		String protocol = cmd.getOptionValue("protocol", "retrieve").toLowerCase();
 
-		if (protocol.equals("sscot")) {
+		if (protocol.equals("acc")) {
+			operation = Access.class;
+		} else if (protocol.equals("cot")) {
 			operation = SSCOT.class;
-		} else if (protocol.equals("ssiot")) {
+		} else if (protocol.equals("iot")) {
 			operation = SSIOT.class;
-		} else if (protocol.equals("reshuffle")) {
+		} else if (protocol.equals("rsf")) {
 			operation = Reshuffle.class;
 		} else if (protocol.equals("ppt")) {
 			operation = PostProcessT.class;
-		} else if (protocol.equals("ssxot")) {
-			operation = SSXOT.class;
-		} else if (protocol.equals("access")) {
-			operation = Access.class;
-		} else if (protocol.equals("gc")) {
-			operation = GarbledCircuit.class;
-		} else if (protocol.equals("gctest")) {
-			operation = GarbledCircuitTest.class;
-		} else if (protocol.equals("dae")) {
-			operation = DeepestAndEmpty.class;
-		} else if (protocol.equals("pd")) {
-			operation = PrepareDeepest.class;
-		} else if (protocol.equals("pt")) {
-			operation = PrepareTarget.class;
-		} else if (protocol.equals("permt")) {
-			operation = PermuteTarget.class;
-		} else if (protocol.equals("permi")) {
-			operation = PermuteIndex.class;
-		} else if (protocol.equals("mc")) {
-			operation = MakeCycle.class;
-		} else if (protocol.equals("update")) {
+		} else if (protocol.equals("ur")) {
 			operation = UpdateRoot.class;
-		} else if (protocol.equals("evict")) {
+		} else if (protocol.equals("evi")) {
 			operation = Eviction.class;
-		} else if (protocol.equals("retrieve")) {
+		} else if (protocol.equals("pt")) {
+			operation = PermuteTarget.class;
+		} else if (protocol.equals("pi")) {
+			operation = PermuteIndex.class;
+		} else if (protocol.equals("xot")) {
+			operation = SSXOT.class;
+		} else if (protocol.equals("rtv")) {
 			operation = Retrieve.class;
 		} else {
 			System.out.println("Protocol " + protocol + " not supported");

@@ -14,7 +14,7 @@ public class TestSSIOT_D {
 		String binDir = dir + "\\bin";
 		String libs = dir + "\\lib\\*";
 		try {
-			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol ssiot debbie");
+			process = runTime.exec("java -classpath " + binDir + ";" + libs + " ui.CLI -protocol iot debbie");
 
 		} catch (IOException e) {
 			e.printStackTrace();
