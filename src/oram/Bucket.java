@@ -4,7 +4,11 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Random;
 
+import org.apache.commons.lang3.ArrayUtils;
+
+import crypto.Crypto;
 import exceptions.LengthNotMatchException;
+import util.Util;
 
 public class Bucket implements Serializable {
 	/**
@@ -48,6 +52,11 @@ public class Bucket implements Serializable {
 	public Tuple[] getTuples() {
 		return tuples;
 	}
+	
+	public void setTuples(Tuple[] tuples) {
+		// TODO: add checks
+		this.tuples = tuples;
+	}
 
 	public Tuple getTuple(int i) {
 		return tuples[i];
@@ -57,6 +66,10 @@ public class Bucket implements Serializable {
 		if (!tuples[i].sameLength(tuple))
 			throw new LengthNotMatchException(tuples[i].getNumBytes() + " != " + tuple.getNumBytes());
 		tuples[i] = tuple;
+	}
+	
+	public void permute(int[] p) {
+		tuples = Util.permute(tuples, p);
 	}
 
 	public Bucket xor(Bucket b) {
@@ -124,5 +137,38 @@ public class Bucket implements Serializable {
 			buckets[i] = new Bucket(Arrays.copyOfRange(tuples, start, end));
 		}
 		return buckets;
+	}
+	
+	public void expand(Tuple[] ts) {
+		// TODO: add check
+		tuples = ArrayUtils.addAll(tuples, ts);
+		numBytes = tuples.length * tuples[0].getNumBytes();
+	}
+	
+	public void expand(int numTuples) {
+		if (tuples.length >= numTuples)
+			return;
+		
+		int f = tuples[0].getF().length;
+		int n = tuples[0].getN().length;
+		int l = tuples[0].getL().length;
+		int a = tuples[0].getA().length;
+		
+		Tuple[] newTuples = new Tuple[numTuples];
+		System.arraycopy(tuples, 0, newTuples, 0, tuples.length);
+		for (int i=tuples.length; i<numTuples; i++) {
+			newTuples[i] = new Tuple(f, n, l, a, Crypto.sr);
+			newTuples[i].setF(new byte[f]);
+		}
+		
+		tuples = newTuples;
+		numBytes = tuples.length * tuples[0].getNumBytes();
+	}
+	
+	public void shrink(int numTuples) {
+		if (numTuples >= tuples.length)
+			return;
+		tuples = Arrays.copyOfRange(tuples, 0, numTuples);
+		numBytes = tuples.length * tuples[0].getNumBytes();
 	}
 }

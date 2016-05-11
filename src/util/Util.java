@@ -107,6 +107,13 @@ public class Util {
 	public static int bytesToInt(byte[] b) {
 		return new BigInteger(b).intValue();
 	}
+	
+	public static int[] identityPermutation(int len) {
+		int[] out = new int[len];
+		for (int i=0; i<len; i++)
+			out[i] = i;
+		return out;
+	}
 
 	public static int[] randomPermutation(int len, Random rand) {
 		List<Integer> list = new ArrayList<Integer>(len);

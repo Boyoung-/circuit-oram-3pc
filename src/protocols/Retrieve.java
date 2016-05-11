@@ -26,12 +26,16 @@ public class Retrieve extends Protocol {
 		Reshuffle reshuffle = new Reshuffle(con1, con2);
 		PostProcessT postprocesst = new PostProcessT(con1, con2);
 		UpdateRoot updateroot = new UpdateRoot(con1, con2);
+		Eviction eviction = new Eviction(con1, con2);
 
 		OutAccess outaccess = access.runE(predata, OTi, Ni, Nip1_pr, timer);
 		Tuple[] path = reshuffle.runE(predata, outaccess.E_P, OTi.getTreeIndex() == 0, timer);
 		Tuple Ti = postprocesst.runE(predata, outaccess.E_Ti, OTi.getTreeIndex() == h - 1, timer);
 		Tuple[] root = Arrays.copyOfRange(path, 0, OTi.getStashSize());
 		root = updateroot.runE(predata, OTi.getTreeIndex() == 0, outaccess.Li, root, Ti, timer);
+		System.arraycopy(root, 0, path, 0, root.length);
+		eviction.runE(predata, OTi.getTreeIndex() == 0, outaccess.Li,
+				OTi.getTreeIndex() == 0 ? new Tuple[] { Ti } : path, OTi.getD(), OTi.getW(), OTi, timer);
 
 		return outaccess;
 	}
@@ -41,11 +45,13 @@ public class Retrieve extends Protocol {
 		Reshuffle reshuffle = new Reshuffle(con1, con2);
 		PostProcessT postprocesst = new PostProcessT(con1, con2);
 		UpdateRoot updateroot = new UpdateRoot(con1, con2);
+		Eviction eviction = new Eviction(con1, con2);
 
 		byte[] Li = access.runD(predata, OTi, Ni, Nip1_pr, timer);
 		reshuffle.runD();
 		postprocesst.runD();
 		updateroot.runD(predata, OTi.getTreeIndex() == 0, Li, OTi.getW(), timer);
+		eviction.runD(predata, OTi.getTreeIndex() == 0, Li, OTi.getW(), OTi, timer);
 	}
 
 	public OutAccess runC(PreData predata, Metadata md, int ti, byte[] Li, int h, Timer timer) {
@@ -53,12 +59,16 @@ public class Retrieve extends Protocol {
 		Reshuffle reshuffle = new Reshuffle(con1, con2);
 		PostProcessT postprocesst = new PostProcessT(con1, con2);
 		UpdateRoot updateroot = new UpdateRoot(con1, con2);
+		Eviction eviction = new Eviction(con1, con2);
 
 		OutAccess outaccess = access.runC(md, ti, Li, timer);
 		Tuple[] path = reshuffle.runC(predata, outaccess.C_P, ti == 0, timer);
 		Tuple Ti = postprocesst.runC(predata, outaccess.C_Ti, Li, outaccess.C_Lip1, outaccess.C_j2, ti == h - 1, timer);
 		Tuple[] root = Arrays.copyOfRange(path, 0, md.getStashSizeOfTree(ti));
 		root = updateroot.runC(predata, ti == 0, root, Ti, timer);
+		System.arraycopy(root, 0, path, 0, root.length);
+		eviction.runC(predata, ti == 0, ti == 0 ? new Tuple[] { Ti } : path, md.getLBitsOfTree(ti) + 1, md.getW(),
+				md.getStashSizeOfTree(ti), timer);
 
 		return outaccess;
 	}
@@ -146,7 +156,8 @@ public class Retrieve extends Protocol {
 						sw.stop();
 
 					} else if (party == Party.Charlie) {
-						System.out.println("L" + ti + "=" + new BigInteger(1, Li).toString(2));
+						int lBits = md.getLBitsOfTree(ti);
+						System.out.println("L" + ti + "=" + Util.addZeros(Util.getSubBits(new BigInteger(1, Li), lBits, 0).toString(2), lBits));
 
 						sw.start();
 						OutAccess outaccess = runC(predata[ti], md, ti, Li, numTrees, timer);
