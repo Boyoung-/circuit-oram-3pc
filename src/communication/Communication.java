@@ -16,6 +16,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.lang3.SerializationUtils;
 
+import util.Bandwidth;
+import util.P;
 import util.Util;
 
 /**
@@ -65,8 +67,15 @@ public class Communication {
 	protected int mState;
 	protected InetSocketAddress mAddress;
 
+	public Bandwidth[] bandwidth;
+	public boolean bandSwitch = true;
+
 	public Communication() {
 		mState = STATE_NONE;
+
+		bandwidth = new Bandwidth[P.size];
+		for (int i = 0; i < P.size; i++)
+			bandwidth[i] = new Bandwidth(P.names[i]);
 	}
 
 	public void setTcpNoDelay(boolean on) {
@@ -319,6 +328,12 @@ public class Communication {
 		r.write(out);
 	}
 
+	public void write(int pid, byte[] out) {
+		write(out);
+		if (bandSwitch)
+			bandwidth[pid].add(out.length);
+	}
+
 	/**
 	 * Write a length encoded byte array.
 	 * 
@@ -331,6 +346,10 @@ public class Communication {
 
 	public <T> void write(T out) {
 		write(SerializationUtils.serialize((Serializable) out));
+	}
+
+	public <T> void write(int pid, T out) {
+		write(pid, SerializationUtils.serialize((Serializable) out));
 	}
 
 	public static final Charset defaultCharset = Charset.forName("ASCII");

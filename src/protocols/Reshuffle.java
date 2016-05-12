@@ -64,7 +64,7 @@ public class Reshuffle extends Protocol {
 			z[i] = path[i].xor(predata.reshuffle_p[i]);
 
 		timer.start(pid, M.online_write);
-		con1.write(z);
+		con1.write(pid, z);
 		timer.stop(pid, M.online_write);
 
 		timer.stop(pid, M.online_comp);

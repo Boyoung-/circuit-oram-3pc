@@ -74,10 +74,10 @@ public class Eviction extends Protocol {
 		}
 
 		timer.start(pid, M.online_write);
-		con1.write(LiInputKeys);
-		con1.write(E_feInputKeys);
-		con1.write(E_labelInputKeys);
-		con1.write(deltaInputKeys);
+		con1.write(pid, LiInputKeys);
+		con1.write(pid, E_feInputKeys);
+		con1.write(pid, E_labelInputKeys);
+		con1.write(pid, deltaInputKeys);
 		timer.stop(pid, M.online_write);
 
 		PermuteTarget permutetarget = new PermuteTarget(con1, con2);
@@ -178,7 +178,7 @@ public class Eviction extends Protocol {
 	public void runC(PreData predata, boolean firstTree, Tuple[] originalPath, int d, int sw, int w, Timer timer) {
 		if (firstTree) {
 			timer.start(pid, M.online_write);
-			con2.write(originalPath);
+			con2.write(pid, originalPath);
 			timer.stop(pid, M.online_write);
 			return;
 		}
@@ -199,8 +199,8 @@ public class Eviction extends Protocol {
 		}
 
 		timer.start(pid, M.online_write);
-		con2.write(C_feInputKeys);
-		con2.write(C_labelInputKeys);
+		con2.write(pid, C_feInputKeys);
+		con2.write(pid, C_labelInputKeys);
 		timer.stop(pid, M.online_write);
 
 		PermuteTarget permutetarget = new PermuteTarget(con1, con2);
@@ -240,7 +240,7 @@ public class Eviction extends Protocol {
 		pathBuckets[0].expand(Arrays.copyOfRange(originalPath, w, sw));
 
 		timer.start(pid, M.online_write);
-		con2.write(pathBuckets);
+		con2.write(pid, pathBuckets);
 		timer.stop(pid, M.online_write);
 
 		timer.stop(pid, M.online_comp);

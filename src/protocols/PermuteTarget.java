@@ -55,8 +55,8 @@ public class PermuteTarget extends Protocol {
 		BigInteger[] z = Util.xor(target, predata.pt_p);
 
 		timer.start(pid, M.online_write);
-		con2.write(z);
-		con2.write(I);
+		con2.write(pid, z);
+		con2.write(pid, I);
 		timer.stop(pid, M.online_write);
 
 		timer.start(pid, M.online_read);
@@ -93,7 +93,7 @@ public class PermuteTarget extends Protocol {
 		BigInteger[] g = Util.permute(mk, predata.evict_pi);
 
 		timer.start(pid, M.online_write);
-		con2.write(g);
+		con2.write(pid, g);
 		timer.stop(pid, M.online_write);
 
 		timer.stop(pid, M.online_comp);

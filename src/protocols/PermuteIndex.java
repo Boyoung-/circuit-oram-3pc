@@ -39,7 +39,7 @@ public class PermuteIndex extends Protocol {
 		BigInteger[] z = Util.xor(ti_p, predata.pi_p);
 
 		timer.start(pid, M.online_write);
-		con2.write(z);
+		con2.write(pid, z);
 		timer.stop(pid, M.online_write);
 
 		timer.start(pid, M.online_read);
@@ -71,7 +71,7 @@ public class PermuteIndex extends Protocol {
 		BigInteger[] g = Util.xor(predata.evict_rho, z);
 
 		timer.start(pid, M.online_write);
-		con2.write(g);
+		con2.write(pid, g);
 		timer.stop(pid, M.online_write);
 
 		timer.stop(pid, M.online_comp);

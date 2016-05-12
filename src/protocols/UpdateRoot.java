@@ -43,10 +43,10 @@ public class UpdateRoot extends Protocol {
 		GCSignal[][] E_labelInputKeys = GCUtil.selectLabelKeys(predata.ur_E_labelKeyPairs, R);
 
 		timer.start(pid, M.online_write);
-		con1.write(j1InputKeys);
-		con1.write(LiInputKeys);
-		con1.write(E_feInputKeys);
-		con1.write(E_labelInputKeys);
+		con1.write(pid, j1InputKeys);
+		con1.write(pid, LiInputKeys);
+		con1.write(pid, E_feInputKeys);
+		con1.write(pid, E_labelInputKeys);
 		timer.stop(pid, M.online_write);
 
 		// step 4
@@ -108,8 +108,8 @@ public class UpdateRoot extends Protocol {
 		GCSignal[][] C_labelInputKeys = GCUtil.selectLabelKeys(predata.ur_C_labelKeyPairs, R);
 
 		timer.start(pid, M.online_write);
-		con2.write(C_feInputKeys);
-		con2.write(C_labelInputKeys);
+		con2.write(pid, C_feInputKeys);
+		con2.write(pid, C_labelInputKeys);
 		timer.stop(pid, M.online_write);
 
 		// step 4

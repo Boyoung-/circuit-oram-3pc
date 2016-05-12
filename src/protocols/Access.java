@@ -116,8 +116,8 @@ public class Access extends Protocol {
 
 		// step 2
 		timer.start(pid, M.online_write);
-		con2.write(pathTuples);
-		con2.write(Ni);
+		con2.write(pid, pathTuples);
+		con2.write(pid, Ni);
 		timer.stop(pid, M.online_write);
 
 		// step 3

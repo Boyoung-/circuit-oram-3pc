@@ -15,6 +15,8 @@ import protocols.precomputation.PreRetrieve;
 import protocols.struct.OutAccess;
 import protocols.struct.Party;
 import protocols.struct.PreData;
+import util.Bandwidth;
+import util.P;
 import util.StopWatch;
 import util.Timer;
 import util.Util;
@@ -104,8 +106,13 @@ public class Retrieve extends Protocol {
 			long N = Util.nextLong(numInsert, Crypto.sr);
 
 			for (int j = 0; j < repeat; j++) {
-				if (i * records + j == abandCycles)
+				int cycleIndex = i * records + j;
+				if (cycleIndex == abandCycles)
 					timer.reset();
+				if (cycleIndex == 1) {
+					con1.bandSwitch = false;
+					con2.bandSwitch = false;
+				}
 
 				System.out.println("Test: " + i + " " + j);
 				System.out.println("N=" + BigInteger.valueOf(N).toString(2));
@@ -198,6 +205,13 @@ public class Retrieve extends Protocol {
 
 		System.out.println();
 		timer.divideBy(cycles - abandCycles).print();
+
+		System.out.println();
+		Bandwidth[] bandwidth = new Bandwidth[P.size];
+		for (int i = 0; i < P.size; i++) {
+			bandwidth[i] = con1.bandwidth[i].add(con2.bandwidth[i]);
+			System.out.println(bandwidth[i]);
+		}
 
 		// System.out.println();
 		// System.out.println(sw.toMS());

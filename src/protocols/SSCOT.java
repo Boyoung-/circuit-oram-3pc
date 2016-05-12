@@ -44,8 +44,8 @@ public class SSCOT extends Protocol {
 		}
 
 		timer.start(pid, M.online_write);
-		con2.write(e);
-		con2.write(v);
+		con2.write(pid, e);
+		con2.write(pid, v);
 		timer.stop(pid, M.online_write);
 
 		timer.stop(pid, M.online_comp);
@@ -69,8 +69,8 @@ public class SSCOT extends Protocol {
 		}
 
 		timer.start(pid, M.online_write);
-		con2.write(p);
-		con2.write(w);
+		con2.write(pid, p);
+		con2.write(pid, w);
 		timer.stop(pid, M.online_write);
 
 		timer.stop(pid, M.online_comp);

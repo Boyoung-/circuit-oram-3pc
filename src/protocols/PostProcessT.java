@@ -80,7 +80,7 @@ public class PostProcessT extends Protocol {
 		int delta = (predata.ppt_alpha - j2 + twoTauPow) % twoTauPow;
 
 		timer.start(pid, M.online_write);
-		con1.write(delta);
+		con1.write(pid, delta);
 		timer.stop(pid, M.online_write);
 
 		// step 2

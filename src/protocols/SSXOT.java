@@ -41,7 +41,7 @@ public class SSXOT extends Protocol {
 			a[i] = m[predata.ssxot_E_pi[id][i]].xor(predata.ssxot_E_r[id][i]);
 
 		timer.start(pid, M.online_write);
-		con2.write(a);
+		con2.write(pid, a);
 		timer.stop(pid, M.online_write);
 
 		timer.start(pid, M.online_read);
@@ -78,10 +78,10 @@ public class SSXOT extends Protocol {
 		}
 
 		timer.start(pid, M.online_write);
-		con2.write(E_j);
-		con2.write(E_p);
-		con1.write(C_j);
-		con1.write(C_p);
+		con2.write(pid, E_j);
+		con2.write(pid, E_p);
+		con1.write(pid, C_j);
+		con1.write(pid, C_p);
 		timer.stop(pid, M.online_write);
 
 		timer.stop(pid, M.online_comp);
@@ -96,7 +96,7 @@ public class SSXOT extends Protocol {
 			a[i] = m[predata.ssxot_C_pi[id][i]].xor(predata.ssxot_C_r[id][i]);
 
 		timer.start(pid, M.online_write);
-		con1.write(a);
+		con1.write(pid, a);
 		timer.stop(pid, M.online_write);
 
 		timer.start(pid, M.online_read);
