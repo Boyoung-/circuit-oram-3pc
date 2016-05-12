@@ -14,12 +14,15 @@ import util.Timer;
 import util.Util;
 
 public class PreAccess extends Protocol {
+
+	private int pid = P.ACC;
+
 	public PreAccess(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
 
 	public void runE(PreData predata, int twotaupow, int numTuples, int[] tupleParam, Timer timer) {
-		timer.start(P.ACC, M.offline_comp);
+		timer.start(pid, M.offline_comp);
 
 		// SSCOT
 		PreSSCOT presscot = new PreSSCOT(con1, con2);
@@ -35,16 +38,16 @@ public class PreAccess extends Protocol {
 		for (int i = 0; i < numTuples; i++)
 			predata.access_p[i] = new Tuple(tupleParam[0], tupleParam[1], tupleParam[2], tupleParam[3], Crypto.sr);
 
-		timer.start(P.ACC, M.offline_write);
+		timer.start(pid, M.offline_write);
 		con1.write(predata.access_sigma);
 		con1.write(predata.access_p);
-		timer.stop(P.ACC, M.offline_write);
+		timer.stop(pid, M.offline_write);
 
-		timer.stop(P.ACC, M.offline_comp);
+		timer.stop(pid, M.offline_comp);
 	}
 
 	public void runD(PreData predata, Timer timer) {
-		timer.start(P.ACC, M.offline_comp);
+		timer.start(pid, M.offline_comp);
 
 		// SSCOT
 		PreSSCOT presscot = new PreSSCOT(con1, con2);
@@ -55,16 +58,16 @@ public class PreAccess extends Protocol {
 		pressiot.runD(predata, timer);
 
 		// Access
-		timer.start(P.ACC, M.offline_read);
+		timer.start(pid, M.offline_read);
 		predata.access_sigma = con1.readObject();
 		predata.access_p = con1.readObject();
-		timer.stop(P.ACC, M.offline_read);
+		timer.stop(pid, M.offline_read);
 
-		timer.stop(P.ACC, M.offline_comp);
+		timer.stop(pid, M.offline_comp);
 	}
 
 	public void runC(Timer timer) {
-		timer.start(P.ACC, M.offline_comp);
+		timer.start(pid, M.offline_comp);
 
 		// SSCOT
 		PreSSCOT presscot = new PreSSCOT(con1, con2);
@@ -74,7 +77,7 @@ public class PreAccess extends Protocol {
 		PreSSIOT pressiot = new PreSSIOT(con1, con2);
 		pressiot.runC();
 
-		timer.stop(P.ACC, M.offline_comp);
+		timer.stop(pid, M.offline_comp);
 	}
 
 	@Override

@@ -17,12 +17,15 @@ import util.Timer;
 import util.Util;
 
 public class SSIOT extends Protocol {
+
+	private int pid = P.IOT;
+
 	public SSIOT(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
 
 	public void runE(PreData predata, byte[][] y, byte[] Nip1_pr, Timer timer) {
-		timer.start(P.IOT, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		// step 1
 		int n = y.length;
@@ -42,16 +45,16 @@ public class SSIOT extends Protocol {
 			v[i] = predata.ssiot_F_kprime.compute(x[i]);
 		}
 
-		timer.start(P.IOT, M.online_write);
+		timer.start(pid, M.online_write);
 		con2.write(e);
 		con2.write(v);
-		timer.stop(P.IOT, M.online_write);
+		timer.stop(pid, M.online_write);
 
-		timer.stop(P.IOT, M.online_comp);
+		timer.stop(pid, M.online_comp);
 	}
 
 	public void runD(PreData predata, byte[] Nip1_pr, Timer timer) {
-		timer.start(P.IOT, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		// step 2
 		byte[] y = predata.ssiot_r;
@@ -60,26 +63,26 @@ public class SSIOT extends Protocol {
 		byte[] p = predata.ssiot_F_k.compute(y);
 		byte[] w = predata.ssiot_F_kprime.compute(y);
 
-		timer.start(P.IOT, M.online_write);
+		timer.start(pid, M.online_write);
 		con2.write(p);
 		con2.write(w);
-		timer.stop(P.IOT, M.online_write);
+		timer.stop(pid, M.online_write);
 
-		timer.stop(P.IOT, M.online_comp);
+		timer.stop(pid, M.online_comp);
 	}
 
 	public OutSSIOT runC(Timer timer) {
-		timer.start(P.IOT, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		// step 1
-		timer.start(P.IOT, M.online_read);
+		timer.start(pid, M.online_read);
 		byte[][] e = con1.readObject();
 		byte[][] v = con1.readObject();
 
 		// step 2
 		byte[] p = con2.read();
 		byte[] w = con2.read();
-		timer.stop(P.IOT, M.online_read);
+		timer.stop(pid, M.online_read);
 
 		// step 3
 		int n = e.length;
@@ -99,7 +102,7 @@ public class SSIOT extends Protocol {
 		if (invariant != 1)
 			throw new SSIOTException("Invariant error: " + invariant);
 
-		timer.stop(P.IOT, M.online_comp);
+		timer.stop(pid, M.online_comp);
 		return output;
 	}
 

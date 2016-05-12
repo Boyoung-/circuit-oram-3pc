@@ -17,12 +17,15 @@ import util.Timer;
 import util.Util;
 
 public class SSCOT extends Protocol {
+
+	private int pid = P.COT;
+
 	public SSCOT(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
 
 	public void runE(PreData predata, byte[][] m, byte[][] a, Timer timer) {
-		timer.start(P.COT, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		// step 1
 		int n = m.length;
@@ -40,16 +43,16 @@ public class SSCOT extends Protocol {
 			v[i] = predata.sscot_F_kprime.compute(x[i]);
 		}
 
-		timer.start(P.COT, M.online_write);
+		timer.start(pid, M.online_write);
 		con2.write(e);
 		con2.write(v);
-		timer.stop(P.COT, M.online_write);
+		timer.stop(pid, M.online_write);
 
-		timer.stop(P.COT, M.online_comp);
+		timer.stop(pid, M.online_comp);
 	}
 
 	public void runD(PreData predata, byte[][] b, Timer timer) {
-		timer.start(P.COT, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		// step 2
 		int n = b.length;
@@ -65,26 +68,26 @@ public class SSCOT extends Protocol {
 			w[i] = predata.sscot_F_kprime.compute(y[i]);
 		}
 
-		timer.start(P.COT, M.online_write);
+		timer.start(pid, M.online_write);
 		con2.write(p);
 		con2.write(w);
-		timer.stop(P.COT, M.online_write);
+		timer.stop(pid, M.online_write);
 
-		timer.stop(P.COT, M.online_comp);
+		timer.stop(pid, M.online_comp);
 	}
 
 	public OutSSCOT runC(Timer timer) {
-		timer.start(P.COT, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		// step 1
-		timer.start(P.COT, M.online_read);
+		timer.start(pid, M.online_read);
 		byte[][] e = con1.readObject();
 		byte[][] v = con1.readObject();
 
 		// step 2
 		byte[][] p = con2.readObject();
 		byte[][] w = con2.readObject();
-		timer.stop(P.COT, M.online_read);
+		timer.stop(pid, M.online_read);
 
 		// step 3
 		int n = e.length;
@@ -104,7 +107,7 @@ public class SSCOT extends Protocol {
 		if (invariant != 1)
 			throw new SSCOTException("Invariant error: " + invariant);
 
-		timer.stop(P.COT, M.online_comp);
+		timer.stop(pid, M.online_comp);
 		return output;
 	}
 

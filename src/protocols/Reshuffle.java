@@ -22,6 +22,8 @@ import util.Util;
 
 public class Reshuffle extends Protocol {
 
+	private int pid = P.RSF;
+
 	public Reshuffle(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
@@ -30,12 +32,12 @@ public class Reshuffle extends Protocol {
 		if (firstTree)
 			return path;
 
-		timer.start(P.RSF, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		// step 1
-		timer.start(P.RSF, M.online_read);
+		timer.start(pid, M.online_read);
 		Tuple[] z = con2.readObject();
-		timer.stop(P.RSF, M.online_read);
+		timer.stop(pid, M.online_read);
 
 		// step 2
 		Tuple[] b = new Tuple[z.length];
@@ -43,7 +45,7 @@ public class Reshuffle extends Protocol {
 			b[i] = path[i].xor(z[i]).xor(predata.reshuffle_r[i]);
 		Tuple[] b_prime = Util.permute(b, predata.reshuffle_pi);
 
-		timer.stop(P.RSF, M.online_comp);
+		timer.stop(pid, M.online_comp);
 		return b_prime;
 	}
 
@@ -54,18 +56,18 @@ public class Reshuffle extends Protocol {
 		if (firstTree)
 			return path;
 
-		timer.start(P.RSF, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		// step 1
 		Tuple[] z = new Tuple[path.length];
 		for (int i = 0; i < z.length; i++)
 			z[i] = path[i].xor(predata.reshuffle_p[i]);
 
-		timer.start(P.RSF, M.online_write);
+		timer.start(pid, M.online_write);
 		con1.write(z);
-		timer.stop(P.RSF, M.online_write);
+		timer.stop(pid, M.online_write);
 
-		timer.stop(P.RSF, M.online_comp);
+		timer.stop(pid, M.online_comp);
 		return predata.reshuffle_a_prime;
 	}
 

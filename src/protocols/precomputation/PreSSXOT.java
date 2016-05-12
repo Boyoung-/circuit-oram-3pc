@@ -16,21 +16,23 @@ import util.Util;
 public class PreSSXOT extends Protocol {
 
 	private int id;
+	private int pid;
 
 	public PreSSXOT(Communication con1, Communication con2, int id) {
 		super(con1, con2);
 		this.id = id;
+		pid = id == 0 ? P.URXOT : P.XOT;
 	}
 
 	public void runE(PreData predata, Timer timer) {
-		timer.start(P.XOT, M.offline_read);
+		timer.start(pid, M.offline_read);
 		predata.ssxot_E_pi[id] = con1.readObject();
 		predata.ssxot_E_r[id] = con1.readObject();
-		timer.stop(P.XOT, M.offline_read);
+		timer.stop(pid, M.offline_read);
 	}
 
 	public void runD(PreData predata, int n, int k, int[] tupleParam, Timer timer) {
-		timer.start(P.XOT, M.offline_comp);
+		timer.start(pid, M.offline_comp);
 
 		predata.ssxot_delta[id] = new Tuple[k];
 		for (int i = 0; i < k; i++)
@@ -49,21 +51,21 @@ public class PreSSXOT extends Protocol {
 			predata.ssxot_C_r[id][i] = new Tuple(tupleParam[0], tupleParam[1], tupleParam[2], tupleParam[3], Crypto.sr);
 		}
 
-		timer.start(P.XOT, M.offline_write);
+		timer.start(pid, M.offline_write);
 		con1.write(predata.ssxot_E_pi[id]);
 		con1.write(predata.ssxot_E_r[id]);
 		con2.write(predata.ssxot_C_pi[id]);
 		con2.write(predata.ssxot_C_r[id]);
-		timer.stop(P.XOT, M.offline_write);
+		timer.stop(pid, M.offline_write);
 
-		timer.stop(P.XOT, M.offline_comp);
+		timer.stop(pid, M.offline_comp);
 	}
 
 	public void runC(PreData predata, Timer timer) {
-		timer.start(P.XOT, M.offline_read);
+		timer.start(pid, M.offline_read);
 		predata.ssxot_C_pi[id] = con2.readObject();
 		predata.ssxot_C_r[id] = con2.readObject();
-		timer.stop(P.XOT, M.offline_read);
+		timer.stop(pid, M.offline_read);
 	}
 
 	@Override

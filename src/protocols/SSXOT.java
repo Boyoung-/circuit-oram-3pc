@@ -18,48 +18,51 @@ import util.Util;
 public class SSXOT extends Protocol {
 
 	private int id;
+	private int pid;
 
 	public SSXOT(Communication con1, Communication con2) {
 		super(con1, con2);
 		this.id = 0;
+		pid = id == 0 ? P.URXOT : P.XOT;
 	}
 
 	public SSXOT(Communication con1, Communication con2, int id) {
 		super(con1, con2);
 		this.id = id;
+		pid = id == 0 ? P.URXOT : P.XOT;
 	}
 
 	public Tuple[] runE(PreData predata, Tuple[] m, Timer timer) {
-		timer.start(P.XOT, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		// step 1
 		Tuple[] a = new Tuple[m.length];
 		for (int i = 0; i < m.length; i++)
 			a[i] = m[predata.ssxot_E_pi[id][i]].xor(predata.ssxot_E_r[id][i]);
 
-		timer.start(P.XOT, M.online_write);
+		timer.start(pid, M.online_write);
 		con2.write(a);
-		timer.stop(P.XOT, M.online_write);
+		timer.stop(pid, M.online_write);
 
-		timer.start(P.XOT, M.online_read);
+		timer.start(pid, M.online_read);
 		a = con2.readObject();
 
 		// step 2
 		int[] j = con1.readObject();
 		Tuple[] p = con1.readObject();
-		timer.stop(P.XOT, M.online_read);
+		timer.stop(pid, M.online_read);
 
 		// step 3
 		Tuple[] z = new Tuple[j.length];
 		for (int i = 0; i < j.length; i++)
 			z[i] = a[j[i]].xor(p[i]);
 
-		timer.stop(P.XOT, M.online_comp);
+		timer.stop(pid, M.online_comp);
 		return z;
 	}
 
 	public void runD(PreData predata, int[] index, Timer timer) {
-		timer.start(P.XOT, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		// step 2
 		int k = index.length;
@@ -74,42 +77,42 @@ public class SSXOT extends Protocol {
 			C_p[i] = predata.ssxot_C_r[id][C_j[i]].xor(predata.ssxot_delta[id][i]);
 		}
 
-		timer.start(P.XOT, M.online_write);
+		timer.start(pid, M.online_write);
 		con2.write(E_j);
 		con2.write(E_p);
 		con1.write(C_j);
 		con1.write(C_p);
-		timer.stop(P.XOT, M.online_write);
+		timer.stop(pid, M.online_write);
 
-		timer.stop(P.XOT, M.online_comp);
+		timer.stop(pid, M.online_comp);
 	}
 
 	public Tuple[] runC(PreData predata, Tuple[] m, Timer timer) {
-		timer.start(P.XOT, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		// step 1
 		Tuple[] a = new Tuple[m.length];
 		for (int i = 0; i < m.length; i++)
 			a[i] = m[predata.ssxot_C_pi[id][i]].xor(predata.ssxot_C_r[id][i]);
 
-		timer.start(P.XOT, M.online_write);
+		timer.start(pid, M.online_write);
 		con1.write(a);
-		timer.stop(P.XOT, M.online_write);
+		timer.stop(pid, M.online_write);
 
-		timer.start(P.XOT, M.online_read);
+		timer.start(pid, M.online_read);
 		a = con1.readObject();
 
 		// step 2
 		int[] j = con2.readObject();
 		Tuple[] p = con2.readObject();
-		timer.stop(P.XOT, M.online_read);
+		timer.stop(pid, M.online_read);
 
 		// step 3
 		Tuple[] z = new Tuple[j.length];
 		for (int i = 0; i < j.length; i++)
 			z[i] = a[j[i]].xor(p[i]);
 
-		timer.stop(P.XOT, M.online_comp);
+		timer.stop(pid, M.online_comp);
 		return z;
 	}
 

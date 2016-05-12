@@ -22,6 +22,9 @@ import util.Timer;
 import util.Util;
 
 public class UpdateRoot extends Protocol {
+
+	private int pid = P.UR;
+
 	public UpdateRoot(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
@@ -30,7 +33,7 @@ public class UpdateRoot extends Protocol {
 		if (firstTree)
 			return R;
 
-		timer.start(P.UR, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		// step 1
 		int j1 = Crypto.sr.nextInt(R.length);
@@ -39,19 +42,19 @@ public class UpdateRoot extends Protocol {
 		GCSignal[] E_feInputKeys = GCUtil.selectFeKeys(predata.ur_E_feKeyPairs, R);
 		GCSignal[][] E_labelInputKeys = GCUtil.selectLabelKeys(predata.ur_E_labelKeyPairs, R);
 
-		timer.start(P.UR, M.online_write);
+		timer.start(pid, M.online_write);
 		con1.write(j1InputKeys);
 		con1.write(LiInputKeys);
 		con1.write(E_feInputKeys);
 		con1.write(E_labelInputKeys);
-		timer.stop(P.UR, M.online_write);
+		timer.stop(pid, M.online_write);
 
 		// step 4
 		R = ArrayUtils.addAll(R, new Tuple[] { Ti });
 		SSXOT ssxot = new SSXOT(con1, con2, 0);
 		R = ssxot.runE(predata, R, timer);
 
-		timer.stop(P.UR, M.online_comp);
+		timer.stop(pid, M.online_comp);
 		return R;
 	}
 
@@ -59,17 +62,17 @@ public class UpdateRoot extends Protocol {
 		if (firstTree)
 			return;
 
-		timer.start(P.UR, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		// step 1
-		timer.start(P.UR, M.online_read);
+		timer.start(pid, M.online_read);
 		GCSignal[] j1InputKeys = con1.readObject();
 		GCSignal[] LiInputKeys = con1.readObject();
 		GCSignal[] E_feInputKeys = con1.readObject();
 		GCSignal[][] E_labelInputKeys = con1.readObject();
 		GCSignal[] C_feInputKeys = con2.readObject();
 		GCSignal[][] C_labelInputKeys = con2.readObject();
-		timer.stop(P.UR, M.online_read);
+		timer.stop(pid, M.online_read);
 
 		// step 2
 		GCSignal[][] outKeys = predata.ur_gcur.rootFindDeepestAndEmpty(j1InputKeys, LiInputKeys, E_feInputKeys,
@@ -91,30 +94,30 @@ public class UpdateRoot extends Protocol {
 		SSXOT ssxot = new SSXOT(con1, con2, 0);
 		ssxot.runD(predata, I, timer);
 
-		timer.stop(P.UR, M.online_comp);
+		timer.stop(pid, M.online_comp);
 	}
 
 	public Tuple[] runC(PreData predata, boolean firstTree, Tuple[] R, Tuple Ti, Timer timer) {
 		if (firstTree)
 			return R;
 
-		timer.start(P.UR, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		// step 1
 		GCSignal[] C_feInputKeys = GCUtil.selectFeKeys(predata.ur_C_feKeyPairs, R);
 		GCSignal[][] C_labelInputKeys = GCUtil.selectLabelKeys(predata.ur_C_labelKeyPairs, R);
 
-		timer.start(P.UR, M.online_write);
+		timer.start(pid, M.online_write);
 		con2.write(C_feInputKeys);
 		con2.write(C_labelInputKeys);
-		timer.stop(P.UR, M.online_write);
+		timer.stop(pid, M.online_write);
 
 		// step 4
 		R = ArrayUtils.addAll(R, new Tuple[] { Ti });
 		SSXOT ssxot = new SSXOT(con1, con2, 0);
 		R = ssxot.runC(predata, R, timer);
 
-		timer.stop(P.UR, M.online_comp);
+		timer.stop(pid, M.online_comp);
 		return R;
 	}
 

@@ -27,19 +27,21 @@ import util.Util;
 
 public class Access extends Protocol {
 
+	private int pid = P.ACC;
+
 	public Access(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
 
 	public OutAccess runE(PreData predata, Tree OTi, byte[] Ni, byte[] Nip1_pr, Timer timer) {
-		timer.start(P.ACC, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		// step 0: get Li from C
 		byte[] Li = new byte[0];
-		timer.start(P.ACC, M.online_read);
+		timer.start(pid, M.online_read);
 		if (OTi.getTreeIndex() > 0)
 			Li = con2.read();
-		timer.stop(P.ACC, M.online_read);
+		timer.stop(pid, M.online_read);
 
 		// step 1
 		Bucket[] pathBuckets = OTi.getBucketsOnPath(Li);
@@ -91,19 +93,19 @@ public class Access extends Protocol {
 
 		OutAccess outaccess = new OutAccess(Li, null, null, null, null, Ti, pathTuples);
 
-		timer.stop(P.ACC, M.online_comp);
+		timer.stop(pid, M.online_comp);
 		return outaccess;
 	}
 
 	public byte[] runD(PreData predata, Tree OTi, byte[] Ni, byte[] Nip1_pr, Timer timer) {
-		timer.start(P.ACC, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		// step 0: get Li from C
 		byte[] Li = new byte[0];
-		timer.start(P.ACC, M.online_read);
+		timer.start(pid, M.online_read);
 		if (OTi.getTreeIndex() > 0)
 			Li = con2.read();
-		timer.stop(P.ACC, M.online_read);
+		timer.stop(pid, M.online_read);
 
 		// step 1
 		Bucket[] pathBuckets = OTi.getBucketsOnPath(Li);
@@ -113,10 +115,10 @@ public class Access extends Protocol {
 		pathTuples = Util.permute(pathTuples, predata.access_sigma);
 
 		// step 2
-		timer.start(P.ACC, M.online_write);
+		timer.start(pid, M.online_write);
 		con2.write(pathTuples);
 		con2.write(Ni);
-		timer.stop(P.ACC, M.online_write);
+		timer.stop(pid, M.online_write);
 
 		// step 3
 		if (OTi.getTreeIndex() > 0) {
@@ -138,27 +140,27 @@ public class Access extends Protocol {
 			ssiot.runD(predata, Nip1_pr, timer);
 		}
 
-		timer.stop(P.ACC, M.online_comp);
+		timer.stop(pid, M.online_comp);
 
 		return Li;
 	}
 
 	public OutAccess runC(Metadata md, int treeIndex, byte[] Li, Timer timer) {
-		timer.start(P.ACC, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		// step 0: send Li to E and D
-		timer.start(P.ACC, M.online_write);
+		timer.start(pid, M.online_write);
 		if (treeIndex > 0) {
 			con1.write(Li);
 			con2.write(Li);
 		}
-		timer.stop(P.ACC, M.online_write);
+		timer.stop(pid, M.online_write);
 
 		// step 2
-		timer.start(P.ACC, M.online_read);
+		timer.start(pid, M.online_read);
 		Tuple[] pathTuples = con2.readObject();
 		byte[] Ni = con2.read();
-		timer.stop(P.ACC, M.online_read);
+		timer.stop(pid, M.online_read);
 
 		// step 3
 		int j1 = 0;
@@ -201,7 +203,7 @@ public class Access extends Protocol {
 
 		OutAccess outaccess = new OutAccess(Li, Lip1, Ti, pathTuples, j2, null, null);
 
-		timer.stop(P.ACC, M.online_comp);
+		timer.stop(pid, M.online_comp);
 		return outaccess;
 	}
 

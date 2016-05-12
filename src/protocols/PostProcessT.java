@@ -22,25 +22,27 @@ import util.Util;
 
 public class PostProcessT extends Protocol {
 
+	private int pid = P.PPT;
+
 	public PostProcessT(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
 
 	public Tuple runE(PreData predata, Tuple Ti, boolean lastTree, Timer timer) {
-		timer.start(P.PPT, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		if (lastTree) {
 			Tuple out = new Tuple(Ti);
 			Util.setXor(out.getL(), predata.ppt_Li);
 
-			timer.stop(P.PPT, M.online_comp);
+			timer.stop(pid, M.online_comp);
 			return out;
 		}
 
 		// step 1
-		timer.start(P.PPT, M.online_read);
+		timer.start(pid, M.online_read);
 		int delta = con2.readObject();
-		timer.stop(P.PPT, M.online_read);
+		timer.stop(pid, M.online_read);
 
 		// step 3
 		int twoTauPow = predata.ppt_s.length;
@@ -55,7 +57,7 @@ public class PostProcessT extends Protocol {
 		Util.setXor(out.getL(), predata.ppt_Li);
 		Util.setXor(out.getA(), e_all);
 
-		timer.stop(P.PPT, M.online_comp);
+		timer.stop(pid, M.online_comp);
 		return out;
 	}
 
@@ -63,13 +65,13 @@ public class PostProcessT extends Protocol {
 	}
 
 	public Tuple runC(PreData predata, Tuple Ti, byte[] Li, byte[] Lip1, int j2, boolean lastTree, Timer timer) {
-		timer.start(P.PPT, M.online_comp);
+		timer.start(pid, M.online_comp);
 
 		if (lastTree) {
 			Tuple out = new Tuple(Ti);
 			Util.setXor(out.getL(), Util.xor(Li, predata.ppt_Li));
 
-			timer.stop(P.PPT, M.online_comp);
+			timer.stop(pid, M.online_comp);
 			return out;
 		}
 
@@ -77,9 +79,9 @@ public class PostProcessT extends Protocol {
 		int twoTauPow = predata.ppt_r.length;
 		int delta = (predata.ppt_alpha - j2 + twoTauPow) % twoTauPow;
 
-		timer.start(P.PPT, M.online_write);
+		timer.start(pid, M.online_write);
 		con1.write(delta);
-		timer.stop(P.PPT, M.online_write);
+		timer.stop(pid, M.online_write);
 
 		// step 2
 		byte[][] c = new byte[twoTauPow][];
@@ -94,7 +96,7 @@ public class PostProcessT extends Protocol {
 		Util.setXor(out.getL(), Util.xor(Li, predata.ppt_Li));
 		Util.setXor(out.getA(), c_all);
 
-		timer.stop(P.PPT, M.online_comp);
+		timer.stop(pid, M.online_comp);
 		return out;
 	}
 
