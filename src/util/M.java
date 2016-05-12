@@ -1,7 +1,6 @@
 package util;
 
 public class M {
-	public static final int size = 6;
 
 	public static final int online_comp = 0;
 	public static final int online_write = 1;
@@ -12,4 +11,5 @@ public class M {
 
 	public static final String[] names = { "online_comp", "online_write", "online_read", "offline_comp",
 			"offline_write", "offline_read" };
+	public static final int size = names.length;
 }

@@ -1,5 +1,7 @@
 package com.oblivm.backend.gc.regular;
 
+import java.util.Arrays;
+
 import com.oblivm.backend.flexsc.Flag;
 import com.oblivm.backend.flexsc.Mode;
 import com.oblivm.backend.gc.GCEvaComp;
@@ -48,23 +50,35 @@ public class GCEva extends GCEvaComp {
 	}
 
 	private void receiveGTT() {
-		try {
-			if (timer != null)
-				timer.start(p, m);
+		if (timer == null) {
+			try {
+				Flag.sw.startGCIO();
+				GCSignal.receive(channel, gtt[0][1]);
+				GCSignal.receive(channel, gtt[1][0]);
+				GCSignal.receive(channel, gtt[1][1]);
+				// gtt[1][0] = GCSignal.receive(channel);
+				// gtt[1][1] = GCSignal.receive(channel);
+				Flag.sw.stopGCIO();
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+		} else {
+			timer.start(p, m);
+			byte[] rows = channel.sender.read();
+			timer.stop(p, m);
 
-			Flag.sw.startGCIO();
-			GCSignal.receive(channel, gtt[0][1]);
-			GCSignal.receive(channel, gtt[1][0]);
-			GCSignal.receive(channel, gtt[1][1]);
-			// gtt[1][0] = GCSignal.receive(channel);
-			// gtt[1][1] = GCSignal.receive(channel);
-			Flag.sw.stopGCIO();
+			gtt[0][1].bytes = Arrays.copyOfRange(rows, 0, GCSignal.len);
+			gtt[1][0].bytes = Arrays.copyOfRange(rows, GCSignal.len, GCSignal.len * 2);
+			gtt[1][1].bytes = Arrays.copyOfRange(rows, GCSignal.len * 2, rows.length);
 
-			if (timer != null)
-				timer.stop(p, m);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.exit(1);
+			/*
+			 * timer.start(p, m); GCSignal[] rows = channel.sender.readObject();
+			 * timer.stop(p, m);
+			 * 
+			 * gtt[0][1].bytes = rows[0].bytes; gtt[1][0].bytes = rows[1].bytes;
+			 * gtt[1][1].bytes = rows[2].bytes;
+			 */
 		}
 	}
 
@@ -86,7 +100,7 @@ public class GCEva extends GCEvaComp {
 				if (curr == null) {
 					curr = this;
 				} else {
-					curr.next = new GCEva(channel);
+					curr.next = new GCEva(channel, timer, p, m);
 					curr = curr.next;
 				}
 				curr.receiveGTT();

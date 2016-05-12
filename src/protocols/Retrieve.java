@@ -82,6 +82,11 @@ public class Retrieve extends Protocol {
 	public void run(Party party, Metadata md, Forest forest) {
 		int records = 5;
 		int repeat = 5;
+		int cycles = records * repeat;
+		int abandRatio = 5; // 20%
+		int abandCycles = 0;
+		if (cycles > 1)
+			abandCycles = (cycles - 2) / abandRatio + 1;
 
 		int tau = md.getTau();
 		int numTrees = md.getNumTrees();
@@ -99,6 +104,9 @@ public class Retrieve extends Protocol {
 			long N = Util.nextLong(numInsert, Crypto.sr);
 
 			for (int j = 0; j < repeat; j++) {
+				if (i * records + j == abandCycles)
+					timer.reset();
+
 				System.out.println("Test: " + i + " " + j);
 				System.out.println("N=" + BigInteger.valueOf(N).toString(2));
 
@@ -188,7 +196,8 @@ public class Retrieve extends Protocol {
 			}
 		}
 
-		// timer.print();
+		System.out.println();
+		timer.divideBy(cycles - abandCycles).print();
 
 		// System.out.println();
 		// System.out.println(sw.toMS());

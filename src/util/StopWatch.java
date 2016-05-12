@@ -88,4 +88,19 @@ public class StopWatch {
 		else
 			return task + "\n" + out;
 	}
+
+	public StopWatch divideBy(int n) {
+		if (isOn) {
+			try {
+				throw new StopWatchException("StopWatch is still running");
+			} catch (StopWatchException e) {
+				e.printStackTrace();
+			}
+		}
+
+		StopWatch sw = new StopWatch(task);
+		sw.elapsedWC = elapsedWC / n;
+		sw.elapsedCPU = elapsedCPU / n;
+		return sw;
+	}
 }

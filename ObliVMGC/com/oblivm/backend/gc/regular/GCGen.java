@@ -79,21 +79,34 @@ public class GCGen extends GCGenComp {
 	}
 
 	private void sendGTT() {
-		try {
-			if (timer != null)
-				timer.start(p, m);
+		if (timer == null) {
+			try {
+				Flag.sw.startGCIO();
+				toSend[0][1].send(channel);
+				toSend[1][0].send(channel);
+				toSend[1][1].send(channel);
+				Flag.sw.stopGCIO();
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+		} else {
+			byte[] rows = new byte[GCSignal.len * 3];
+			System.arraycopy(toSend[0][1].bytes, 0, rows, 0, GCSignal.len);
+			System.arraycopy(toSend[1][0].bytes, 0, rows, GCSignal.len, GCSignal.len);
+			System.arraycopy(toSend[1][1].bytes, 0, rows, GCSignal.len * 2, GCSignal.len);
 
-			Flag.sw.startGCIO();
-			toSend[0][1].send(channel);
-			toSend[1][0].send(channel);
-			toSend[1][1].send(channel);
-			Flag.sw.stopGCIO();
+			timer.start(p, m);
+			channel.receiver.write(rows);
+			timer.stop(p, m);
 
-			if (timer != null)
-				timer.stop(p, m);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.exit(1);
+			/*
+			 * GCSignal[] rows = new GCSignal[3]; rows[0] = toSend[0][1];
+			 * rows[1] = toSend[1][0]; rows[2] = toSend[1][1];
+			 * 
+			 * timer.start(p, m); channel.receiver.write(rows); timer.stop(p,
+			 * m);
+			 */
 		}
 	}
 
