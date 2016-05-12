@@ -6,8 +6,14 @@ import com.oblivm.backend.gc.GCGenComp;
 import com.oblivm.backend.gc.GCSignal;
 import com.oblivm.backend.network.Network;
 
+import util.Timer;
+
 public class GCGen extends GCGenComp {
 	Garbler gb;
+
+	Timer timer = null;
+	int p;
+	int m;
 
 	public GCGen(Network channel) {
 		super(channel, Mode.REAL);
@@ -19,6 +25,22 @@ public class GCGen extends GCGenComp {
 			toSend[0][i] = new GCSignal(new byte[10]);
 			toSend[1][i] = new GCSignal(new byte[10]);
 		}
+	}
+
+	public GCGen(Network channel, Timer timer, int p, int m) {
+		super(channel, Mode.REAL);
+		gb = new Garbler();
+		for (int i = 0; i < 2; ++i) {
+			labelL[i] = new GCSignal(new byte[10]);
+			labelR[i] = new GCSignal(new byte[10]);
+			lb[i] = new GCSignal(new byte[10]);
+			toSend[0][i] = new GCSignal(new byte[10]);
+			toSend[1][i] = new GCSignal(new byte[10]);
+		}
+
+		this.timer = timer;
+		this.p = p;
+		this.m = m;
 	}
 
 	private GCSignal[][] gtt = new GCSignal[2][2];
@@ -58,11 +80,17 @@ public class GCGen extends GCGenComp {
 
 	private void sendGTT() {
 		try {
+			if (timer != null)
+				timer.start(p, m);
+
 			Flag.sw.startGCIO();
 			toSend[0][1].send(channel);
 			toSend[1][0].send(channel);
 			toSend[1][1].send(channel);
 			Flag.sw.stopGCIO();
+
+			if (timer != null)
+				timer.stop(p, m);
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);
