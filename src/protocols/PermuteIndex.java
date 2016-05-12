@@ -10,10 +10,15 @@ import oram.Metadata;
 import protocols.precomputation.PrePermuteIndex;
 import protocols.struct.Party;
 import protocols.struct.PreData;
+import util.M;
+import util.P;
 import util.Timer;
 import util.Util;
 
 public class PermuteIndex extends Protocol {
+
+	private int pid = P.PI;
+
 	public PermuteIndex(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
@@ -25,15 +30,21 @@ public class PermuteIndex extends Protocol {
 		if (firstTree)
 			return null;
 
+		timer.start(pid, M.online_comp);
+
 		BigInteger[] ti_p = new BigInteger[ti.length];
 		for (int i = 0; i < ti.length; i++)
 			ti_p[i] = BigInteger.valueOf(ti[i]);
 
 		BigInteger[] z = Util.xor(ti_p, predata.pi_p);
 
+		timer.start(pid, M.online_write);
 		con2.write(z);
+		timer.stop(pid, M.online_write);
 
+		timer.start(pid, M.online_read);
 		BigInteger[] g = con2.readObject();
+		timer.stop(pid, M.online_read);
 
 		ti_p = Util.xor(predata.pi_a, g);
 
@@ -41,6 +52,7 @@ public class PermuteIndex extends Protocol {
 		for (int i = 0; i < ti.length; i++)
 			ti_pp[i] = ti_p[i].intValue();
 
+		timer.stop(pid, M.online_comp);
 		return ti_pp;
 	}
 
@@ -48,13 +60,21 @@ public class PermuteIndex extends Protocol {
 		if (firstTree)
 			return;
 
+		timer.start(pid, M.online_comp);
+
+		timer.start(pid, M.online_read);
 		BigInteger[] z = con2.readObject();
+		timer.stop(pid, M.online_read);
 
 		z = Util.xor(z, predata.pi_r);
 		z = Util.permute(z, predata.evict_pi);
 		BigInteger[] g = Util.xor(predata.evict_rho, z);
 
+		timer.start(pid, M.online_write);
 		con2.write(g);
+		timer.stop(pid, M.online_write);
+
+		timer.stop(pid, M.online_comp);
 	}
 
 	// for testing correctness
@@ -62,7 +82,7 @@ public class PermuteIndex extends Protocol {
 	public void run(Party party, Metadata md, Forest forest) {
 		Timer timer = new Timer();
 
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 50; i++) {
 
 			System.out.println("i=" + i);
 
@@ -70,8 +90,8 @@ public class PermuteIndex extends Protocol {
 			PrePermuteIndex prepermuteindex = new PrePermuteIndex(con1, con2);
 
 			if (party == Party.Eddie) {
-				int d = Crypto.sr.nextInt(5) + 5;
-				int w = Crypto.sr.nextInt(5) + 5;
+				int d = Crypto.sr.nextInt(15) + 5;
+				int w = Crypto.sr.nextInt(15) + 5;
 				int logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2));
 
 				int[] ti = new int[d];
@@ -93,12 +113,18 @@ public class PermuteIndex extends Protocol {
 
 				runE();
 
+				int[] ti_pp = con1.readObject();
 				ti = Util.permute(ti, predata.evict_pi);
-				for (int j = 0; j < d; j++) {
+				int j = 0;
+				for (; j < d; j++) {
 					ti[j] = predata.evict_rho[j].intValue() ^ ti[j];
-					System.out.print(ti[j] + " ");
+					if (ti[j] != ti_pp[j]) {
+						System.err.println("PermuteIndex test failed");
+						break;
+					}
 				}
-				System.out.println();
+				if (j == d)
+					System.out.println("PermuteIndex test passed");
 
 			} else if (party == Party.Debbie) {
 				predata.evict_pi = con1.readObject();
@@ -108,10 +134,7 @@ public class PermuteIndex extends Protocol {
 				prepermuteindex.runD(predata, timer);
 
 				int[] ti_pp = runD(predata, false, ti, timer);
-				for (int j = 0; j < ti.length; j++) {
-					System.out.print(ti_pp[j] + " ");
-				}
-				System.out.println();
+				con1.write(ti_pp);
 
 			} else if (party == Party.Charlie) {
 				predata.evict_pi = con1.readObject();

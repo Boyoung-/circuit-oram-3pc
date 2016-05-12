@@ -12,15 +12,22 @@ import oram.Metadata;
 import protocols.Protocol;
 import protocols.struct.Party;
 import protocols.struct.PreData;
+import util.M;
+import util.P;
 import util.Timer;
 import util.Util;
 
 public class PrePermuteTarget extends Protocol {
+
+	private int pid = P.PT;
+
 	public PrePermuteTarget(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
 
 	public void runE(PreData predata, int d, Timer timer) {
+		timer.start(pid, M.offline_comp);
+
 		// PermuteTargetI
 		int logD = (int) Math.ceil(Math.log(d) / Math.log(2));
 
@@ -45,10 +52,11 @@ public class PrePermuteTarget extends Protocol {
 			predata.pt_targetT[i] = Util.permute(predata.pt_targetT[i], randPerm);
 		}
 
+		timer.start(pid, M.offline_write);
 		con1.write(predata.pt_keyT);
 		con1.write(predata.pt_targetT);
-
 		con2.write(predata.pt_maskT);
+		timer.stop(pid, M.offline_write);
 
 		// PermuteTargetII
 		predata.pt_p = new BigInteger[d];
@@ -61,13 +69,17 @@ public class PrePermuteTarget extends Protocol {
 		}
 		predata.pt_a = Util.permute(predata.pt_a, predata.evict_pi);
 
+		timer.start(pid, M.offline_write);
 		con1.write(predata.pt_p);
 		con1.write(predata.pt_a);
-
 		con2.write(predata.pt_r);
+		timer.stop(pid, M.offline_write);
+
+		timer.stop(pid, M.offline_comp);
 	}
 
 	public void runD(PreData predata, int d, Timer timer) {
+		timer.start(pid, M.offline_read);
 		// PermuteTargetI
 		predata.pt_keyT = con1.readObject();
 		predata.pt_targetT = con1.readObject();
@@ -75,14 +87,17 @@ public class PrePermuteTarget extends Protocol {
 		// PermuteTargetII
 		predata.pt_p = con1.readObject();
 		predata.pt_a = con1.readObject();
+		timer.stop(pid, M.offline_read);
 	}
 
 	public void runC(PreData predata, Timer timer) {
+		timer.start(pid, M.offline_read);
 		// PermuteTargetI
 		predata.pt_maskT = con1.readObject();
 
 		// PermuteTargetII
 		predata.pt_r = con1.readObject();
+		timer.stop(pid, M.offline_read);
 	}
 
 	@Override

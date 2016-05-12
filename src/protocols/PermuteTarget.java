@@ -13,10 +13,15 @@ import oram.Metadata;
 import protocols.precomputation.PrePermuteTarget;
 import protocols.struct.Party;
 import protocols.struct.PreData;
+import util.M;
+import util.P;
 import util.Timer;
 import util.Util;
 
 public class PermuteTarget extends Protocol {
+
+	private int pid = P.PT;
+
 	public PermuteTarget(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
@@ -27,6 +32,8 @@ public class PermuteTarget extends Protocol {
 	public int[] runD(PreData predata, boolean firstTree, GCSignal[][] targetOutKeys, Timer timer) {
 		if (firstTree)
 			return null;
+
+		timer.start(pid, M.online_comp);
 
 		// PermuteTargetI
 		int d = targetOutKeys.length;
@@ -47,10 +54,14 @@ public class PermuteTarget extends Protocol {
 		// PermuteTargetII
 		BigInteger[] z = Util.xor(target, predata.pt_p);
 
+		timer.start(pid, M.online_write);
 		con2.write(z);
 		con2.write(I);
+		timer.stop(pid, M.online_write);
 
+		timer.start(pid, M.online_read);
 		BigInteger[] g = con2.readObject();
+		timer.stop(pid, M.online_read);
 
 		target = Util.xor(predata.pt_a, g);
 
@@ -58,6 +69,7 @@ public class PermuteTarget extends Protocol {
 		for (int i = 0; i < d; i++)
 			target_pp[i] = target[i].intValue();
 
+		timer.stop(pid, M.online_comp);
 		return target_pp;
 	}
 
@@ -65,9 +77,13 @@ public class PermuteTarget extends Protocol {
 		if (firstTree)
 			return;
 
+		timer.start(pid, M.online_comp);
+
 		// PermuteTargetII
+		timer.start(pid, M.online_read);
 		BigInteger[] z = con2.readObject();
 		int[] I = con2.readObject();
+		timer.stop(pid, M.online_read);
 
 		BigInteger[] mk = new BigInteger[z.length];
 		for (int i = 0; i < mk.length; i++) {
@@ -76,7 +92,11 @@ public class PermuteTarget extends Protocol {
 		}
 		BigInteger[] g = Util.permute(mk, predata.evict_pi);
 
+		timer.start(pid, M.online_write);
 		con2.write(g);
+		timer.stop(pid, M.online_write);
+
+		timer.stop(pid, M.online_comp);
 	}
 
 	// for testing correctness
@@ -84,7 +104,7 @@ public class PermuteTarget extends Protocol {
 	public void run(Party party, Metadata md, Forest forest) {
 		Timer timer = new Timer();
 
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 50; i++) {
 
 			System.out.println("i=" + i);
 
@@ -92,7 +112,7 @@ public class PermuteTarget extends Protocol {
 			PrePermuteTarget prepermutetarget = new PrePermuteTarget(con1, con2);
 
 			if (party == Party.Eddie) {
-				int d = Crypto.sr.nextInt(1) + 5;
+				int d = Crypto.sr.nextInt(20) + 5;
 				int logD = (int) Math.ceil(Math.log(d) / Math.log(2));
 				int[] target = Util.randomPermutation(d, Crypto.sr);
 
@@ -116,14 +136,20 @@ public class PermuteTarget extends Protocol {
 
 				runE();
 
+				int[] target_pp = con1.readObject();
 				int[] pi_ivs = Util.inversePermutation(predata.evict_pi);
-
 				int[] piTargetPiIvs = new int[d];
-				for (int j = 0; j < d; j++) {
+
+				int j = 0;
+				for (; j < d; j++) {
 					piTargetPiIvs[j] = predata.evict_pi[target[pi_ivs[j]]];
-					System.out.print(piTargetPiIvs[j] + " ");
+					if (piTargetPiIvs[j] != target_pp[j]) {
+						System.err.println("PermuteTarget test failed");
+						break;
+					}
 				}
-				System.out.println();
+				if (j == d)
+					System.out.println("PermuteTarget test passed");
 
 			} else if (party == Party.Debbie) {
 				int d = con1.readObject();
@@ -134,10 +160,7 @@ public class PermuteTarget extends Protocol {
 				prepermutetarget.runD(predata, d, timer);
 
 				int[] target_pp = runD(predata, false, targetOutKeys, timer);
-				for (int j = 0; j < d; j++) {
-					System.out.print(target_pp[j] + " ");
-				}
-				System.out.println();
+				con1.write(target_pp);
 
 			} else if (party == Party.Charlie) {
 				predata.evict_pi = con1.readObject();

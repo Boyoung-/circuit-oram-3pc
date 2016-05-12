@@ -39,7 +39,7 @@ public class Retrieve extends Protocol {
 		root = updateroot.runE(predata, OTi.getTreeIndex() == 0, outaccess.Li, root, Ti, timer);
 		System.arraycopy(root, 0, path, 0, root.length);
 		eviction.runE(predata, OTi.getTreeIndex() == 0, outaccess.Li,
-				OTi.getTreeIndex() == 0 ? new Tuple[] { Ti } : path, OTi.getD(), OTi.getW(), OTi, timer);
+				OTi.getTreeIndex() == 0 ? new Tuple[] { Ti } : path, OTi, timer);
 
 		return outaccess;
 	}
@@ -55,7 +55,7 @@ public class Retrieve extends Protocol {
 		reshuffle.runD();
 		postprocesst.runD();
 		updateroot.runD(predata, OTi.getTreeIndex() == 0, Li, OTi.getW(), timer);
-		eviction.runD(predata, OTi.getTreeIndex() == 0, Li, OTi.getW(), OTi, timer);
+		eviction.runD(predata, OTi.getTreeIndex() == 0, Li, OTi, timer);
 	}
 
 	public OutAccess runC(PreData predata, Metadata md, int ti, byte[] Li, int h, Timer timer) {
@@ -71,8 +71,8 @@ public class Retrieve extends Protocol {
 		Tuple[] root = Arrays.copyOfRange(path, 0, md.getStashSizeOfTree(ti));
 		root = updateroot.runC(predata, ti == 0, root, Ti, timer);
 		System.arraycopy(root, 0, path, 0, root.length);
-		eviction.runC(predata, ti == 0, ti == 0 ? new Tuple[] { Ti } : path, md.getLBitsOfTree(ti) + 1, md.getW(),
-				md.getStashSizeOfTree(ti), timer);
+		eviction.runC(predata, ti == 0, ti == 0 ? new Tuple[] { Ti } : path, md.getLBitsOfTree(ti) + 1,
+				md.getStashSizeOfTree(ti), md.getW(), timer);
 
 		return outaccess;
 	}

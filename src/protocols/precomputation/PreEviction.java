@@ -17,10 +17,15 @@ import oram.Metadata;
 import protocols.Protocol;
 import protocols.struct.Party;
 import protocols.struct.PreData;
+import util.M;
+import util.P;
 import util.Timer;
 import util.Util;
 
 public class PreEviction extends Protocol {
+
+	private int pid = P.EVI;
+
 	public PreEviction(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
@@ -28,6 +33,8 @@ public class PreEviction extends Protocol {
 	public void runE(PreData predata, boolean firstTree, int d, int w, Timer timer) {
 		if (firstTree)
 			return;
+
+		timer.start(pid, M.offline_comp);
 
 		// GC
 		int logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2));
@@ -66,26 +73,24 @@ public class PreEviction extends Protocol {
 		}
 
 		Network channel = new Network(null, con1);
-		CompEnv<GCSignal> gen = new GCGen(channel);
+		CompEnv<GCSignal> gen = new GCGen(channel, timer, pid, M.offline_write);
 		GCSignal[][][] outZeroKeys = new GCRoute<GCSignal>(gen, d, w).routing(LiZeroKeys, E_feZeroKeys, C_feZeroKeys,
 				E_labelZeroKeys, C_labelZeroKeys, deltaZeroKeys);
 
 		predata.evict_tiOutKeyHashes = new BigInteger[d][];
 		predata.evict_targetOutKeyPairs = new GCSignal[d][][];
-		// predata.tmpKeyHashes = new BigInteger[d][];
 		for (int i = 0; i < d; i++) {
 			predata.evict_tiOutKeyHashes[i] = GCUtil.genOutKeyHashes(outZeroKeys[1][i]);
 			predata.evict_targetOutKeyPairs[i] = GCUtil.recoverOutKeyPairs(outZeroKeys[0][i]);
-			// predata.tmpKeyHashes[i] =
-			// GCUtil.genOutKeyHashes(outZeroKeys[0][i]);
 		}
 
+		timer.start(pid, M.offline_write);
 		con2.write(predata.evict_C_feKeyPairs);
 		con2.write(predata.evict_C_labelKeyPairs);
 
 		con1.write(predata.evict_tiOutKeyHashes);
 		con1.write(predata.evict_targetOutKeyPairs);
-		// con1.write(predata.tmpKeyHashes);
+		timer.stop(pid, M.offline_write);
 
 		// Permutation
 		predata.evict_pi = Util.randomPermutation(d, Crypto.sr);
@@ -101,11 +106,13 @@ public class PreEviction extends Protocol {
 			predata.evict_rho_p[i] = Util.getXorPermutation(predata.evict_rho[i], logW);
 		}
 
+		timer.start(pid, M.offline_write);
 		con2.write(predata.evict_pi);
 		con2.write(predata.evict_delta);
 		con2.write(predata.evict_rho);
 		con2.write(predata.evict_delta_p);
 		con2.write(predata.evict_rho_p);
+		timer.stop(pid, M.offline_write);
 
 		// PermuteTarget
 		PrePermuteTarget prepermutetarget = new PrePermuteTarget(con1, con2);
@@ -118,11 +125,15 @@ public class PreEviction extends Protocol {
 		// SSXOT
 		PreSSXOT pressxot = new PreSSXOT(con1, con2, 1);
 		pressxot.runE(predata, timer);
+
+		timer.stop(pid, M.offline_comp);
 	}
 
 	public void runD(PreData predata, boolean firstTree, int d, int w, int[] tupleParam, Timer timer) {
 		if (firstTree)
 			return;
+
+		timer.start(pid, M.offline_comp);
 
 		// GC
 		int logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2));
@@ -146,15 +157,16 @@ public class PreEviction extends Protocol {
 		}
 
 		Network channel = new Network(con1, null);
-		CompEnv<GCSignal> eva = new GCEva(channel);
+		CompEnv<GCSignal> eva = new GCEva(channel, timer, pid, M.offline_read);
 		predata.evict_gcroute = new GCRoute<GCSignal>(eva, d, w);
 		predata.evict_gcroute.routing(LiZeroKeys, E_feZeroKeys, C_feZeroKeys, E_labelZeroKeys, C_labelZeroKeys,
 				deltaZeroKeys);
 		eva.setEvaluate();
 
+		timer.start(pid, M.offline_read);
 		predata.evict_tiOutKeyHashes = con1.readObject();
 		predata.evict_targetOutKeyPairs = con1.readObject();
-		// predata.tmpKeyHashes = con1.readObject();
+		timer.stop(pid, M.offline_read);
 
 		// PermuteTarget
 		PrePermuteTarget prepermutetarget = new PrePermuteTarget(con1, con2);
@@ -168,13 +180,18 @@ public class PreEviction extends Protocol {
 		int W = (int) Math.pow(2, logW);
 		PreSSXOT pressxot = new PreSSXOT(con1, con2, 1);
 		pressxot.runD(predata, d * W, d * W, tupleParam, timer);
+
+		timer.stop(pid, M.offline_comp);
 	}
 
 	public void runC(PreData predata, boolean firstTree, Timer timer) {
 		if (firstTree)
 			return;
 
+		timer.start(pid, M.offline_comp);
+
 		// GC
+		timer.start(pid, M.offline_read);
 		predata.evict_C_feKeyPairs = con1.readObject();
 		predata.evict_C_labelKeyPairs = con1.readObject();
 
@@ -184,6 +201,7 @@ public class PreEviction extends Protocol {
 		predata.evict_rho = con1.readObject();
 		predata.evict_delta_p = con1.readObject();
 		predata.evict_rho_p = con1.readObject();
+		timer.stop(pid, M.offline_read);
 
 		// PermuteTarget
 		PrePermuteTarget prepermutetarget = new PrePermuteTarget(con1, con2);
@@ -196,6 +214,8 @@ public class PreEviction extends Protocol {
 		// SSXOT
 		PreSSXOT pressxot = new PreSSXOT(con1, con2, 1);
 		pressxot.runC(predata, timer);
+
+		timer.stop(pid, M.offline_comp);
 	}
 
 	@Override

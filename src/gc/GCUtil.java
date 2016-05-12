@@ -8,7 +8,6 @@ import com.oblivm.backend.gc.GCSignal;
 import crypto.Crypto;
 import exceptions.LengthNotMatchException;
 import oram.Tuple;
-import util.Util;
 
 public class GCUtil {
 
