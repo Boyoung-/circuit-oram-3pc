@@ -207,6 +207,90 @@ public class Access extends Protocol {
 		return outaccess;
 	}
 
+	public OutAccess runE2(Tree OTi, Timer timer) {
+		timer.start(pid, M.online_comp);
+
+		// step 0: get Li from C
+		byte[] Li = new byte[0];
+		timer.start(pid, M.online_read);
+		if (OTi.getTreeIndex() > 0)
+			Li = con2.read();
+		timer.stop(pid, M.online_read);
+
+		// step 1
+		Bucket[] pathBuckets = OTi.getBucketsOnPath(Li);
+		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
+
+		// step 5
+		Tuple Ti = null;
+		if (OTi.getTreeIndex() == 0)
+			Ti = pathTuples[0];
+		else {
+			Ti = new Tuple(1, OTi.getNBytes(), OTi.getLBytes(), OTi.getABytes(), Crypto.sr);
+			Ti.setF(new byte[1]);
+		}
+
+		OutAccess outaccess = new OutAccess(Li, null, null, null, null, Ti, pathTuples);
+
+		timer.stop(pid, M.online_comp);
+		return outaccess;
+	}
+
+	public byte[] runD2(Tree OTi, Timer timer) {
+		timer.start(pid, M.online_comp);
+
+		// step 0: get Li from C
+		byte[] Li = new byte[0];
+		timer.start(pid, M.online_read);
+		if (OTi.getTreeIndex() > 0)
+			Li = con2.read();
+		timer.stop(pid, M.online_read);
+
+		// step 1
+		Bucket[] pathBuckets = OTi.getBucketsOnPath(Li);
+		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
+
+		// step 2
+		timer.start(pid, M.online_write);
+		con2.write(pid, pathTuples);
+		timer.stop(pid, M.online_write);
+
+		timer.stop(pid, M.online_comp);
+		return Li;
+	}
+
+	public OutAccess runC2(Metadata md, int treeIndex, byte[] Li, Timer timer) {
+		timer.start(pid, M.online_comp);
+
+		// step 0: send Li to E and D
+		timer.start(pid, M.online_write);
+		if (treeIndex > 0) {
+			con1.write(Li);
+			con2.write(Li);
+		}
+		timer.stop(pid, M.online_write);
+
+		// step 2
+		timer.start(pid, M.online_read);
+		Tuple[] pathTuples = con2.readObject();
+		timer.stop(pid, M.online_read);
+
+		// step 5
+		Tuple Ti = null;
+		if (treeIndex == 0) {
+			Ti = pathTuples[0];
+		} else {
+			Ti = new Tuple(1, md.getNBytesOfTree(treeIndex), md.getLBytesOfTree(treeIndex),
+					md.getABytesOfTree(treeIndex), Crypto.sr);
+			Ti.setF(new byte[1]);
+		}
+
+		OutAccess outaccess = new OutAccess(Li, null, Ti, pathTuples, null, null, null);
+
+		timer.stop(pid, M.online_comp);
+		return outaccess;
+	}
+
 	// for testing correctness
 	@Override
 	public void run(Party party, Metadata md, Forest forest) {
