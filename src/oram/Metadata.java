@@ -197,10 +197,10 @@ public class Metadata {
 		defaultForestFileName = "forest_";
 		defaultForestFileName += "t" + tau;
 		defaultForestFileName += "m" + addrBits;
+		defaultForestFileName += "s" + stashSize;
 		defaultForestFileName += "w" + w;
 		defaultForestFileName += "d" + dBytes;
 		defaultForestFileName += "_i" + numInsertRecords;
-		defaultForestFileName += "s" + stashSize;
 		defaultForestFileName += ".bin";
 	}
 

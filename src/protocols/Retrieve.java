@@ -215,14 +215,11 @@ public class Retrieve extends Protocol {
 		System.out.println(ete_off.noPreToMS());
 		System.out.println();
 
-		/*
-		 * System.out.println(); Bandwidth[] bandwidth = new Bandwidth[P.size];
-		 * for (int i = 0; i < P.size; i++) { bandwidth[i] =
-		 * con1.bandwidth[i].add(con2.bandwidth[i]);
-		 * System.out.println(bandwidth[i]); }
-		 */
-
-		// System.out.println();
-		// System.out.println(sw.toMS());
+		Bandwidth[] bandwidth = new Bandwidth[P.size];
+		for (int i = 0; i < P.size; i++) {
+			bandwidth[i] = con1.bandwidth[i].add(con2.bandwidth[i]);
+			System.out.println(bandwidth[i].noPreToString());
+		}
+		System.out.println();
 	}
 }

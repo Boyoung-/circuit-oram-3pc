@@ -14,14 +14,12 @@ public class Tuple implements Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	private int numBytes;
 	private byte[] F;
 	private byte[] N;
 	private byte[] L;
 	private byte[] A;
 
 	public Tuple(int fs, int ns, int ls, int as, Random rand) {
-		numBytes = fs + ns + ls + as;
 		F = new byte[fs];
 		N = new byte[ns];
 		L = new byte[ls];
@@ -35,7 +33,6 @@ public class Tuple implements Serializable {
 	}
 
 	public Tuple(byte[] f, byte[] n, byte[] l, byte[] a) {
-		numBytes = f.length + n.length + l.length + a.length;
 		F = f;
 		N = n;
 		L = l;
@@ -44,7 +41,6 @@ public class Tuple implements Serializable {
 
 	// deep copy
 	public Tuple(Tuple t) {
-		numBytes = t.getNumBytes();
 		F = t.getF().clone();
 		N = t.getN().clone();
 		L = t.getL().clone();
@@ -52,7 +48,7 @@ public class Tuple implements Serializable {
 	}
 
 	public int getNumBytes() {
-		return numBytes;
+		return F.length + N.length + L.length + A.length;
 	}
 
 	public byte[] getF() {
@@ -154,7 +150,7 @@ public class Tuple implements Serializable {
 	}
 
 	public boolean sameLength(Tuple t) {
-		return numBytes == t.getNumBytes();
+		return getNumBytes() == t.getNumBytes();
 	}
 
 	public boolean equals(Tuple t) {
@@ -164,7 +160,7 @@ public class Tuple implements Serializable {
 	}
 
 	public byte[] toByteArray() {
-		byte[] tuple = new byte[numBytes];
+		byte[] tuple = new byte[getNumBytes()];
 		int offset = 0;
 		System.arraycopy(F, 0, tuple, offset, F.length);
 		offset += F.length;

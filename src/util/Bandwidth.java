@@ -33,6 +33,10 @@ public class Bandwidth {
 		return total;
 	}
 
+	public String noPreToString() {
+		return "" + bandwidth;
+	}
+
 	@Override
 	public String toString() {
 		return task + "(bytes): " + bandwidth;
