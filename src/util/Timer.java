@@ -54,6 +54,14 @@ public class Timer {
 				System.out.println(watches[i][j].toMS());
 	}
 
+	public void noPrePrint() {
+		if (!stack.empty())
+			throw new TimerException("Stack not empty");
+		for (int i = 0; i < watches.length; i++)
+			for (int j = 0; j < watches[i].length; j++)
+				System.out.println(watches[i][j].noPreToMS());
+	}
+
 	public Timer divideBy(int n) {
 		if (!stack.empty())
 			throw new TimerException("Stack not empty");

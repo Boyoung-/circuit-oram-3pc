@@ -82,13 +82,9 @@ public class Retrieve extends Protocol {
 	// for testing correctness
 	@Override
 	public void run(Party party, Metadata md, Forest forest) {
-		int records = 5;
+		int records = 6;
 		int repeat = 5;
-		int cycles = records * repeat;
-		int abandRatio = 5; // 20%
-		int abandCycles = 0;
-		if (cycles > 1)
-			abandCycles = (cycles - 2) / abandRatio + 1;
+		int reset = 1;
 
 		int tau = md.getTau();
 		int numTrees = md.getNumTrees();
@@ -96,7 +92,8 @@ public class Retrieve extends Protocol {
 		int addrBits = md.getAddrBits();
 
 		Timer timer = new Timer();
-		StopWatch sw = new StopWatch();
+		StopWatch ete_off = new StopWatch("ETE_offline");
+		StopWatch ete_on = new StopWatch("ETE_online");
 
 		sanityCheck();
 
@@ -106,8 +103,8 @@ public class Retrieve extends Protocol {
 			long N = Util.nextLong(numInsert, Crypto.sr);
 
 			for (int j = 0; j < repeat; j++) {
-				int cycleIndex = i * records + j;
-				if (cycleIndex == abandCycles)
+				int cycleIndex = i * repeat + j;
+				if (cycleIndex == reset * repeat)
 					timer.reset();
 				if (cycleIndex == 1) {
 					con1.bandSwitch = false;
@@ -124,13 +121,19 @@ public class Retrieve extends Protocol {
 					predata[ti] = new PreData();
 
 					if (party == Party.Eddie) {
+						ete_off.start();
 						preretrieve.runE(predata[ti], md, ti, timer);
+						ete_off.stop();
 
 					} else if (party == Party.Debbie) {
+						ete_off.start();
 						preretrieve.runD(predata[ti], md, ti, ti == 0 ? null : predata[ti - 1], timer);
+						ete_off.stop();
 
 					} else if (party == Party.Charlie) {
+						ete_off.start();
 						preretrieve.runC(predata[ti], md, ti, ti == 0 ? null : predata[ti - 1], timer);
+						ete_off.stop();
 
 					} else {
 						throw new NoSuchPartyException(party + "");
@@ -157,9 +160,9 @@ public class Retrieve extends Protocol {
 						byte[] sD_Nip1_pr = Util.xor(Nip1_pr, sE_Nip1_pr);
 						con1.write(sD_Nip1_pr);
 
-						sw.start();
+						ete_on.start();
 						runE(predata[ti], OTi, sE_Ni, sE_Nip1_pr, numTrees, timer);
-						sw.stop();
+						ete_on.stop();
 
 						if (ti == numTrees - 1)
 							con2.write(N);
@@ -170,18 +173,18 @@ public class Retrieve extends Protocol {
 						byte[] sD_Ni = con1.read();
 						byte[] sD_Nip1_pr = con1.read();
 
-						sw.start();
+						ete_on.start();
 						runD(predata[ti], OTi, sD_Ni, sD_Nip1_pr, timer);
-						sw.stop();
+						ete_on.stop();
 
 					} else if (party == Party.Charlie) {
 						int lBits = md.getLBitsOfTree(ti);
 						System.out.println("L" + ti + "="
 								+ Util.addZeros(Util.getSubBits(new BigInteger(1, Li), lBits, 0).toString(2), lBits));
 
-						sw.start();
+						ete_on.start();
 						OutAccess outaccess = runC(predata[ti], md, ti, Li, numTrees, timer);
-						sw.stop();
+						ete_on.stop();
 
 						Li = outaccess.C_Lip1;
 
@@ -202,16 +205,22 @@ public class Retrieve extends Protocol {
 				}
 			}
 		}
-
 		System.out.println();
-		timer.divideBy(cycles - abandCycles).print();
 
+		timer.noPrePrint();
+		// timer.divideBy((records-reset)*repeat).print();
 		System.out.println();
-		Bandwidth[] bandwidth = new Bandwidth[P.size];
-		for (int i = 0; i < P.size; i++) {
-			bandwidth[i] = con1.bandwidth[i].add(con2.bandwidth[i]);
-			System.out.println(bandwidth[i]);
-		}
+
+		System.out.println(ete_on.noPreToMS());
+		System.out.println(ete_off.noPreToMS());
+		System.out.println();
+
+		/*
+		 * System.out.println(); Bandwidth[] bandwidth = new Bandwidth[P.size];
+		 * for (int i = 0; i < P.size; i++) { bandwidth[i] =
+		 * con1.bandwidth[i].add(con2.bandwidth[i]);
+		 * System.out.println(bandwidth[i]); }
+		 */
 
 		// System.out.println();
 		// System.out.println(sw.toMS());

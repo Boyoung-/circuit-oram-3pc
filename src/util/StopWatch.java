@@ -81,12 +81,16 @@ public class StopWatch {
 	}
 
 	public String toMS() {
-		String out = " WallClock(ms): " + elapsedWC / 1000000;
-		out += "\n CPUClock(ms): " + elapsedCPU / 1000000;
+		String out = "  WC(ms): " + elapsedWC / 1000000;
+		out += "\n  CPU(ms): " + elapsedCPU / 1000000;
 		if (task.length() == 0)
 			return out;
 		else
 			return task + "\n" + out;
+	}
+
+	public String noPreToMS() {
+		return "\n" + (elapsedWC / 1000000) + "\n" + (elapsedCPU / 1000000);
 	}
 
 	public StopWatch divideBy(int n) {
