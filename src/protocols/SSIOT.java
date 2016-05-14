@@ -76,8 +76,8 @@ public class SSIOT extends Protocol {
 
 		// step 1
 		timer.start(pid, M.online_read);
-		byte[][] e = con1.readDoubleByteArray();
-		byte[][] v = con1.readDoubleByteArray();
+		byte[][] e = con1.readObject();
+		byte[][] v = con1.readObject();
 
 		// step 2
 		byte[] p = con2.read();
@@ -139,7 +139,7 @@ public class SSIOT extends Protocol {
 				runD(predata, sD_Nip1_pr, timer);
 
 			} else if (party == Party.Charlie) {
-				y = con1.readDoubleByteArray();
+				y = con1.readObject();
 				index = con1.readInt();
 				pressiot.runC();
 				OutSSIOT output = runC(timer);

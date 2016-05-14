@@ -81,12 +81,12 @@ public class SSCOT extends Protocol {
 
 		// step 1
 		timer.start(pid, M.online_read);
-		byte[][] e = con1.readDoubleByteArray();
-		byte[][] v = con1.readDoubleByteArray();
+		byte[][] e = con1.readObject();
+		byte[][] v = con1.readObject();
 
 		// step 2
-		byte[][] p = con2.readDoubleByteArray();
-		byte[][] w = con2.readDoubleByteArray();
+		byte[][] p = con2.readObject();
+		byte[][] w = con2.readObject();
 		timer.stop(pid, M.online_read);
 
 		// step 3
@@ -143,12 +143,12 @@ public class SSCOT extends Protocol {
 				runE(predata, m, a, timer);
 
 			} else if (party == Party.Debbie) {
-				b = con1.readDoubleByteArray();
+				b = con1.readObject();
 				presscot.runD(predata, timer);
 				runD(predata, b, timer);
 
 			} else if (party == Party.Charlie) {
-				m = con1.readDoubleByteArray();
+				m = con1.readObject();
 				index = con1.readInt();
 				presscot.runC();
 				OutSSCOT output = runC(timer);

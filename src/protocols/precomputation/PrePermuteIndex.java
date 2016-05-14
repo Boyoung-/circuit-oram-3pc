@@ -46,14 +46,14 @@ public class PrePermuteIndex extends Protocol {
 
 	public void runD(PreData predata, Timer timer) {
 		timer.start(pid, M.offline_read);
-		predata.pi_p = con1.readDoubleByteArray();
-		predata.pi_a = con1.readDoubleByteArray();
+		predata.pi_p = con1.readObject();
+		predata.pi_a = con1.readObject();
 		timer.stop(pid, M.offline_read);
 	}
 
 	public void runC(PreData predata, Timer timer) {
 		timer.start(pid, M.offline_read);
-		predata.pi_r = con1.readDoubleByteArray();
+		predata.pi_r = con1.readObject();
 		timer.stop(pid, M.offline_read);
 	}
 

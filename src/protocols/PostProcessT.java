@@ -158,16 +158,16 @@ public class PostProcessT extends Protocol {
 						OutAccess outaccess = access.runE(predata, OTi, sE_Ni, sE_Nip1_pr, timer);
 
 						if (ti == numTrees - 1)
-							con2.write(BigInteger.valueOf(N));
+							con2.write(N);
 
 						prepostprocesst.runE(predata, timer);
 						Tuple Ti_prime = runE(predata, outaccess.E_Ti, ti == numTrees - 1, timer);
 
-						Ti_prime.setXor(con2.readTuple());
+						Ti_prime.setXor(con2.readObject());
 						byte[] Li_prime = Util.xor(predata.ppt_Li, con2.read());
 						byte[] Lip1_prime = Util.xor(predata.ppt_Lip1, con2.read());
 						int j2 = con2.readInt();
-						Tuple Ti = outaccess.E_Ti.xor(con2.readTuple());
+						Tuple Ti = outaccess.E_Ti.xor(con2.readObject());
 
 						if (!Util.equal(Ti.getF(), Ti_prime.getF()))
 							System.err.println("PPT test failed");
@@ -209,7 +209,7 @@ public class PostProcessT extends Protocol {
 						Li = outaccess.C_Lip1;
 
 						if (ti == numTrees - 1) {
-							N = con1.readBigInteger().longValue();
+							N = con1.readLong();
 							long data = new BigInteger(1, outaccess.C_Ti.getA()).longValue();
 							if (N == data) {
 								System.out.println("Access passed");

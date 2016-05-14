@@ -25,7 +25,7 @@ public class PrePostProcessT extends Protocol {
 		predata.ppt_Li = con1.read();
 		predata.ppt_Lip1 = con1.read();
 
-		predata.ppt_s = con1.readDoubleByteArray();
+		predata.ppt_s = con1.readObject();
 		timer.stop(pid, M.offline_read);
 	}
 
@@ -71,7 +71,7 @@ public class PrePostProcessT extends Protocol {
 
 		timer.start(pid, M.offline_read);
 		predata.ppt_alpha = con2.readInt();
-		predata.ppt_r = con2.readDoubleByteArray();
+		predata.ppt_r = con2.readObject();
 		timer.stop(pid, M.offline_read);
 
 		timer.stop(pid, M.offline_comp);

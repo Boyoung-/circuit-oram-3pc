@@ -39,7 +39,7 @@ public class PermuteIndex extends Protocol {
 		timer.stop(pid, M.online_write);
 
 		timer.start(pid, M.online_read);
-		byte[][] g = con2.readDoubleByteArray();
+		byte[][] g = con2.readObject();
 		timer.stop(pid, M.online_read);
 
 		ti = Util.xor(predata.pi_a, g);
@@ -60,7 +60,7 @@ public class PermuteIndex extends Protocol {
 		timer.start(pid, M.online_comp);
 
 		timer.start(pid, M.online_read);
-		byte[][] z = con2.readDoubleByteArray();
+		byte[][] z = con2.readObject();
 		timer.stop(pid, M.online_read);
 
 		z = Util.xor(z, predata.pi_r);
@@ -111,7 +111,7 @@ public class PermuteIndex extends Protocol {
 
 				runE();
 
-				int[] ti_pp = con1.readIntArray();
+				int[] ti_pp = con1.readObject();
 				ti = Util.permute(ti, predata.evict_pi);
 				int j = 0;
 				for (; j < d; j++) {
@@ -126,9 +126,9 @@ public class PermuteIndex extends Protocol {
 					System.out.println("PermuteIndex test passed");
 
 			} else if (party == Party.Debbie) {
-				predata.evict_pi = con1.readIntArray();
-				predata.evict_rho = con1.readDoubleByteArray();
-				byte[][] ti = con1.readDoubleByteArray();
+				predata.evict_pi = con1.readObject();
+				predata.evict_rho = con1.readObject();
+				byte[][] ti = con1.readObject();
 				int w = con1.readInt();
 
 				prepermuteindex.runD(predata, timer);
@@ -137,8 +137,8 @@ public class PermuteIndex extends Protocol {
 				con1.write(ti_pp);
 
 			} else if (party == Party.Charlie) {
-				predata.evict_pi = con1.readIntArray();
-				predata.evict_rho = con1.readDoubleByteArray();
+				predata.evict_pi = con1.readObject();
+				predata.evict_rho = con1.readObject();
 
 				prepermuteindex.runC(predata, timer);
 

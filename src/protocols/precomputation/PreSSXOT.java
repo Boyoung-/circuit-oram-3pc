@@ -26,8 +26,8 @@ public class PreSSXOT extends Protocol {
 
 	public void runE(PreData predata, Timer timer) {
 		timer.start(pid, M.offline_read);
-		predata.ssxot_E_pi[id] = con1.readIntArray();
-		predata.ssxot_E_r[id] = con1.readTupleArray();
+		predata.ssxot_E_pi[id] = con1.readObject();
+		predata.ssxot_E_r[id] = con1.readObject();
 		timer.stop(pid, M.offline_read);
 	}
 
@@ -63,8 +63,8 @@ public class PreSSXOT extends Protocol {
 
 	public void runC(PreData predata, Timer timer) {
 		timer.start(pid, M.offline_read);
-		predata.ssxot_C_pi[id] = con2.readIntArray();
-		predata.ssxot_C_r[id] = con2.readTupleArray();
+		predata.ssxot_C_pi[id] = con2.readObject();
+		predata.ssxot_C_r[id] = con2.readObject();
 		timer.stop(pid, M.offline_read);
 	}
 

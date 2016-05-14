@@ -45,11 +45,11 @@ public class SSXOT extends Protocol {
 		timer.stop(pid, M.online_write);
 
 		timer.start(pid, M.online_read);
-		a = con2.readTupleArray();
+		a = con2.readObject();
 
 		// step 2
-		int[] j = con1.readIntArray();
-		Tuple[] p = con1.readTupleArray();
+		int[] j = con1.readObject();
+		Tuple[] p = con1.readObject();
 		timer.stop(pid, M.online_read);
 
 		// step 3
@@ -100,11 +100,11 @@ public class SSXOT extends Protocol {
 		timer.stop(pid, M.online_write);
 
 		timer.start(pid, M.online_read);
-		a = con1.readTupleArray();
+		a = con1.readObject();
 
 		// step 2
-		int[] j = con2.readIntArray();
-		Tuple[] p = con2.readTupleArray();
+		int[] j = con2.readObject();
+		Tuple[] p = con2.readObject();
 		timer.stop(pid, M.online_read);
 
 		// step 3
@@ -153,9 +153,9 @@ public class SSXOT extends Protocol {
 				pressxot.runC(predata, timer);
 				Tuple[] C_out_m = runC(predata, C_m, timer);
 
-				index = con2.readIntArray();
-				E_m = con1.readTupleArray();
-				Tuple[] E_out_m = con1.readTupleArray();
+				index = con2.readObject();
+				E_m = con1.readObject();
+				Tuple[] E_out_m = con1.readObject();
 
 				boolean pass = true;
 				for (int i = 0; i < index.length; i++) {

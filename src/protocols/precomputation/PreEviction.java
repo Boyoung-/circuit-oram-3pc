@@ -162,8 +162,8 @@ public class PreEviction extends Protocol {
 		eva.setEvaluate();
 
 		timer.start(pid, M.offline_read);
-		predata.evict_tiOutKeyHashes = con1.readTripleByteArray();
-		predata.evict_targetOutKeyPairs = con1.readTripleGCSignalArray();
+		predata.evict_tiOutKeyHashes = con1.readObject();
+		predata.evict_targetOutKeyPairs = con1.readObject();
 		timer.stop(pid, M.offline_read);
 
 		// PermuteTarget
@@ -190,15 +190,15 @@ public class PreEviction extends Protocol {
 
 		// GC
 		timer.start(pid, M.offline_read);
-		predata.evict_C_feKeyPairs = con1.readTripleGCSignalArray();
-		predata.evict_C_labelKeyPairs = con1.readQuadGCSignalArray();
+		predata.evict_C_feKeyPairs = con1.readObject();
+		predata.evict_C_labelKeyPairs = con1.readObject();
 
 		// Permutation
-		predata.evict_pi = con1.readIntArray();
-		predata.evict_delta = con1.readDoubleByteArray();
-		predata.evict_rho = con1.readDoubleByteArray();
-		predata.evict_delta_p = con1.readDoubleIntArray();
-		predata.evict_rho_p = con1.readDoubleIntArray();
+		predata.evict_pi = con1.readObject();
+		predata.evict_delta = con1.readObject();
+		predata.evict_rho = con1.readObject();
+		predata.evict_delta_p = con1.readObject();
+		predata.evict_rho_p = con1.readObject();
 		timer.stop(pid, M.offline_read);
 
 		// PermuteTarget

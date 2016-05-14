@@ -61,7 +61,7 @@ public class PermuteTarget extends Protocol {
 		timer.stop(pid, M.online_write);
 
 		timer.start(pid, M.online_read);
-		byte[][] g = con2.readDoubleByteArray();
+		byte[][] g = con2.readObject();
 		timer.stop(pid, M.online_read);
 
 		target = Util.xor(predata.pt_a, g);
@@ -82,8 +82,8 @@ public class PermuteTarget extends Protocol {
 
 		// PermuteTargetII
 		timer.start(pid, M.online_read);
-		byte[][] z = con2.readDoubleByteArray();
-		int[] I = con2.readIntArray();
+		byte[][] z = con2.readObject();
+		int[] I = con2.readObject();
 		timer.stop(pid, M.online_read);
 
 		byte[][] mk = new byte[z.length][];
@@ -137,7 +137,7 @@ public class PermuteTarget extends Protocol {
 
 				runE();
 
-				int[] target_pp = con1.readIntArray();
+				int[] target_pp = con1.readObject();
 				int[] pi_ivs = Util.inversePermutation(predata.evict_pi);
 				int[] piTargetPiIvs = new int[d];
 
@@ -154,9 +154,9 @@ public class PermuteTarget extends Protocol {
 
 			} else if (party == Party.Debbie) {
 				int d = con1.readInt();
-				predata.evict_pi = con1.readIntArray();
-				predata.evict_targetOutKeyPairs = con1.readTripleGCSignalArray();
-				GCSignal[][] targetOutKeys = con1.readDoubleGCSignalArray();
+				predata.evict_pi = con1.readObject();
+				predata.evict_targetOutKeyPairs = con1.readObject();
+				GCSignal[][] targetOutKeys = con1.readObject();
 
 				prepermutetarget.runD(predata, d, timer);
 
@@ -164,7 +164,7 @@ public class PermuteTarget extends Protocol {
 				con1.write(target_pp);
 
 			} else if (party == Party.Charlie) {
-				predata.evict_pi = con1.readIntArray();
+				predata.evict_pi = con1.readObject();
 
 				prepermutetarget.runC(predata, timer);
 
