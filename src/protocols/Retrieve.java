@@ -196,7 +196,7 @@ public class Retrieve extends Protocol {
 						ete_on.stop();
 
 						if (ti == numTrees - 1)
-							con2.write(N);
+							con2.write(BigInteger.valueOf(N));
 
 					} else if (party == Party.Debbie) {
 						Tree OTi = forest.getTree(ti);
@@ -220,7 +220,7 @@ public class Retrieve extends Protocol {
 						Li = outaccess.C_Lip1;
 
 						if (ti == numTrees - 1) {
-							N = con1.readObject();
+							N = con1.readBigInteger().longValue();
 							long data = new BigInteger(1, outaccess.C_Ti.getA()).longValue();
 							if (N == data) {
 								System.out.println("Access passed");

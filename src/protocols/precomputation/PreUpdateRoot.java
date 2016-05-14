@@ -95,7 +95,7 @@ public class PreUpdateRoot extends Protocol {
 		eva.setEvaluate();
 
 		timer.start(pid, M.offline_read);
-		predata.ur_outKeyHashes = con1.readObject();
+		predata.ur_outKeyHashes = con1.readDoubleBigIntegerArray();
 		timer.stop(pid, M.offline_read);
 
 		PreSSXOT pressxot = new PreSSXOT(con1, con2, 0);
@@ -108,8 +108,8 @@ public class PreUpdateRoot extends Protocol {
 		timer.start(pid, M.offline_comp);
 
 		timer.start(pid, M.offline_read);
-		predata.ur_C_feKeyPairs = con1.readObject();
-		predata.ur_C_labelKeyPairs = con1.readObject();
+		predata.ur_C_feKeyPairs = con1.readDoubleGCSignalArray();
+		predata.ur_C_labelKeyPairs = con1.readTripleGCSignalArray();
 		timer.stop(pid, M.offline_read);
 
 		PreSSXOT pressxot = new PreSSXOT(con1, con2, 0);

@@ -66,12 +66,12 @@ public class UpdateRoot extends Protocol {
 
 		// step 1
 		timer.start(pid, M.online_read);
-		GCSignal[] j1InputKeys = con1.readObject();
-		GCSignal[] LiInputKeys = con1.readObject();
-		GCSignal[] E_feInputKeys = con1.readObject();
-		GCSignal[][] E_labelInputKeys = con1.readObject();
-		GCSignal[] C_feInputKeys = con2.readObject();
-		GCSignal[][] C_labelInputKeys = con2.readObject();
+		GCSignal[] j1InputKeys = con1.readGCSignalArray();
+		GCSignal[] LiInputKeys = con1.readGCSignalArray();
+		GCSignal[] E_feInputKeys = con1.readGCSignalArray();
+		GCSignal[][] E_labelInputKeys = con1.readDoubleGCSignalArray();
+		GCSignal[] C_feInputKeys = con2.readGCSignalArray();
+		GCSignal[][] C_labelInputKeys = con2.readDoubleGCSignalArray();
 		timer.stop(pid, M.online_read);
 
 		// step 2
@@ -151,7 +151,7 @@ public class UpdateRoot extends Protocol {
 				preupdateroot.runE(predata, sw, lBits, timer);
 				Tuple[] newR = runE(predata, false, Li, R, Ti, timer);
 
-				Tuple[] R_C = con2.readObject();
+				Tuple[] R_C = con2.readTupleArray();
 				int cnt = 0;
 				int[] index = new int[3];
 				for (int j = 0; j < sw; j++) {
@@ -225,8 +225,8 @@ public class UpdateRoot extends Protocol {
 				System.out.println();
 
 			} else if (party == Party.Debbie) {
-				int sw = con1.readObject();
-				int lBits = con1.readObject();
+				int sw = con1.readInt();
+				int lBits = con1.readInt();
 				byte[] Li = con1.read();
 				int[] tupleParam = new int[] { 1, 2, (lBits + 7) / 8, 3 };
 
@@ -234,8 +234,8 @@ public class UpdateRoot extends Protocol {
 				runD(predata, false, Li, md.getW(), timer);
 
 			} else if (party == Party.Charlie) {
-				int sw = con1.readObject();
-				int lBits = con1.readObject();
+				int sw = con1.readInt();
+				int lBits = con1.readInt();
 				Tuple[] R = new Tuple[sw];
 				for (int j = 0; j < sw; j++)
 					R[j] = new Tuple(1, 2, (lBits + 7) / 8, 3, null);

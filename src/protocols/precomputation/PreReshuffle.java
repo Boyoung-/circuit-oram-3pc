@@ -27,7 +27,7 @@ public class PreReshuffle extends Protocol {
 		predata.reshuffle_pi = Util.inversePermutation(predata.access_sigma);
 
 		timer.start(pid, M.offline_read);
-		predata.reshuffle_r = con1.readObject();
+		predata.reshuffle_r = con1.readTupleArray();
 		timer.stop(pid, M.offline_read);
 
 		timer.stop(pid, M.offline_comp);
@@ -59,8 +59,8 @@ public class PreReshuffle extends Protocol {
 
 	public void runC(PreData predata, Timer timer) {
 		timer.start(pid, M.offline_read);
-		predata.reshuffle_p = con2.readObject();
-		predata.reshuffle_a_prime = con2.readObject();
+		predata.reshuffle_p = con2.readTupleArray();
+		predata.reshuffle_a_prime = con2.readTupleArray();
 		timer.stop(pid, M.offline_read);
 	}
 

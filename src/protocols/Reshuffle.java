@@ -36,7 +36,7 @@ public class Reshuffle extends Protocol {
 
 		// step 1
 		timer.start(pid, M.online_read);
-		Tuple[] z = con2.readObject();
+		Tuple[] z = con2.readTupleArray();
 		timer.stop(pid, M.online_read);
 
 		// step 2
@@ -127,13 +127,13 @@ public class Reshuffle extends Protocol {
 						OutAccess outaccess = access.runE(predata, OTi, sE_Ni, sE_Nip1_pr, timer);
 
 						if (ti == numTrees - 1)
-							con2.write(N);
+							con2.write(BigInteger.valueOf(N));
 
 						prereshuffle.runE(predata, timer);
 						Tuple[] E_P_prime = runE(predata, outaccess.E_P, ti == 0, timer);
 
-						Tuple[] C_P = con2.readObject();
-						Tuple[] C_P_prime = con2.readObject();
+						Tuple[] C_P = con2.readTupleArray();
+						Tuple[] C_P_prime = con2.readTupleArray();
 						Tuple[] oldPath = new Tuple[C_P.length];
 						Tuple[] newPath = new Tuple[C_P.length];
 
@@ -182,7 +182,7 @@ public class Reshuffle extends Protocol {
 						Li = outaccess.C_Lip1;
 
 						if (ti == numTrees - 1) {
-							N = con1.readObject();
+							N = con1.readBigInteger().longValue();
 							long data = new BigInteger(1, outaccess.C_Ti.getA()).longValue();
 							if (N == data) {
 								System.out.println("Access passed");

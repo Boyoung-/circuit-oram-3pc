@@ -4,6 +4,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.SerializationUtils;
 
 import communication.Communication;
 import crypto.Crypto;
@@ -158,7 +159,7 @@ public class Access extends Protocol {
 
 		// step 2
 		timer.start(pid, M.online_read);
-		Tuple[] pathTuples = con2.readObject();
+		Tuple[] pathTuples = con2.readTupleArray();
 		byte[] Ni = con2.read();
 		timer.stop(pid, M.online_read);
 
@@ -272,7 +273,7 @@ public class Access extends Protocol {
 
 		// step 2
 		timer.start(pid, M.online_read);
-		Tuple[] pathTuples = con2.readObject();
+		Tuple[] pathTuples = con2.readTupleArray();
 		timer.stop(pid, M.online_read);
 
 		// step 5
@@ -345,7 +346,7 @@ public class Access extends Protocol {
 						runE(predata, OTi, sE_Ni, sE_Nip1_pr, timer);
 
 						if (ti == numTrees - 1)
-							con2.write(N);
+							con2.write(BigInteger.valueOf(N));
 
 					} else if (party == Party.Debbie) {
 						Tree OTi = forest.getTree(ti);
@@ -367,7 +368,7 @@ public class Access extends Protocol {
 						Li = outaccess.C_Lip1;
 
 						if (ti == numTrees - 1) {
-							N = con1.readObject();
+							N = con1.readBigInteger().longValue();
 							long data = new BigInteger(1, outaccess.C_Ti.getA()).longValue();
 							if (N == data) {
 								System.out.println("Access passed");
