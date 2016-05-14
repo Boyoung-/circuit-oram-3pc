@@ -1,7 +1,5 @@
 package protocols.precomputation;
 
-import java.math.BigInteger;
-
 import com.oblivm.backend.flexsc.CompEnv;
 import com.oblivm.backend.gc.GCSignal;
 import com.oblivm.backend.gc.regular.GCEva;
@@ -77,7 +75,7 @@ public class PreEviction extends Protocol {
 		GCSignal[][][] outZeroKeys = new GCRoute<GCSignal>(gen, d, w).routing(LiZeroKeys, E_feZeroKeys, C_feZeroKeys,
 				E_labelZeroKeys, C_labelZeroKeys, deltaZeroKeys);
 
-		predata.evict_tiOutKeyHashes = new BigInteger[d][];
+		predata.evict_tiOutKeyHashes = new byte[d][][];
 		predata.evict_targetOutKeyPairs = new GCSignal[d][][];
 		for (int i = 0; i < d; i++) {
 			predata.evict_tiOutKeyHashes[i] = GCUtil.genOutKeyHashes(outZeroKeys[1][i]);
@@ -94,14 +92,14 @@ public class PreEviction extends Protocol {
 
 		// Permutation
 		predata.evict_pi = Util.randomPermutation(d, Crypto.sr);
-		predata.evict_delta = new BigInteger[d];
-		predata.evict_rho = new BigInteger[d];
+		predata.evict_delta = new byte[d][];
+		predata.evict_rho = new byte[d][];
 		predata.evict_delta_p = new int[d][];
 		predata.evict_rho_p = new int[d][];
 
 		for (int i = 0; i < d; i++) {
-			predata.evict_delta[i] = new BigInteger(logW, Crypto.sr);
-			predata.evict_rho[i] = new BigInteger(logW, Crypto.sr);
+			predata.evict_delta[i] = Util.nextBytes((logW + 7) / 8, Crypto.sr);
+			predata.evict_rho[i] = Util.nextBytes((logW + 7) / 8, Crypto.sr);
 			predata.evict_delta_p[i] = Util.getXorPermutation(predata.evict_delta[i], logW);
 			predata.evict_rho_p[i] = Util.getXorPermutation(predata.evict_rho[i], logW);
 		}
@@ -164,7 +162,7 @@ public class PreEviction extends Protocol {
 		eva.setEvaluate();
 
 		timer.start(pid, M.offline_read);
-		predata.evict_tiOutKeyHashes = con1.readDoubleBigIntegerArray();
+		predata.evict_tiOutKeyHashes = con1.readTripleByteArray();
 		predata.evict_targetOutKeyPairs = con1.readTripleGCSignalArray();
 		timer.stop(pid, M.offline_read);
 
@@ -197,8 +195,8 @@ public class PreEviction extends Protocol {
 
 		// Permutation
 		predata.evict_pi = con1.readIntArray();
-		predata.evict_delta = con1.readBigIntegerArray();
-		predata.evict_rho = con1.readBigIntegerArray();
+		predata.evict_delta = con1.readDoubleByteArray();
+		predata.evict_rho = con1.readDoubleByteArray();
 		predata.evict_delta_p = con1.readDoubleIntArray();
 		predata.evict_rho_p = con1.readDoubleIntArray();
 		timer.stop(pid, M.offline_read);

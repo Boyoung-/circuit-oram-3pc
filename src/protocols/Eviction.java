@@ -69,8 +69,7 @@ public class Eviction extends Protocol {
 		for (int i = 0; i < d; i++) {
 			E_feInputKeys[i] = GCUtil.selectFeKeys(predata.evict_E_feKeyPairs[i], pathBuckets[i].getTuples());
 			E_labelInputKeys[i] = GCUtil.selectLabelKeys(predata.evict_E_labelKeyPairs[i], pathBuckets[i].getTuples());
-			deltaInputKeys[i] = GCUtil.revSelectKeys(predata.evict_deltaKeyPairs[i],
-					predata.evict_delta[i].toByteArray());
+			deltaInputKeys[i] = GCUtil.revSelectKeys(predata.evict_deltaKeyPairs[i], predata.evict_delta[i]);
 		}
 
 		timer.start(pid, M.online_write);
@@ -144,22 +143,24 @@ public class Eviction extends Protocol {
 		GCSignal[][][] C_labelInputKeys = con2.readTripleGCSignalArray();
 		timer.stop(pid, M.online_read);
 
+		int w = OTi.getW();
+		int logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2));
+
 		GCSignal[][][] outKeys = predata.evict_gcroute.routing(LiInputKeys, E_feInputKeys, C_feInputKeys,
 				E_labelInputKeys, C_labelInputKeys, deltaInputKeys);
 
-		int[] ti_p = new int[deltaInputKeys.length];
+		byte[][] ti_p = new byte[deltaInputKeys.length][];
 		for (int i = 0; i < ti_p.length; i++) {
-			ti_p[i] = GCUtil.evaOutKeys(outKeys[1][i], predata.evict_tiOutKeyHashes[i]).intValue();
+			ti_p[i] = Util.padArray(GCUtil.evaOutKeys(outKeys[1][i], predata.evict_tiOutKeyHashes[i]).toByteArray(),
+					(logW + 7) / 8);
 		}
 
 		PermuteTarget permutetarget = new PermuteTarget(con1, con2);
 		int[] target_pp = permutetarget.runD(predata, firstTree, outKeys[0], timer);
 
 		PermuteIndex permuteindex = new PermuteIndex(con1, con2);
-		int[] ti_pp = permuteindex.runD(predata, firstTree, ti_p, timer);
+		int[] ti_pp = permuteindex.runD(predata, firstTree, ti_p, w, timer);
 
-		int w = OTi.getW();
-		int logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2));
 		int W = (int) Math.pow(2, logW);
 		int[] evict = prepareEviction(target_pp, ti_pp, W);
 

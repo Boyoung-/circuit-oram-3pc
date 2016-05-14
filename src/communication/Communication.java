@@ -3,7 +3,6 @@ package communication;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.io.StreamCorruptedException;
 import java.math.BigInteger;
 import java.net.InetSocketAddress;
@@ -15,7 +14,7 @@ import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.apache.commons.lang3.SerializationUtils;
+import org.bouncycastle.util.Arrays;
 
 import com.oblivm.backend.gc.GCSignal;
 
@@ -359,14 +358,24 @@ public class Communication {
 
 	public void write(byte[][] arr) {
 		write(arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(arr[i]);
+		write(ComUtil.toByteArray(arr));
 	}
 
 	public void write(int pid, byte[][] arr) {
 		write(pid, arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(pid, arr[i]);
+		write(pid, ComUtil.toByteArray(arr));
+	}
+
+	public void write(byte[][][] arr) {
+		write(arr.length);
+		write(arr[0].length);
+		write(ComUtil.toByteArray(arr));
+	}
+
+	public void write(int pid, byte[][][] arr) {
+		write(pid, arr.length);
+		write(pid, arr[0].length);
+		write(pid, ComUtil.toByteArray(arr));
 	}
 
 	public void write(BigInteger b) {
@@ -377,80 +386,60 @@ public class Communication {
 		write(pid, b.toByteArray());
 	}
 
-	public void write(BigInteger[] arr) {
-		write(arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(arr[i]);
-	}
-
-	public void write(int pid, BigInteger[] arr) {
-		write(pid, arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(pid, arr[i]);
-	}
-
-	public void write(BigInteger[][] arr) {
-		write(arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(arr[i]);
-	}
-
-	public void write(int pid, BigInteger[][] arr) {
-		write(pid, arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(pid, arr[i]);
-	}
-
 	public void write(int n) {
-		write(BigInteger.valueOf(n).toByteArray());
+		write(BigInteger.valueOf(n));
 	}
 
 	public void write(int pid, int n) {
-		write(pid, BigInteger.valueOf(n).toByteArray());
+		write(pid, BigInteger.valueOf(n));
 	}
 
 	public void write(int[] arr) {
-		write(arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(arr[i]);
+		write(ComUtil.toByteArray(arr));
 	}
 
 	public void write(int pid, int[] arr) {
-		write(pid, arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(pid, arr[i]);
+		write(pid, ComUtil.toByteArray(arr));
 	}
 
 	public void write(int[][] arr) {
 		write(arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(arr[i]);
+		write(ComUtil.toByteArray(arr));
 	}
 
 	public void write(int pid, int[][] arr) {
 		write(pid, arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(pid, arr[i]);
+		write(pid, ComUtil.toByteArray(arr));
 	}
 
 	public void write(Tuple t) {
-		write(SerializationUtils.serialize(t));
+		write(t.getF().length);
+		write(t.getN().length);
+		write(t.getL().length);
+		write(t.toByteArray());
 	}
 
 	public void write(int pid, Tuple t) {
-		write(pid, SerializationUtils.serialize(t));
+		write(pid, t.getF().length);
+		write(pid, t.getN().length);
+		write(pid, t.getL().length);
+		write(pid, t.toByteArray());
 	}
 
 	public void write(Tuple[] arr) {
 		write(arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(arr[i]);
+		write(arr[0].getF().length);
+		write(arr[0].getN().length);
+		write(arr[0].getL().length);
+		write(ComUtil.toByteArray(arr));
 	}
 
-	public void write(int pid, Tuple[] tuples) {
-		write(pid, tuples.length);
-		for (int i = 0; i < tuples.length; i++)
-			write(pid, tuples[i]);
+	public void write(int pid, Tuple[] arr) {
+		write(pid, arr.length);
+		write(pid, arr[0].getF().length);
+		write(pid, arr[0].getN().length);
+		write(pid, arr[0].getL().length);
+		write(pid, ComUtil.toByteArray(arr));
 	}
 
 	public void write(Bucket b) {
@@ -463,14 +452,14 @@ public class Communication {
 
 	public void write(Bucket[] arr) {
 		write(arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(arr[i]);
+		write(arr[0].getNumTuples());
+		write(Bucket.bucketsToTuples(arr));
 	}
 
 	public void write(int pid, Bucket[] arr) {
 		write(pid, arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(pid, arr[i]);
+		write(pid, arr[0].getNumTuples());
+		write(pid, Bucket.bucketsToTuples(arr));
 	}
 
 	public void write(GCSignal key) {
@@ -482,51 +471,47 @@ public class Communication {
 	}
 
 	public void write(GCSignal[] arr) {
-		write(arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(arr[i]);
+		write(ComUtil.toByteArray(arr));
 	}
 
 	public void write(int pid, GCSignal[] arr) {
-		write(pid, arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(pid, arr[i]);
+		write(pid, ComUtil.toByteArray(arr));
 	}
 
 	public void write(GCSignal[][] arr) {
 		write(arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(arr[i]);
+		write(ComUtil.toByteArray(arr));
 	}
 
 	public void write(int pid, GCSignal[][] arr) {
 		write(pid, arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(pid, arr[i]);
+		write(pid, ComUtil.toByteArray(arr));
 	}
 
 	public void write(GCSignal[][][] arr) {
 		write(arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(arr[i]);
+		write(arr[0].length);
+		write(ComUtil.toByteArray(arr));
 	}
 
 	public void write(int pid, GCSignal[][][] arr) {
 		write(pid, arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(pid, arr[i]);
+		write(pid, arr[0].length);
+		write(pid, ComUtil.toByteArray(arr));
 	}
 
 	public void write(GCSignal[][][][] arr) {
 		write(arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(arr[i]);
+		write(arr[0].length);
+		write(arr[0][0].length);
+		write(ComUtil.toByteArray(arr));
 	}
 
 	public void write(int pid, GCSignal[][][][] arr) {
 		write(pid, arr.length);
-		for (int i = 0; i < arr.length; i++)
-			write(pid, arr[i]);
+		write(pid, arr[0].length);
+		write(pid, arr[0][0].length);
+		write(pid, ComUtil.toByteArray(arr));
 	}
 
 	public static final Charset defaultCharset = Charset.forName("ASCII");
@@ -616,62 +601,63 @@ public class Communication {
 
 	public byte[][] readDoubleByteArray() {
 		int len = readInt();
-		byte[][] arr = new byte[len][];
-		for (int i = 0; i < len; i++)
-			arr[i] = read();
-		return arr;
+		return ComUtil.toDoubleByteArray(read(), len);
+	}
+
+	public byte[][][] readTripleByteArray() {
+		int len1 = readInt();
+		int len2 = readInt();
+		return ComUtil.toTripleByteArray(read(), len1, len2);
 	}
 
 	public BigInteger readBigInteger() {
 		return new BigInteger(read());
 	}
 
-	public BigInteger[] readBigIntegerArray() {
-		int len = readInt();
-		BigInteger[] arr = new BigInteger[len];
-		for (int i = 0; i < len; i++)
-			arr[i] = readBigInteger();
-		return arr;
-	}
-
-	public BigInteger[][] readDoubleBigIntegerArray() {
-		int len = readInt();
-		BigInteger[][] arr = new BigInteger[len][];
-		for (int i = 0; i < len; i++)
-			arr[i] = readBigIntegerArray();
-		return arr;
-	}
-
 	public int readInt() {
-		return new BigInteger(read()).intValue();
+		return readBigInteger().intValue();
 	}
 
 	public int[] readIntArray() {
-		int len = readInt();
-		int[] arr = new int[len];
-		for (int i = 0; i < len; i++)
-			arr[i] = readInt();
-		return arr;
+		return ComUtil.toIntArray(read());
 	}
 
 	public int[][] readDoubleIntArray() {
 		int len = readInt();
-		int[][] arr = new int[len][];
-		for (int i = 0; i < len; i++)
-			arr[i] = readIntArray();
-		return arr;
+		return ComUtil.toDoubleIntArray(read(), len);
 	}
 
 	public Tuple readTuple() {
-		Tuple t = SerializationUtils.deserialize(read());
-		return t;
+		int f = readInt();
+		int n = readInt();
+		int l = readInt();
+		int endN = f + n;
+		int endL = endN + l;
+		byte[] b = read();
+		byte[] F = Arrays.copyOfRange(b, 0, f);
+		byte[] N = Arrays.copyOfRange(b, f, endN);
+		byte[] L = Arrays.copyOfRange(b, endN, endL);
+		byte[] A = Arrays.copyOfRange(b, endL, b.length);
+		return new Tuple(F, N, L, A);
 	}
 
 	public Tuple[] readTupleArray() {
-		int len = readInt();
-		Tuple[] arr = new Tuple[len];
-		for (int i = 0; i < len; i++)
-			arr[i] = readTuple();
+		int len1 = readInt();
+		int f = readInt();
+		int n = readInt();
+		int l = readInt();
+		byte[] b = read();
+		int len2 = b.length / len1;
+		int endN = f + n;
+		int endL = endN + l;
+		Tuple[] arr = new Tuple[len1];
+		for (int i = 0; i < len1; i++) {
+			byte[] F = Arrays.copyOfRange(b, i * len2, i * len2 + f);
+			byte[] N = Arrays.copyOfRange(b, i * len2 + f, i * len2 + endN);
+			byte[] L = Arrays.copyOfRange(b, i * len2 + endN, i * len2 + endL);
+			byte[] A = Arrays.copyOfRange(b, i * len2 + endL, (i + 1) * len2);
+			arr[i] = new Tuple(F, N, L, A);
+		}
 		return arr;
 	}
 
@@ -680,11 +666,11 @@ public class Communication {
 	}
 
 	public Bucket[] readBucketArray() {
-		int len = readInt();
-		Bucket[] arr = new Bucket[len];
-		for (int i = 0; i < len; i++)
-			arr[i] = readBucket();
-		return arr;
+		int d = readInt();
+		int sw = readInt();
+		Tuple[] arr = readTupleArray();
+		int w = (arr.length - sw) / (d - 1);
+		return Bucket.tuplesToBuckets(arr, d, sw, w);
 	}
 
 	public GCSignal readGCSignal() {
@@ -692,35 +678,25 @@ public class Communication {
 	}
 
 	public GCSignal[] readGCSignalArray() {
-		int len = readInt();
-		GCSignal[] arr = new GCSignal[len];
-		for (int i = 0; i < len; i++)
-			arr[i] = readGCSignal();
-		return arr;
+		return ComUtil.toGCSignalArray(read());
 	}
 
 	public GCSignal[][] readDoubleGCSignalArray() {
 		int len = readInt();
-		GCSignal[][] arr = new GCSignal[len][];
-		for (int i = 0; i < len; i++)
-			arr[i] = readGCSignalArray();
-		return arr;
+		return ComUtil.toDoubleGCSignalArray(read(), len);
 	}
 
 	public GCSignal[][][] readTripleGCSignalArray() {
-		int len = readInt();
-		GCSignal[][][] arr = new GCSignal[len][][];
-		for (int i = 0; i < len; i++)
-			arr[i] = readDoubleGCSignalArray();
-		return arr;
+		int len1 = readInt();
+		int len2 = readInt();
+		return ComUtil.toTripleGCSignalArray(read(), len1, len2);
 	}
 
 	public GCSignal[][][][] readQuadGCSignalArray() {
-		int len = readInt();
-		GCSignal[][][][] arr = new GCSignal[len][][][];
-		for (int i = 0; i < len; i++)
-			arr[i] = readTripleGCSignalArray();
-		return arr;
+		int len1 = readInt();
+		int len2 = readInt();
+		int len3 = readInt();
+		return ComUtil.toQuadGCSignalArray(read(), len1, len2, len3);
 	}
 
 	/**

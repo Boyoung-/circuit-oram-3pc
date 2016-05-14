@@ -4,7 +4,6 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.SerializationUtils;
 
 import communication.Communication;
 import crypto.Crypto;

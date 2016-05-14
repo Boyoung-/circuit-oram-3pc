@@ -31,19 +31,21 @@ public class PrePermuteTarget extends Protocol {
 		// PermuteTargetI
 		int logD = (int) Math.ceil(Math.log(d) / Math.log(2));
 
-		predata.pt_keyT = new BigInteger[d][d];
-		predata.pt_targetT = new BigInteger[d][d];
-		predata.pt_maskT = new BigInteger[d][d];
+		predata.pt_keyT = new byte[d][d][];
+		predata.pt_targetT = new byte[d][d][];
+		predata.pt_maskT = new byte[d][d][];
 
 		for (int i = 0; i < d; i++) {
 			for (int j = 0; j < d; j++) {
 				GCSignal[] keys = GCUtil.revSelectKeys(predata.evict_targetOutKeyPairs[i],
 						BigInteger.valueOf(j).toByteArray());
-				predata.pt_keyT[i][j] = new BigInteger(GCUtil.hashAll(keys));
+				predata.pt_keyT[i][j] = GCUtil.hashAll(keys);
 
-				predata.pt_maskT[i][j] = new BigInteger(logD, Crypto.sr);
+				predata.pt_maskT[i][j] = Util.nextBytes((logD + 7) / 8, Crypto.sr);
 
-				predata.pt_targetT[i][j] = BigInteger.valueOf(predata.evict_pi[j]).xor(predata.pt_maskT[i][j]);
+				predata.pt_targetT[i][j] = Util.xor(
+						Util.padArray(BigInteger.valueOf(predata.evict_pi[j]).toByteArray(), (logD + 7) / 8),
+						predata.pt_maskT[i][j]);
 			}
 
 			int[] randPerm = Util.randomPermutation(d, Crypto.sr);
@@ -59,13 +61,13 @@ public class PrePermuteTarget extends Protocol {
 		timer.stop(pid, M.offline_write);
 
 		// PermuteTargetII
-		predata.pt_p = new BigInteger[d];
-		predata.pt_r = new BigInteger[d];
-		predata.pt_a = new BigInteger[d];
+		predata.pt_p = new byte[d][];
+		predata.pt_r = new byte[d][];
+		predata.pt_a = new byte[d][];
 		for (int i = 0; i < d; i++) {
-			predata.pt_p[i] = new BigInteger(logD, Crypto.sr);
-			predata.pt_r[i] = new BigInteger(logD, Crypto.sr);
-			predata.pt_a[i] = predata.pt_p[i].xor(predata.pt_r[i]);
+			predata.pt_p[i] = Util.nextBytes((logD + 7) / 8, Crypto.sr);
+			predata.pt_r[i] = Util.nextBytes((logD + 7) / 8, Crypto.sr);
+			predata.pt_a[i] = Util.xor(predata.pt_p[i], predata.pt_r[i]);
 		}
 		predata.pt_a = Util.permute(predata.pt_a, predata.evict_pi);
 
@@ -81,22 +83,22 @@ public class PrePermuteTarget extends Protocol {
 	public void runD(PreData predata, int d, Timer timer) {
 		timer.start(pid, M.offline_read);
 		// PermuteTargetI
-		predata.pt_keyT = con1.readDoubleBigIntegerArray();
-		predata.pt_targetT = con1.readDoubleBigIntegerArray();
+		predata.pt_keyT = con1.readTripleByteArray();
+		predata.pt_targetT = con1.readTripleByteArray();
 
 		// PermuteTargetII
-		predata.pt_p = con1.readBigIntegerArray();
-		predata.pt_a = con1.readBigIntegerArray();
+		predata.pt_p = con1.readDoubleByteArray();
+		predata.pt_a = con1.readDoubleByteArray();
 		timer.stop(pid, M.offline_read);
 	}
 
 	public void runC(PreData predata, Timer timer) {
 		timer.start(pid, M.offline_read);
 		// PermuteTargetI
-		predata.pt_maskT = con1.readDoubleBigIntegerArray();
+		predata.pt_maskT = con1.readTripleByteArray();
 
 		// PermuteTargetII
-		predata.pt_r = con1.readBigIntegerArray();
+		predata.pt_r = con1.readDoubleByteArray();
 		timer.stop(pid, M.offline_read);
 	}
 

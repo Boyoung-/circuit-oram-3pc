@@ -30,11 +30,11 @@ public class PreRetrieve extends Protocol {
 		preaccess.runE(predata[0], md.getTwoTauPow(), numTuples, tupleParam, timer);
 		prereshuffle.runE(predata[0], timer);
 		prepostprocesst.runE(predata[0], timer);
-		preupdateroot.runE(predata[0], md.getStashSizeOfTree(ti), md.getLBitsOfTree(ti), timer);
+		preupdateroot.runE(predata[0], ti == 0, md.getStashSizeOfTree(ti), md.getLBitsOfTree(ti), timer);
 		preeviction.runE(predata[0], ti == 0, md.getLBitsOfTree(ti) + 1, md.getW(), timer);
 
 		// 2nd eviction
-		preupdateroot.runE(predata[1], md.getStashSizeOfTree(ti), md.getLBitsOfTree(ti), timer);
+		preupdateroot.runE(predata[1], ti == 0, md.getStashSizeOfTree(ti), md.getLBitsOfTree(ti), timer);
 		preeviction.runE(predata[1], ti == 0, md.getLBitsOfTree(ti) + 1, md.getW(), timer);
 	}
 
@@ -52,11 +52,11 @@ public class PreRetrieve extends Protocol {
 		preaccess.runD(predata[0], timer);
 		prereshuffle.runD(predata[0], tupleParam, timer);
 		prepostprocesst.runD(predata[0], prev, md.getLBytesOfTree(ti), md.getAlBytesOfTree(ti), md.getTau(), timer);
-		preupdateroot.runD(predata[0], md.getStashSizeOfTree(ti), md.getLBitsOfTree(ti), tupleParam, timer);
+		preupdateroot.runD(predata[0], ti == 0, md.getStashSizeOfTree(ti), md.getLBitsOfTree(ti), tupleParam, timer);
 		preeviction.runD(predata[0], ti == 0, md.getLBitsOfTree(ti) + 1, md.getW(), tupleParam, timer);
 
 		// 2nd eviction
-		preupdateroot.runD(predata[1], md.getStashSizeOfTree(ti), md.getLBitsOfTree(ti), tupleParam, timer);
+		preupdateroot.runD(predata[1], ti == 0, md.getStashSizeOfTree(ti), md.getLBitsOfTree(ti), tupleParam, timer);
 		preeviction.runD(predata[1], ti == 0, md.getLBitsOfTree(ti) + 1, md.getW(), tupleParam, timer);
 	}
 
@@ -71,11 +71,11 @@ public class PreRetrieve extends Protocol {
 		preaccess.runC(timer);
 		prereshuffle.runC(predata[0], timer);
 		prepostprocesst.runC(predata[0], prev, md.getLBytesOfTree(ti), md.getAlBytesOfTree(ti), timer);
-		preupdateroot.runC(predata[0], timer);
+		preupdateroot.runC(predata[0], ti == 0, timer);
 		preeviction.runC(predata[0], ti == 0, timer);
 
 		// 2nd eviction
-		preupdateroot.runC(predata[1], timer);
+		preupdateroot.runC(predata[1], ti == 0, timer);
 		preeviction.runC(predata[1], ti == 0, timer);
 	}
 

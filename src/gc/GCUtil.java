@@ -8,6 +8,7 @@ import com.oblivm.backend.gc.GCSignal;
 import crypto.Crypto;
 import exceptions.LengthNotMatchException;
 import oram.Tuple;
+import util.Util;
 
 public class GCUtil {
 
@@ -66,24 +67,24 @@ public class GCUtil {
 		return out;
 	}
 
-	public static BigInteger[] genOutKeyHashes(GCSignal[] outZeroKeys) {
-		BigInteger[] hashes = new BigInteger[outZeroKeys.length];
+	public static byte[][] genOutKeyHashes(GCSignal[] outZeroKeys) {
+		byte[][] hashes = new byte[outZeroKeys.length][];
 		for (int i = 0; i < outZeroKeys.length; i++) {
-			hashes[i] = new BigInteger(Crypto.sha1.digest(outZeroKeys[i].bytes));
+			hashes[i] = Crypto.sha1.digest(outZeroKeys[i].bytes);
 		}
 		return hashes;
 	}
 
-	public static BigInteger evaOutKeys(GCSignal[] outKeys, BigInteger[] genHashes) {
+	public static BigInteger evaOutKeys(GCSignal[] outKeys, byte[][] genHashes) {
 		if (outKeys.length != genHashes.length)
 			throw new LengthNotMatchException(outKeys.length + " != " + genHashes.length);
-		BigInteger[] evaHashes = genOutKeyHashes(outKeys);
+		byte[][] evaHashes = genOutKeyHashes(outKeys);
 		BigInteger output = BigInteger.ZERO;
 		for (int i = 0; i < outKeys.length; i++) {
 			if (outKeys[i].isPublic()) {
 				if (outKeys[i].v)
 					output = output.setBit(i);
-			} else if (genHashes[i].compareTo(evaHashes[i]) != 0) {
+			} else if (!Util.equal(genHashes[i], evaHashes[i])) {
 				output = output.setBit(i);
 			}
 		}

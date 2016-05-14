@@ -1,7 +1,5 @@
 package protocols.precomputation;
 
-import java.math.BigInteger;
-
 import communication.Communication;
 import crypto.Crypto;
 import oram.Forest;
@@ -27,13 +25,13 @@ public class PrePermuteIndex extends Protocol {
 
 		int logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2));
 
-		predata.pi_p = new BigInteger[d];
-		predata.pi_r = new BigInteger[d];
-		predata.pi_a = new BigInteger[d];
+		predata.pi_p = new byte[d][];
+		predata.pi_r = new byte[d][];
+		predata.pi_a = new byte[d][];
 		for (int i = 0; i < d; i++) {
-			predata.pi_p[i] = new BigInteger(logW, Crypto.sr);
-			predata.pi_r[i] = new BigInteger(logW, Crypto.sr);
-			predata.pi_a[i] = predata.pi_p[i].xor(predata.pi_r[i]);
+			predata.pi_p[i] = Util.nextBytes((logW + 7) / 8, Crypto.sr);
+			predata.pi_r[i] = Util.nextBytes((logW + 7) / 8, Crypto.sr);
+			predata.pi_a[i] = Util.xor(predata.pi_p[i], predata.pi_r[i]);
 		}
 		predata.pi_a = Util.permute(predata.pi_a, predata.evict_pi);
 
@@ -48,14 +46,14 @@ public class PrePermuteIndex extends Protocol {
 
 	public void runD(PreData predata, Timer timer) {
 		timer.start(pid, M.offline_read);
-		predata.pi_p = con1.readBigIntegerArray();
-		predata.pi_a = con1.readBigIntegerArray();
+		predata.pi_p = con1.readDoubleByteArray();
+		predata.pi_a = con1.readDoubleByteArray();
 		timer.stop(pid, M.offline_read);
 	}
 
 	public void runC(PreData predata, Timer timer) {
 		timer.start(pid, M.offline_read);
-		predata.pi_r = con1.readBigIntegerArray();
+		predata.pi_r = con1.readDoubleByteArray();
 		timer.stop(pid, M.offline_read);
 	}
 

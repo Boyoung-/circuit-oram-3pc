@@ -37,13 +37,14 @@ public class PermuteTarget extends Protocol {
 
 		// PermuteTargetI
 		int d = targetOutKeys.length;
+		int logD = (int) Math.ceil(Math.log(d) / Math.log(2));
 		int I[] = new int[d];
-		BigInteger[] target = new BigInteger[d];
+		byte[][] target = new byte[d][];
 
 		for (int i = 0; i < d; i++) {
-			BigInteger hashKeys = new BigInteger(GCUtil.hashAll(targetOutKeys[i]));
+			byte[] hashKeys = GCUtil.hashAll(targetOutKeys[i]);
 			for (int j = 0; j < d; j++) {
-				if (hashKeys.compareTo(predata.pt_keyT[i][j]) == 0) {
+				if (Util.equal(hashKeys, predata.pt_keyT[i][j])) {
 					I[i] = j;
 					target[i] = predata.pt_targetT[i][j];
 					break;
@@ -52,7 +53,7 @@ public class PermuteTarget extends Protocol {
 		}
 
 		// PermuteTargetII
-		BigInteger[] z = Util.xor(target, predata.pt_p);
+		byte[][] z = Util.xor(target, predata.pt_p);
 
 		timer.start(pid, M.online_write);
 		con2.write(pid, z);
@@ -60,14 +61,14 @@ public class PermuteTarget extends Protocol {
 		timer.stop(pid, M.online_write);
 
 		timer.start(pid, M.online_read);
-		BigInteger[] g = con2.readBigIntegerArray();
+		byte[][] g = con2.readDoubleByteArray();
 		timer.stop(pid, M.online_read);
 
 		target = Util.xor(predata.pt_a, g);
 
 		int[] target_pp = new int[d];
 		for (int i = 0; i < d; i++)
-			target_pp[i] = target[i].intValue();
+			target_pp[i] = Util.getSubBits(new BigInteger(target[i]), logD, 0).intValue();
 
 		timer.stop(pid, M.online_comp);
 		return target_pp;
@@ -81,16 +82,16 @@ public class PermuteTarget extends Protocol {
 
 		// PermuteTargetII
 		timer.start(pid, M.online_read);
-		BigInteger[] z = con2.readBigIntegerArray();
+		byte[][] z = con2.readDoubleByteArray();
 		int[] I = con2.readIntArray();
 		timer.stop(pid, M.online_read);
 
-		BigInteger[] mk = new BigInteger[z.length];
+		byte[][] mk = new byte[z.length][];
 		for (int i = 0; i < mk.length; i++) {
-			mk[i] = predata.pt_maskT[i][I[i]].xor(z[i]);
-			mk[i] = predata.pt_r[i].xor(mk[i]);
+			mk[i] = Util.xor(predata.pt_maskT[i][I[i]], z[i]);
+			mk[i] = Util.xor(predata.pt_r[i], mk[i]);
 		}
-		BigInteger[] g = Util.permute(mk, predata.evict_pi);
+		byte[][] g = Util.permute(mk, predata.evict_pi);
 
 		timer.start(pid, M.online_write);
 		con2.write(pid, g);
@@ -104,7 +105,7 @@ public class PermuteTarget extends Protocol {
 	public void run(Party party, Metadata md, Forest forest) {
 		Timer timer = new Timer();
 
-		for (int i = 0; i < 50; i++) {
+		for (int i = 0; i < 100; i++) {
 
 			System.out.println("i=" + i);
 

@@ -41,6 +41,13 @@ public class GCRoute<T> extends IntegerLib<T> {
 		T[][][] output = env.newTArray(2, 0, 0);
 		output[0] = target;
 		output[1] = ptai[1];
+
+		// rm sign bit
+		for (int i = 0; i < output[0].length; i++) {
+			output[0][i] = Arrays.copyOfRange(output[0][i], 0, logD);
+			output[1][i] = Arrays.copyOfRange(output[1][i], 0, logW);
+		}
+
 		return output;
 	}
 

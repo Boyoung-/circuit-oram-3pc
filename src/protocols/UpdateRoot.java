@@ -148,7 +148,7 @@ public class UpdateRoot extends Protocol {
 				con2.write(sw);
 				con2.write(lBits);
 
-				preupdateroot.runE(predata, sw, lBits, timer);
+				preupdateroot.runE(predata, false, sw, lBits, timer);
 				Tuple[] newR = runE(predata, false, Li, R, Ti, timer);
 
 				Tuple[] R_C = con2.readTupleArray();
@@ -230,7 +230,7 @@ public class UpdateRoot extends Protocol {
 				byte[] Li = con1.read();
 				int[] tupleParam = new int[] { 1, 2, (lBits + 7) / 8, 3 };
 
-				preupdateroot.runD(predata, sw, lBits, tupleParam, timer);
+				preupdateroot.runD(predata, false, sw, lBits, tupleParam, timer);
 				runD(predata, false, Li, md.getW(), timer);
 
 			} else if (party == Party.Charlie) {
@@ -241,7 +241,7 @@ public class UpdateRoot extends Protocol {
 					R[j] = new Tuple(1, 2, (lBits + 7) / 8, 3, null);
 				Tuple Ti = new Tuple(1, 2, (lBits + 7) / 8, 3, null);
 
-				preupdateroot.runC(predata, timer);
+				preupdateroot.runC(predata, false, timer);
 				R = runC(predata, false, R, Ti, timer);
 
 				con1.write(R);

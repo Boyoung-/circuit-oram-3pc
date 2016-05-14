@@ -71,6 +71,15 @@ public class Util {
 		return arr;
 	}
 
+	public static byte[][] xor(byte[][] a, byte[][] b) {
+		if (a.length != b.length)
+			throw new LengthNotMatchException(a.length + " != " + b.length);
+		byte[][] c = new byte[a.length][];
+		for (int i = 0; i < a.length; i++)
+			c[i] = xor(a[i], b[i]);
+		return c;
+	}
+
 	// c = a ^ b
 	public static byte[] xor(byte[] a, byte[] b) {
 		if (a.length != b.length)
@@ -161,11 +170,12 @@ public class Util {
 		}
 	}
 
-	public static int[] getXorPermutation(BigInteger b, int bits) {
+	public static int[] getXorPermutation(byte[] b, int bits) {
+		BigInteger bi = Util.getSubBits(new BigInteger(b), bits, 0);
 		int len = (int) Math.pow(2, bits);
 		int[] p = new int[len];
 		for (int i = 0; i < len; i++) {
-			p[i] = BigInteger.valueOf(i).xor(b).intValue();
+			p[i] = BigInteger.valueOf(i).xor(bi).intValue();
 		}
 		return p;
 	}
@@ -175,6 +185,18 @@ public class Util {
 		for (int i = 0; i < n - a.length(); i++)
 			out = "0" + out;
 		return out;
+	}
+
+	public static byte[] padArray(byte[] in, int len) {
+		if (in.length == len)
+			return in;
+		else if (in.length < len) {
+			byte[] out = new byte[len];
+			System.arraycopy(in, 0, out, len - in.length, in.length);
+			return out;
+		} else {
+			return Arrays.copyOfRange(in, in.length - len, in.length);
+		}
 	}
 
 	public static void debug(String s) {

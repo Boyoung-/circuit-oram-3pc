@@ -1,7 +1,5 @@
 package protocols.precomputation;
 
-import java.math.BigInteger;
-
 import com.oblivm.backend.flexsc.CompEnv;
 import com.oblivm.backend.gc.GCSignal;
 import com.oblivm.backend.gc.regular.GCEva;
@@ -28,7 +26,10 @@ public class PreUpdateRoot extends Protocol {
 		super(con1, con2);
 	}
 
-	public void runE(PreData predata, int sw, int lBits, Timer timer) {
+	public void runE(PreData predata, boolean firstTree, int sw, int lBits, Timer timer) {
+		if (firstTree)
+			return;
+
 		timer.start(pid, M.offline_comp);
 
 		int sLogW = (int) Math.ceil(Math.log(sw) / Math.log(2));
@@ -56,7 +57,7 @@ public class PreUpdateRoot extends Protocol {
 		GCSignal[][] outZeroKeys = new GCUpdateRoot<GCSignal>(gen, lBits + 1, sw).rootFindDeepestAndEmpty(j1ZeroKeys,
 				LiZeroKeys, E_feZeroKeys, C_feZeroKeys, E_labelZeroKeys, C_labelZeroKeys);
 
-		predata.ur_outKeyHashes = new BigInteger[outZeroKeys.length][];
+		predata.ur_outKeyHashes = new byte[outZeroKeys.length][][];
 		for (int i = 0; i < outZeroKeys.length; i++)
 			predata.ur_outKeyHashes[i] = GCUtil.genOutKeyHashes(outZeroKeys[i]);
 
@@ -72,7 +73,10 @@ public class PreUpdateRoot extends Protocol {
 		timer.stop(pid, M.offline_comp);
 	}
 
-	public void runD(PreData predata, int sw, int lBits, int[] tupleParam, Timer timer) {
+	public void runD(PreData predata, boolean firstTree, int sw, int lBits, int[] tupleParam, Timer timer) {
+		if (firstTree)
+			return;
+
 		timer.start(pid, M.offline_comp);
 
 		int logSW = (int) Math.ceil(Math.log(sw) / Math.log(2));
@@ -95,7 +99,7 @@ public class PreUpdateRoot extends Protocol {
 		eva.setEvaluate();
 
 		timer.start(pid, M.offline_read);
-		predata.ur_outKeyHashes = con1.readDoubleBigIntegerArray();
+		predata.ur_outKeyHashes = con1.readTripleByteArray();
 		timer.stop(pid, M.offline_read);
 
 		PreSSXOT pressxot = new PreSSXOT(con1, con2, 0);
@@ -104,7 +108,10 @@ public class PreUpdateRoot extends Protocol {
 		timer.stop(pid, M.offline_comp);
 	}
 
-	public void runC(PreData predata, Timer timer) {
+	public void runC(PreData predata, boolean firstTree, Timer timer) {
+		if (firstTree)
+			return;
+
 		timer.start(pid, M.offline_comp);
 
 		timer.start(pid, M.offline_read);

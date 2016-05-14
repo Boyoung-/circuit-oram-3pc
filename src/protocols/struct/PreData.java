@@ -1,7 +1,5 @@
 package protocols.struct;
 
-import java.math.BigInteger;
-
 import com.oblivm.backend.gc.GCSignal;
 
 import crypto.PRF;
@@ -50,7 +48,7 @@ public class PreData {
 	public GCSignal[][] ur_C_feKeyPairs;
 	public GCSignal[][][] ur_E_labelKeyPairs;
 	public GCSignal[][][] ur_C_labelKeyPairs;
-	public BigInteger[][] ur_outKeyHashes;
+	public byte[][][] ur_outKeyHashes;
 	public GCUpdateRoot<GCSignal> ur_gcur;
 
 	public GCSignal[][] evict_LiKeyPairs;
@@ -59,26 +57,26 @@ public class PreData {
 	public GCSignal[][][][] evict_E_labelKeyPairs;
 	public GCSignal[][][][] evict_C_labelKeyPairs;
 	public GCSignal[][][] evict_deltaKeyPairs;
-	public BigInteger[][] evict_tiOutKeyHashes;
+	public byte[][][] evict_tiOutKeyHashes;
 	public GCSignal[][][] evict_targetOutKeyPairs;
 	public GCRoute<GCSignal> evict_gcroute;
 	public int[] evict_pi;
-	public BigInteger[] evict_delta;
-	public BigInteger[] evict_rho;
+	public byte[][] evict_delta;
+	public byte[][] evict_rho;
 	public int[][] evict_delta_p;
 	public int[][] evict_rho_p;
 
 	// PermuteTargetI
-	public BigInteger[][] pt_maskT;
-	public BigInteger[][] pt_keyT;
-	public BigInteger[][] pt_targetT;
+	public byte[][][] pt_maskT;
+	public byte[][][] pt_keyT;
+	public byte[][][] pt_targetT;
 	// PermuteTargetII
-	public BigInteger[] pt_p;
-	public BigInteger[] pt_r;
-	public BigInteger[] pt_a;
+	public byte[][] pt_p;
+	public byte[][] pt_r;
+	public byte[][] pt_a;
 
 	// PermuteIndex
-	public BigInteger[] pi_p;
-	public BigInteger[] pi_r;
-	public BigInteger[] pi_a;
+	public byte[][] pi_p;
+	public byte[][] pi_r;
+	public byte[][] pi_a;
 }
