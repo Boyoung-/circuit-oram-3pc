@@ -128,8 +128,9 @@ public class Retrieve extends Protocol {
 		StopWatch ete_off = new StopWatch("ETE_offline");
 		StopWatch ete_on = new StopWatch("ETE_online");
 
-		sanityCheck();
+		long[] gates = new long[2];
 
+		sanityCheck();
 		System.out.println();
 
 		for (int i = 0; i < records; i++) {
@@ -161,8 +162,13 @@ public class Retrieve extends Protocol {
 
 					} else if (party == Party.Debbie) {
 						ete_off.start();
-						preretrieve.runD(predata[ti], md, ti, ti == 0 ? null : predata[ti - 1][0], timer);
+						long[] cnt = preretrieve.runD(predata[ti], md, ti, ti == 0 ? null : predata[ti - 1][0], timer);
 						ete_off.stop();
+
+						if (cycleIndex == 0) {
+							gates[0] += cnt[0];
+							gates[1] += cnt[1];
+						}
 
 					} else if (party == Party.Charlie) {
 						ete_off.start();
@@ -254,6 +260,10 @@ public class Retrieve extends Protocol {
 			bandwidth[i] = con1.bandwidth[i].add(con2.bandwidth[i]);
 			System.out.println(bandwidth[i].noPreToString());
 		}
+		System.out.println();
+
+		System.out.println(gates[0]);
+		System.out.println(gates[1]);
 		System.out.println();
 	}
 }

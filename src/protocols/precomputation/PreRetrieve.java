@@ -38,7 +38,7 @@ public class PreRetrieve extends Protocol {
 		preeviction.runE(predata[1], ti == 0, md.getLBitsOfTree(ti) + 1, md.getW(), timer);
 	}
 
-	public void runD(PreData[] predata, Metadata md, int ti, PreData prev, Timer timer) {
+	public long[] runD(PreData[] predata, Metadata md, int ti, PreData prev, Timer timer) {
 		// 1st eviction
 		PreAccess preaccess = new PreAccess(con1, con2);
 		PreReshuffle prereshuffle = new PreReshuffle(con1, con2);
@@ -48,16 +48,21 @@ public class PreRetrieve extends Protocol {
 
 		int[] tupleParam = new int[] { ti == 0 ? 0 : 1, md.getNBytesOfTree(ti), md.getLBytesOfTree(ti),
 				md.getABytesOfTree(ti) };
+		long[] cnt = new long[2];
 
 		preaccess.runD(predata[0], timer);
 		prereshuffle.runD(predata[0], tupleParam, timer);
 		prepostprocesst.runD(predata[0], prev, md.getLBytesOfTree(ti), md.getAlBytesOfTree(ti), md.getTau(), timer);
-		preupdateroot.runD(predata[0], ti == 0, md.getStashSizeOfTree(ti), md.getLBitsOfTree(ti), tupleParam, timer);
-		preeviction.runD(predata[0], ti == 0, md.getLBitsOfTree(ti) + 1, md.getW(), tupleParam, timer);
+		cnt[0] += preupdateroot.runD(predata[0], ti == 0, md.getStashSizeOfTree(ti), md.getLBitsOfTree(ti), tupleParam,
+				timer);
+		cnt[1] += preeviction.runD(predata[0], ti == 0, md.getLBitsOfTree(ti) + 1, md.getW(), tupleParam, timer);
 
 		// 2nd eviction
-		preupdateroot.runD(predata[1], ti == 0, md.getStashSizeOfTree(ti), md.getLBitsOfTree(ti), tupleParam, timer);
-		preeviction.runD(predata[1], ti == 0, md.getLBitsOfTree(ti) + 1, md.getW(), tupleParam, timer);
+		cnt[0] += preupdateroot.runD(predata[1], ti == 0, md.getStashSizeOfTree(ti), md.getLBitsOfTree(ti), tupleParam,
+				timer);
+		cnt[1] += preeviction.runD(predata[1], ti == 0, md.getLBitsOfTree(ti) + 1, md.getW(), tupleParam, timer);
+
+		return cnt;
 	}
 
 	public void runC(PreData[] predata, Metadata md, int ti, PreData prev, Timer timer) {

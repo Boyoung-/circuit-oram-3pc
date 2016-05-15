@@ -74,9 +74,9 @@ public class PreUpdateRoot extends Protocol {
 		timer.stop(pid, M.offline_comp);
 	}
 
-	public void runD(PreData predata, boolean firstTree, int sw, int lBits, int[] tupleParam, Timer timer) {
+	public long runD(PreData predata, boolean firstTree, int sw, int lBits, int[] tupleParam, Timer timer) {
 		if (firstTree)
-			return;
+			return 0;
 
 		timer.start(pid, M.offline_comp);
 
@@ -108,6 +108,7 @@ public class PreUpdateRoot extends Protocol {
 		pressxot.runD(predata, sw + 1, sw, tupleParam, timer);
 
 		timer.stop(pid, M.offline_comp);
+		return eva.numOfAnds;
 	}
 
 	public void runC(PreData predata, boolean firstTree, Timer timer) {

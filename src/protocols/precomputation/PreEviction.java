@@ -128,9 +128,9 @@ public class PreEviction extends Protocol {
 		timer.stop(pid, M.offline_comp);
 	}
 
-	public void runD(PreData predata, boolean firstTree, int d, int w, int[] tupleParam, Timer timer) {
+	public long runD(PreData predata, boolean firstTree, int d, int w, int[] tupleParam, Timer timer) {
 		if (firstTree)
-			return;
+			return 0;
 
 		timer.start(pid, M.offline_comp);
 
@@ -182,6 +182,7 @@ public class PreEviction extends Protocol {
 		pressxot.runD(predata, d * W, d * W, tupleParam, timer);
 
 		timer.stop(pid, M.offline_comp);
+		return eva.numOfAnds;
 	}
 
 	public void runC(PreData predata, boolean firstTree, Timer timer) {
