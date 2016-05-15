@@ -118,7 +118,7 @@ public class PostProcessT extends Protocol {
 		System.out.println();
 
 		for (int i = 0; i < records; i++) {
-			long N = Util.nextLong(numInsert, Crypto.sr);
+			long N = Metadata.cheat ? 0 : Util.nextLong(numInsert, Crypto.sr);
 
 			for (int j = 0; j < repeat; j++) {
 				System.out.println("Test: " + i + " " + j);
@@ -163,11 +163,11 @@ public class PostProcessT extends Protocol {
 						prepostprocesst.runE(predata, timer);
 						Tuple Ti_prime = runE(predata, outaccess.E_Ti, ti == numTrees - 1, timer);
 
-						Ti_prime.setXor(con2.readObject());
+						Ti_prime.setXor(con2.readTuple());
 						byte[] Li_prime = Util.xor(predata.ppt_Li, con2.read());
 						byte[] Lip1_prime = Util.xor(predata.ppt_Lip1, con2.read());
 						int j2 = con2.readInt();
-						Tuple Ti = outaccess.E_Ti.xor(con2.readObject());
+						Tuple Ti = outaccess.E_Ti.xor(con2.readTuple());
 
 						if (!Util.equal(Ti.getF(), Ti_prime.getF()))
 							System.err.println("PPT test failed");

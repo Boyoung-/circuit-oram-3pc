@@ -158,7 +158,7 @@ public class Access extends Protocol {
 
 		// step 2
 		timer.start(pid, M.online_read);
-		Tuple[] pathTuples = con2.readObject();
+		Tuple[] pathTuples = con2.readTupleArray();
 		byte[] Ni = con2.read();
 		timer.stop(pid, M.online_read);
 
@@ -272,7 +272,7 @@ public class Access extends Protocol {
 
 		// step 2
 		timer.start(pid, M.online_read);
-		Tuple[] pathTuples = con2.readObject();
+		Tuple[] pathTuples = con2.readTupleArray();
 		timer.stop(pid, M.online_read);
 
 		// step 5
@@ -309,7 +309,7 @@ public class Access extends Protocol {
 		System.out.println();
 
 		for (int i = 0; i < records; i++) {
-			long N = Util.nextLong(numInsert, Crypto.sr);
+			long N = Metadata.cheat ? 0 : Util.nextLong(numInsert, Crypto.sr);
 
 			for (int j = 0; j < repeat; j++) {
 				System.out.println("Test: " + i + " " + j);

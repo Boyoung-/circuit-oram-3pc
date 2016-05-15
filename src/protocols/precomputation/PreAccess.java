@@ -59,8 +59,8 @@ public class PreAccess extends Protocol {
 
 		// Access
 		timer.start(pid, M.offline_read);
-		predata.access_sigma = con1.readObject();
-		predata.access_p = con1.readObject();
+		predata.access_sigma = con1.readIntArray();
+		predata.access_p = con1.readTupleArray();
 		timer.stop(pid, M.offline_read);
 
 		timer.stop(pid, M.offline_comp);

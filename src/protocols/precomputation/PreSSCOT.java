@@ -51,7 +51,7 @@ public class PreSSCOT extends Protocol {
 		timer.start(pid, M.offline_read);
 		predata.sscot_k = con1.read();
 		predata.sscot_kprime = con1.read();
-		predata.sscot_r = con1.readObject();
+		predata.sscot_r = con1.readDoubleByteArray();
 		timer.stop(pid, M.offline_read);
 
 		predata.sscot_F_k = new PRF(Crypto.secParam);

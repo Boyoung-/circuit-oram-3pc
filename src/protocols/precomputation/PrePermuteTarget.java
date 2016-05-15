@@ -83,22 +83,22 @@ public class PrePermuteTarget extends Protocol {
 	public void runD(PreData predata, int d, Timer timer) {
 		timer.start(pid, M.offline_read);
 		// PermuteTargetI
-		predata.pt_keyT = con1.readObject();
-		predata.pt_targetT = con1.readObject();
+		predata.pt_keyT = con1.readTripleByteArray();
+		predata.pt_targetT = con1.readTripleByteArray();
 
 		// PermuteTargetII
-		predata.pt_p = con1.readObject();
-		predata.pt_a = con1.readObject();
+		predata.pt_p = con1.readDoubleByteArray();
+		predata.pt_a = con1.readDoubleByteArray();
 		timer.stop(pid, M.offline_read);
 	}
 
 	public void runC(PreData predata, Timer timer) {
 		timer.start(pid, M.offline_read);
 		// PermuteTargetI
-		predata.pt_maskT = con1.readObject();
+		predata.pt_maskT = con1.readTripleByteArray();
 
 		// PermuteTargetII
-		predata.pt_r = con1.readObject();
+		predata.pt_r = con1.readDoubleByteArray();
 		timer.stop(pid, M.offline_read);
 	}
 

@@ -36,7 +36,7 @@ public class Reshuffle extends Protocol {
 
 		// step 1
 		timer.start(pid, M.online_read);
-		Tuple[] z = con2.readObject();
+		Tuple[] z = con2.readTupleArray();
 		timer.stop(pid, M.online_read);
 
 		// step 2
@@ -89,7 +89,7 @@ public class Reshuffle extends Protocol {
 		System.out.println();
 
 		for (int i = 0; i < records; i++) {
-			long N = Util.nextLong(numInsert, Crypto.sr);
+			long N = Metadata.cheat ? 0 : Util.nextLong(numInsert, Crypto.sr);
 
 			for (int j = 0; j < repeat; j++) {
 				System.out.println("Test: " + i + " " + j);
@@ -132,8 +132,8 @@ public class Reshuffle extends Protocol {
 						prereshuffle.runE(predata, timer);
 						Tuple[] E_P_prime = runE(predata, outaccess.E_P, ti == 0, timer);
 
-						Tuple[] C_P = con2.readObject();
-						Tuple[] C_P_prime = con2.readObject();
+						Tuple[] C_P = con2.readTupleArray();
+						Tuple[] C_P_prime = con2.readTupleArray();
 						Tuple[] oldPath = new Tuple[C_P.length];
 						Tuple[] newPath = new Tuple[C_P.length];
 

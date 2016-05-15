@@ -1,7 +1,6 @@
 package com.oblivm.backend.gc.regular;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import com.oblivm.backend.flexsc.Flag;
 import com.oblivm.backend.flexsc.Mode;
@@ -17,7 +16,7 @@ public class GCGen extends GCGenComp {
 	Timer timer = null;
 	int p;
 	int m;
-	List<byte[]> msg = new ArrayList<byte[]>(threshold);
+	ArrayList<byte[]> msg = new ArrayList<byte[]>(threshold);
 
 	public GCGen(Network channel) {
 		super(channel, Mode.REAL);

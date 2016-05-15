@@ -2,7 +2,6 @@ package com.oblivm.backend.gc.regular;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import com.oblivm.backend.flexsc.Flag;
 import com.oblivm.backend.flexsc.Mode;
@@ -23,7 +22,7 @@ public class GCEva extends GCEvaComp {
 	Timer timer = null;
 	int p;
 	int m;
-	List<byte[]> msg = new ArrayList<byte[]>(threshold);
+	ArrayList<byte[]> msg = new ArrayList<byte[]>(threshold);
 
 	public GCEva(Network channel) {
 		super(channel, Mode.REAL);
@@ -55,7 +54,7 @@ public class GCEva extends GCEvaComp {
 	public void receiveLastSetGTT() {
 		int remainder = (int) (numOfAnds % threshold);
 		if (remainder > 0) {
-			msg = channel.sender.readObject();
+			msg = channel.sender.readArrayList();
 			for (int i = 0; i < remainder; i++) {
 				if (curr == null) {
 					curr = this;
@@ -88,7 +87,7 @@ public class GCEva extends GCEvaComp {
 			}
 		} else {
 			if (numOfAnds % threshold == 0) {
-				msg = channel.sender.readObject();
+				msg = channel.sender.readArrayList();
 				for (int i = 0; i < threshold; i++) {
 					if (curr == null) {
 						curr = this;

@@ -1,232 +1,632 @@
 package communication;
 
-import java.util.Arrays;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
 
 import com.oblivm.backend.gc.GCSignal;
 
+import oram.Bucket;
 import oram.Tuple;
-import util.Util;
 
 public class ComUtil {
-	public static byte[] toByteArray(byte[][] in) {
-		int len1 = in.length;
-		int len2 = in[0].length;
-		byte[] out = new byte[len1 * len2];
-		for (int i = 0; i < len1; i++)
-			System.arraycopy(in[i], 0, out, i * len2, len2);
-		return out;
-	}
-
-	public static byte[][] toDoubleByteArray(byte[] in, int len1) {
-		int len2 = in.length / len1;
-		byte[][] out = new byte[len1][];
-		for (int i = 0; i < len1; i++) {
-			out[i] = Arrays.copyOfRange(in, i * len2, (i + 1) * len2);
-		}
-		return out;
-	}
-
-	public static byte[] toByteArray(byte[][][] in) {
-		int len1 = in.length;
-		int len2 = in[0].length;
-		int len3 = in[0][0].length;
-		byte[] out = new byte[len1 * len2 * len3];
-		for (int i = 0; i < len1; i++)
-			for (int j = 0; j < len2; j++)
-				System.arraycopy(in[i][j], 0, out, i * len2 * len3 + j * len3, len3);
-		return out;
-	}
-
-	public static byte[][][] toTripleByteArray(byte[] in, int len1, int len2) {
-		int len3 = in.length / len1 / len2;
-		byte[][][] out = new byte[len1][len2][];
-		for (int i = 0; i < len1; i++) {
-			for (int j = 0; j < len2; j++) {
-				out[i][j] = Arrays.copyOfRange(in, i * len2 * len3 + j * len3, i * len2 * len3 + j * len3 + len3);
+	public static byte[] serialize(byte[][] in) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(baos);
+		byte[] out = null;
+		try {
+			dos.writeInt(in.length);
+			dos.writeInt(in[0].length);
+			for (int i = 0; i < in.length; i++)
+				dos.write(in[i]);
+			out = baos.toByteArray();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dos.close();
+				baos.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 		return out;
 	}
 
-	public static byte[] toByteArray(int[] in) {
-		byte[] out = new byte[in.length * 4];
-		for (int i = 0; i < in.length; i++) {
-			byte[] n = Util.intToBytes(in[i]);
-			System.arraycopy(n, 0, out, i * 4, 4);
+	public static byte[][] toDoubleByteArray(byte[] in) {
+		ByteArrayInputStream bais = new ByteArrayInputStream(in);
+		DataInputStream dis = new DataInputStream(bais);
+		byte[][] out = null;
+		try {
+			int len1 = dis.readInt();
+			int len2 = dis.readInt();
+			out = new byte[len1][len2];
+			for (int i = 0; i < len1; i++)
+				dis.read(out[i]);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dis.close();
+				bais.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return out;
+	}
+
+	public static byte[] serialize(byte[][][] in) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(baos);
+		byte[] out = null;
+		try {
+			dos.writeInt(in.length);
+			dos.writeInt(in[0].length);
+			dos.writeInt(in[0][0].length);
+			for (int i = 0; i < in.length; i++)
+				for (int j = 0; j < in[i].length; j++)
+					dos.write(in[i][j]);
+			out = baos.toByteArray();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dos.close();
+				baos.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return out;
+	}
+
+	public static byte[][][] toTripleByteArray(byte[] in) {
+		ByteArrayInputStream bais = new ByteArrayInputStream(in);
+		DataInputStream dis = new DataInputStream(bais);
+		byte[][][] out = null;
+		try {
+			int len1 = dis.readInt();
+			int len2 = dis.readInt();
+			int len3 = dis.readInt();
+			out = new byte[len1][len2][len3];
+			for (int i = 0; i < len1; i++)
+				for (int j = 0; j < len2; j++)
+					dis.read(out[i][j]);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dis.close();
+				bais.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return out;
+	}
+
+	public static byte[] serialize(int[] in) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(baos);
+		byte[] out = null;
+		try {
+			dos.writeInt(in.length);
+			for (int i = 0; i < in.length; i++)
+				dos.writeInt(in[i]);
+			out = baos.toByteArray();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dos.close();
+				baos.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		return out;
 	}
 
 	public static int[] toIntArray(byte[] in) {
-		int len1 = in.length / 4;
-		int[] out = new int[len1];
-		for (int i = 0; i < len1; i++) {
-			byte[] b = Arrays.copyOfRange(in, i * 4, (i + 1) * 4);
-			out[i] = Util.bytesToInt(b);
-		}
-		return out;
-	}
-
-	public static byte[] toByteArray(int[][] in) {
-		int len1 = in.length;
-		int len2 = in[0].length;
-		byte[] out = new byte[len1 * len2 * 4];
-		for (int i = 0; i < len1; i++) {
-			for (int j = 0; j < len2; j++) {
-				byte[] n = Util.intToBytes(in[i][j]);
-				System.arraycopy(n, 0, out, (i * len2 + j) * 4, 4);
+		ByteArrayInputStream bais = new ByteArrayInputStream(in);
+		DataInputStream dis = new DataInputStream(bais);
+		int[] out = null;
+		try {
+			int len1 = dis.readInt();
+			out = new int[len1];
+			for (int i = 0; i < len1; i++)
+				out[i] = dis.readInt();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dis.close();
+				bais.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 		return out;
 	}
 
-	public static int[][] toDoubleIntArray(byte[] in, int len1) {
-		int len2 = in.length / len1 / 4;
-		int[][] out = new int[len1][len2];
-		for (int i = 0; i < len1; i++) {
-			for (int j = 0; j < len2; j++) {
-				byte[] b = Arrays.copyOfRange(in, (i * len2 + j) * 4, (i * len2 + j + 1) * 4);
-				out[i][j] = Util.bytesToInt(b);
+	public static byte[] serialize(int[][] in) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(baos);
+		byte[] out = null;
+		try {
+			dos.writeInt(in.length);
+			dos.writeInt(in[0].length);
+			for (int i = 0; i < in.length; i++)
+				for (int j = 0; j < in[i].length; j++)
+					dos.writeInt(in[i][j]);
+			out = baos.toByteArray();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dos.close();
+				baos.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 		return out;
 	}
 
-	public static byte[] toByteArray(Tuple[] in) {
-		int len1 = in.length;
-		int f = in[0].getF().length;
-		int n = in[0].getN().length;
-		int l = in[0].getL().length;
-		int a = in[0].getA().length;
-		int len2 = f + n + l + a;
-		byte[] out = new byte[len1 * len2];
-		for (int i = 0; i < len1; i++) {
-			System.arraycopy(in[i].getF(), 0, out, i * len2, f);
-			System.arraycopy(in[i].getN(), 0, out, i * len2 + f, n);
-			System.arraycopy(in[i].getL(), 0, out, i * len2 + f + n, l);
-			System.arraycopy(in[i].getA(), 0, out, i * len2 + f + n + l, a);
+	public static int[][] toDoubleIntArray(byte[] in) {
+		ByteArrayInputStream bais = new ByteArrayInputStream(in);
+		DataInputStream dis = new DataInputStream(bais);
+		int[][] out = null;
+		try {
+			int len1 = dis.readInt();
+			int len2 = dis.readInt();
+			out = new int[len1][len2];
+			for (int i = 0; i < len1; i++)
+				for (int j = 0; j < len2; j++)
+					out[i][j] = dis.readInt();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dis.close();
+				bais.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		return out;
 	}
 
-	public static Tuple[] toTupleArray(byte[] in, int len1, int f, int n, int l) {
-		int len2 = in.length / len1;
-		Tuple[] out = new Tuple[len1];
-		for (int i = 0; i < len1; i++) {
-			byte[] F = Arrays.copyOfRange(in, i * len2, i * len2 + f);
-			byte[] N = Arrays.copyOfRange(in, i * len2 + f, i * len2 + f + n);
-			byte[] L = Arrays.copyOfRange(in, i * len2 + f + n, i * len2 + f + n + l);
-			byte[] A = Arrays.copyOfRange(in, i * len2 + f + n + l, (i + 1) * len2);
-			out[i] = new Tuple(F, N, L, A);
+	public static byte[] serialize(Tuple in) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(baos);
+		byte[] out = null;
+		try {
+			dos.writeInt(in.getF().length);
+			dos.writeInt(in.getN().length);
+			dos.writeInt(in.getL().length);
+			dos.writeInt(in.getA().length);
+			dos.write(in.getF());
+			dos.write(in.getN());
+			dos.write(in.getL());
+			dos.write(in.getA());
+			out = baos.toByteArray();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dos.close();
+				baos.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		return out;
 	}
 
-	public static byte[] toByteArray(GCSignal[] in) {
-		byte[] out = new byte[in.length * GCSignal.len];
-		for (int i = 0; i < in.length; i++) {
-			System.arraycopy(in[i].bytes, 0, out, i * GCSignal.len, GCSignal.len);
+	public static Tuple toTuple(byte[] in) {
+		ByteArrayInputStream bais = new ByteArrayInputStream(in);
+		DataInputStream dis = new DataInputStream(bais);
+		Tuple out = null;
+		try {
+			int f = dis.readInt();
+			int n = dis.readInt();
+			int l = dis.readInt();
+			int a = dis.readInt();
+			byte[] F = new byte[f];
+			byte[] N = new byte[n];
+			byte[] L = new byte[l];
+			byte[] A = new byte[a];
+			dis.read(F);
+			dis.read(N);
+			dis.read(L);
+			dis.read(A);
+			out = new Tuple(F, N, L, A);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dis.close();
+				bais.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return out;
+	}
+
+	public static byte[] serialize(Tuple[] in) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(baos);
+		byte[] out = null;
+		try {
+			dos.writeInt(in.length);
+			dos.writeInt(in[0].getF().length);
+			dos.writeInt(in[0].getN().length);
+			dos.writeInt(in[0].getL().length);
+			dos.writeInt(in[0].getA().length);
+			for (int i = 0; i < in.length; i++) {
+				dos.write(in[i].getF());
+				dos.write(in[i].getN());
+				dos.write(in[i].getL());
+				dos.write(in[i].getA());
+			}
+			out = baos.toByteArray();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dos.close();
+				baos.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return out;
+	}
+
+	public static Tuple[] toTupleArray(byte[] in) {
+		ByteArrayInputStream bais = new ByteArrayInputStream(in);
+		DataInputStream dis = new DataInputStream(bais);
+		Tuple[] out = null;
+		try {
+			int len = dis.readInt();
+			int f = dis.readInt();
+			int n = dis.readInt();
+			int l = dis.readInt();
+			int a = dis.readInt();
+			out = new Tuple[len];
+			for (int i = 0; i < len; i++) {
+				byte[] F = new byte[f];
+				byte[] N = new byte[n];
+				byte[] L = new byte[l];
+				byte[] A = new byte[a];
+				dis.read(F);
+				dis.read(N);
+				dis.read(L);
+				dis.read(A);
+				out[i] = new Tuple(F, N, L, A);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dis.close();
+				bais.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return out;
+	}
+
+	public static byte[] serialize(GCSignal[] in) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(baos);
+		byte[] out = null;
+		try {
+			dos.writeInt(in.length);
+			for (int i = 0; i < in.length; i++)
+				dos.write(in[i].bytes);
+			out = baos.toByteArray();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dos.close();
+				baos.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 		return out;
 	}
 
 	public static GCSignal[] toGCSignalArray(byte[] in) {
-		int len1 = in.length / GCSignal.len;
-		GCSignal[] out = new GCSignal[len1];
-		for (int i = 0; i < len1; i++) {
-			byte[] b = Arrays.copyOfRange(in, i * GCSignal.len, (i + 1) * GCSignal.len);
-			out[i] = new GCSignal(b);
-		}
-		return out;
-	}
-
-	public static byte[] toByteArray(GCSignal[][] in) {
-		int len1 = in.length;
-		int len2 = in[0].length;
-		byte[] out = new byte[len1 * len2 * GCSignal.len];
-		for (int i = 0; i < len1; i++) {
-			for (int j = 0; j < len2; j++) {
-				System.arraycopy(in[i][j].bytes, 0, out, (i * len2 + j) * GCSignal.len, GCSignal.len);
+		ByteArrayInputStream bais = new ByteArrayInputStream(in);
+		DataInputStream dis = new DataInputStream(bais);
+		GCSignal[] out = null;
+		try {
+			int len1 = dis.readInt();
+			out = new GCSignal[len1];
+			for (int i = 0; i < len1; i++) {
+				out[i] = new GCSignal(new byte[GCSignal.len]);
+				dis.read(out[i].bytes);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dis.close();
+				bais.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 		return out;
 	}
 
-	public static GCSignal[][] toDoubleGCSignalArray(byte[] in, int len1) {
-		int len2 = in.length / len1 / GCSignal.len;
-		GCSignal[][] out = new GCSignal[len1][len2];
-		for (int i = 0; i < len1; i++) {
-			for (int j = 0; j < len2; j++) {
-				byte[] b = Arrays.copyOfRange(in, (i * len2 + j) * GCSignal.len, (i * len2 + j + 1) * GCSignal.len);
-				out[i][j] = new GCSignal(b);
+	public static byte[] serialize(GCSignal[][] in) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(baos);
+		byte[] out = null;
+		try {
+			dos.writeInt(in.length);
+			dos.writeInt(in[0].length);
+			for (int i = 0; i < in.length; i++)
+				for (int j = 0; j < in[i].length; j++)
+					dos.write(in[i][j].bytes);
+			out = baos.toByteArray();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dos.close();
+				baos.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 		return out;
 	}
 
-	public static byte[] toByteArray(GCSignal[][][] in) {
-		int len1 = in.length;
-		int len2 = in[0].length;
-		int len3 = in[0][0].length;
-		byte[] out = new byte[len1 * len2 * len3 * GCSignal.len];
-		for (int i = 0; i < len1; i++) {
-			for (int j = 0; j < len2; j++) {
-				for (int k = 0; k < len3; k++) {
-					System.arraycopy(in[i][j][k].bytes, 0, out, (i * len2 * len3 + j * len3 + k) * GCSignal.len,
-							GCSignal.len);
+	public static GCSignal[][] toDoubleGCSignalArray(byte[] in) {
+		ByteArrayInputStream bais = new ByteArrayInputStream(in);
+		DataInputStream dis = new DataInputStream(bais);
+		GCSignal[][] out = null;
+		try {
+			int len1 = dis.readInt();
+			int len2 = dis.readInt();
+			out = new GCSignal[len1][len2];
+			for (int i = 0; i < len1; i++)
+				for (int j = 0; j < len2; j++) {
+					out[i][j] = new GCSignal(new byte[GCSignal.len]);
+					dis.read(out[i][j].bytes);
 				}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dis.close();
+				bais.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 		return out;
 	}
 
-	public static GCSignal[][][] toTripleGCSignalArray(byte[] in, int len1, int len2) {
-		int len3 = in.length / len1 / len2 / GCSignal.len;
-		GCSignal[][][] out = new GCSignal[len1][len2][len3];
-		for (int i = 0; i < len1; i++) {
-			for (int j = 0; j < len2; j++) {
-				for (int k = 0; k < len3; k++) {
-					byte[] b = Arrays.copyOfRange(in, (i * len2 * len3 + j * len3 + k) * GCSignal.len,
-							(i * len2 * len3 + j * len3 + k + 1) * GCSignal.len);
-					out[i][j][k] = new GCSignal(b);
-				}
+	public static byte[] serialize(GCSignal[][][] in) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(baos);
+		byte[] out = null;
+		try {
+			dos.writeInt(in.length);
+			dos.writeInt(in[0].length);
+			dos.writeInt(in[0][0].length);
+			for (int i = 0; i < in.length; i++)
+				for (int j = 0; j < in[i].length; j++)
+					for (int k = 0; k < in[i][j].length; k++)
+						dos.write(in[i][j][k].bytes);
+			out = baos.toByteArray();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dos.close();
+				baos.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 		return out;
 	}
 
-	public static byte[] toByteArray(GCSignal[][][][] in) {
-		int len1 = in.length;
-		int len2 = in[0].length;
-		int len3 = in[0][0].length;
-		int len4 = in[0][0][0].length;
-		byte[] out = new byte[len1 * len2 * len3 * len4 * GCSignal.len];
-		for (int i = 0; i < len1; i++) {
-			for (int j = 0; j < len2; j++) {
-				for (int k = 0; k < len3; k++) {
-					for (int l = 0; l < len4; l++) {
-						System.arraycopy(in[i][j][k][l].bytes, 0, out,
-								(i * len2 * len3 * len4 + j * len3 * len4 + k * len4 + l) * GCSignal.len, GCSignal.len);
+	public static GCSignal[][][] toTripleGCSignalArray(byte[] in) {
+		ByteArrayInputStream bais = new ByteArrayInputStream(in);
+		DataInputStream dis = new DataInputStream(bais);
+		GCSignal[][][] out = null;
+		try {
+			int len1 = dis.readInt();
+			int len2 = dis.readInt();
+			int len3 = dis.readInt();
+			out = new GCSignal[len1][len2][len3];
+			for (int i = 0; i < len1; i++)
+				for (int j = 0; j < len2; j++)
+					for (int k = 0; k < len3; k++) {
+						out[i][j][k] = new GCSignal(new byte[GCSignal.len]);
+						dis.read(out[i][j][k].bytes);
 					}
-				}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dis.close();
+				bais.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 		return out;
 	}
 
-	public static GCSignal[][][][] toQuadGCSignalArray(byte[] in, int len1, int len2, int len3) {
-		int len4 = in.length / len1 / len2 / len3 / GCSignal.len;
-		GCSignal[][][][] out = new GCSignal[len1][len2][len3][len4];
-		for (int i = 0; i < len1; i++) {
-			for (int j = 0; j < len2; j++) {
-				for (int k = 0; k < len3; k++) {
-					for (int l = 0; l < len4; l++) {
-						byte[] b = Arrays.copyOfRange(in,
-								(i * len2 * len3 * len4 + j * len3 * len4 + k * len4 + l) * GCSignal.len,
-								(i * len2 * len3 * len4 + j * len3 * len4 + k * len4 + l + 1) * GCSignal.len);
-						out[i][j][k][l] = new GCSignal(b);
-					}
-				}
+	public static byte[] serialize(GCSignal[][][][] in) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(baos);
+		byte[] out = null;
+		try {
+			dos.writeInt(in.length);
+			dos.writeInt(in[0].length);
+			dos.writeInt(in[0][0].length);
+			dos.writeInt(in[0][0][0].length);
+			for (int i = 0; i < in.length; i++)
+				for (int j = 0; j < in[i].length; j++)
+					for (int k = 0; k < in[i][j].length; k++)
+						for (int l = 0; l < in[i][j][k].length; l++)
+							dos.write(in[i][j][k][l].bytes);
+			out = baos.toByteArray();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dos.close();
+				baos.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return out;
+	}
+
+	public static GCSignal[][][][] toQuadGCSignalArray(byte[] in) {
+		ByteArrayInputStream bais = new ByteArrayInputStream(in);
+		DataInputStream dis = new DataInputStream(bais);
+		GCSignal[][][][] out = null;
+		try {
+			int len1 = dis.readInt();
+			int len2 = dis.readInt();
+			int len3 = dis.readInt();
+			int len4 = dis.readInt();
+			out = new GCSignal[len1][len2][len3][len4];
+			for (int i = 0; i < len1; i++)
+				for (int j = 0; j < len2; j++)
+					for (int k = 0; k < len3; k++)
+						for (int l = 0; l < len4; l++) {
+							out[i][j][k][l] = new GCSignal(new byte[GCSignal.len]);
+							dis.read(out[i][j][k][l].bytes);
+						}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dis.close();
+				bais.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return out;
+	}
+
+	public static byte[] serialize(Bucket[] in) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(baos);
+		byte[] out = null;
+		try {
+			byte[] b = serialize(Bucket.bucketsToTuples(in));
+			dos.writeInt(in.length);
+			dos.writeInt(in[0].getNumTuples());
+			dos.writeInt(in[1].getNumTuples());
+			dos.writeInt(b.length);
+			dos.write(b);
+			out = baos.toByteArray();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dos.close();
+				baos.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return out;
+	}
+
+	public static Bucket[] toBucketArray(byte[] in) {
+		ByteArrayInputStream bais = new ByteArrayInputStream(in);
+		DataInputStream dis = new DataInputStream(bais);
+		Bucket[] out = null;
+		try {
+			int d = dis.readInt();
+			int sw = dis.readInt();
+			int w = dis.readInt();
+			int bytes = dis.readInt();
+			byte[] b = new byte[bytes];
+			dis.read(b);
+			Tuple[] tuples = toTupleArray(b);
+			out = Bucket.tuplesToBuckets(tuples, d, sw, w);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dis.close();
+				bais.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return out;
+	}
+
+	public static byte[] serialize(ArrayList<byte[]> in) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(baos);
+		byte[] out = null;
+		try {
+			dos.writeInt(in.size());
+			dos.writeInt(in.get(0).length);
+			for (int i = 0; i < in.size(); i++)
+				dos.write(in.get(i));
+			out = baos.toByteArray();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dos.close();
+				baos.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return out;
+	}
+
+	public static ArrayList<byte[]> toArrayList(byte[] in) {
+		ByteArrayInputStream bais = new ByteArrayInputStream(in);
+		DataInputStream dis = new DataInputStream(bais);
+		ArrayList<byte[]> out = null;
+		try {
+			int len = dis.readInt();
+			int bytes = dis.readInt();
+			out = new ArrayList<byte[]>(len);
+			for (int i = 0; i < len; i++) {
+				byte[] b = new byte[bytes];
+				dis.read(b);
+				out.add(b);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				dis.close();
+				bais.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 		return out;
