@@ -1,5 +1,8 @@
 package com.oblivm.backend.gc.regular;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.oblivm.backend.flexsc.Flag;
 import com.oblivm.backend.flexsc.Mode;
 import com.oblivm.backend.gc.GCGenComp;
@@ -14,6 +17,7 @@ public class GCGen extends GCGenComp {
 	Timer timer = null;
 	int p;
 	int m;
+	List<byte[]> msg = new ArrayList<byte[]>(threshold);
 
 	public GCGen(Network channel) {
 		super(channel, Mode.REAL);
@@ -78,6 +82,15 @@ public class GCGen extends GCGenComp {
 		return GCSignal.newInstance(lb[0].bytes);
 	}
 
+	public void sendLastSetGTT() {
+		if (msg.size() > 0) {
+			timer.start(p, m);
+			channel.receiver.write(msg);
+			timer.stop(p, m);
+			msg.clear();
+		}
+	}
+
 	private void sendGTT() {
 		if (timer == null) {
 			try {
@@ -96,17 +109,13 @@ public class GCGen extends GCGenComp {
 			System.arraycopy(toSend[1][0].bytes, 0, rows, GCSignal.len, GCSignal.len);
 			System.arraycopy(toSend[1][1].bytes, 0, rows, GCSignal.len * 2, GCSignal.len);
 
-			timer.start(p, m);
-			channel.receiver.write(rows);
-			timer.stop(p, m);
-
-			/*
-			 * GCSignal[] rows = new GCSignal[3]; rows[0] = toSend[0][1];
-			 * rows[1] = toSend[1][0]; rows[2] = toSend[1][1];
-			 * 
-			 * timer.start(p, m); channel.receiver.write(rows); timer.stop(p,
-			 * m);
-			 */
+			msg.add(rows);
+			if (msg.size() == threshold) {
+				timer.start(p, m);
+				channel.receiver.write(msg);
+				timer.stop(p, m);
+				msg.clear();
+			}
 		}
 	}
 

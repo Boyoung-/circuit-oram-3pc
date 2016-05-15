@@ -6,6 +6,8 @@ import com.oblivm.backend.flexsc.Party;
 import com.oblivm.backend.network.Network;
 
 public abstract class GCCompEnv extends CompEnv<GCSignal> {
+	protected int threshold = 100;
+
 	public GCCompEnv(Network channel, Party p, Mode mode) {
 		super(channel, p, mode);
 	}

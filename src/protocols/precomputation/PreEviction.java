@@ -74,6 +74,7 @@ public class PreEviction extends Protocol {
 		CompEnv<GCSignal> gen = new GCGen(channel, timer, pid, M.offline_write);
 		GCSignal[][][] outZeroKeys = new GCRoute<GCSignal>(gen, d, w).routing(LiZeroKeys, E_feZeroKeys, C_feZeroKeys,
 				E_labelZeroKeys, C_labelZeroKeys, deltaZeroKeys);
+		((GCGen) gen).sendLastSetGTT();
 
 		predata.evict_tiOutKeyHashes = new byte[d][][];
 		predata.evict_targetOutKeyPairs = new GCSignal[d][][];
@@ -159,6 +160,7 @@ public class PreEviction extends Protocol {
 		predata.evict_gcroute = new GCRoute<GCSignal>(eva, d, w);
 		predata.evict_gcroute.routing(LiZeroKeys, E_feZeroKeys, C_feZeroKeys, E_labelZeroKeys, C_labelZeroKeys,
 				deltaZeroKeys);
+		((GCEva) eva).receiveLastSetGTT();
 		eva.setEvaluate();
 
 		timer.start(pid, M.offline_read);

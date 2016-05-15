@@ -126,7 +126,7 @@ public class UpdateRoot extends Protocol {
 	public void run(Party party, Metadata md, Forest forest) {
 		Timer timer = new Timer();
 
-		for (int i = 0; i < 20; i++) {
+		for (int i = 0; i < 100; i++) {
 
 			System.out.println("i=" + i);
 

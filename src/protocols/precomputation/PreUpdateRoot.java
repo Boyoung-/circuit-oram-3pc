@@ -56,6 +56,7 @@ public class PreUpdateRoot extends Protocol {
 		CompEnv<GCSignal> gen = new GCGen(channel, timer, pid, M.offline_write);
 		GCSignal[][] outZeroKeys = new GCUpdateRoot<GCSignal>(gen, lBits + 1, sw).rootFindDeepestAndEmpty(j1ZeroKeys,
 				LiZeroKeys, E_feZeroKeys, C_feZeroKeys, E_labelZeroKeys, C_labelZeroKeys);
+		((GCGen) gen).sendLastSetGTT();
 
 		predata.ur_outKeyHashes = new byte[outZeroKeys.length][][];
 		for (int i = 0; i < outZeroKeys.length; i++)
@@ -96,6 +97,7 @@ public class PreUpdateRoot extends Protocol {
 		predata.ur_gcur = new GCUpdateRoot<GCSignal>(eva, lBits + 1, sw);
 		predata.ur_gcur.rootFindDeepestAndEmpty(j1ZeroKeys, LiZeroKeys, E_feZeroKeys, C_feZeroKeys, E_labelZeroKeys,
 				C_labelZeroKeys);
+		((GCEva) eva).receiveLastSetGTT();
 		eva.setEvaluate();
 
 		timer.start(pid, M.offline_read);

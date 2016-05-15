@@ -1,6 +1,8 @@
 package com.oblivm.backend.gc.regular;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import com.oblivm.backend.flexsc.Flag;
 import com.oblivm.backend.flexsc.Mode;
@@ -21,6 +23,7 @@ public class GCEva extends GCEvaComp {
 	Timer timer = null;
 	int p;
 	int m;
+	List<byte[]> msg = new ArrayList<byte[]>(threshold);
 
 	public GCEva(Network channel) {
 		super(channel, Mode.REAL);
@@ -49,6 +52,26 @@ public class GCEva extends GCEvaComp {
 		curr = this;
 	}
 
+	public void receiveLastSetGTT() {
+		int remainder = (int) (numOfAnds % threshold);
+		if (remainder > 0) {
+			msg = channel.sender.readObject();
+			for (int i = 0; i < remainder; i++) {
+				if (curr == null) {
+					curr = this;
+				} else {
+					curr.next = new GCEva(channel, timer, p, m);
+					curr = curr.next;
+				}
+				byte[] rows = msg.get(i);
+				curr.gtt[0][1].bytes = Arrays.copyOfRange(rows, 0, GCSignal.len);
+				curr.gtt[1][0].bytes = Arrays.copyOfRange(rows, GCSignal.len, GCSignal.len * 2);
+				curr.gtt[1][1].bytes = Arrays.copyOfRange(rows, GCSignal.len * 2, rows.length);
+			}
+			msg.clear();
+		}
+	}
+
 	private void receiveGTT() {
 		if (timer == null) {
 			try {
@@ -64,21 +87,22 @@ public class GCEva extends GCEvaComp {
 				System.exit(1);
 			}
 		} else {
-			timer.start(p, m);
-			byte[] rows = channel.sender.read();
-			timer.stop(p, m);
-
-			gtt[0][1].bytes = Arrays.copyOfRange(rows, 0, GCSignal.len);
-			gtt[1][0].bytes = Arrays.copyOfRange(rows, GCSignal.len, GCSignal.len * 2);
-			gtt[1][1].bytes = Arrays.copyOfRange(rows, GCSignal.len * 2, rows.length);
-
-			/*
-			 * timer.start(p, m); GCSignal[] rows = channel.sender.readObject();
-			 * timer.stop(p, m);
-			 * 
-			 * gtt[0][1].bytes = rows[0].bytes; gtt[1][0].bytes = rows[1].bytes;
-			 * gtt[1][1].bytes = rows[2].bytes;
-			 */
+			if (numOfAnds % threshold == 0) {
+				msg = channel.sender.readObject();
+				for (int i = 0; i < threshold; i++) {
+					if (curr == null) {
+						curr = this;
+					} else {
+						curr.next = new GCEva(channel, timer, p, m);
+						curr = curr.next;
+					}
+					byte[] rows = msg.get(i);
+					curr.gtt[0][1].bytes = Arrays.copyOfRange(rows, 0, GCSignal.len);
+					curr.gtt[1][0].bytes = Arrays.copyOfRange(rows, GCSignal.len, GCSignal.len * 2);
+					curr.gtt[1][1].bytes = Arrays.copyOfRange(rows, GCSignal.len * 2, rows.length);
+				}
+				msg.clear();
+			}
 		}
 	}
 
@@ -96,14 +120,7 @@ public class GCEva extends GCEvaComp {
 			res = new GCSignal(new byte[10]);
 			if (!evaluate) {
 				++numOfAnds;
-
-				if (curr == null) {
-					curr = this;
-				} else {
-					curr.next = new GCEva(channel, timer, p, m);
-					curr = curr.next;
-				}
-				curr.receiveGTT();
+				receiveGTT();
 			} else {
 				int i0 = a.getLSB();
 				int i1 = b.getLSB();
