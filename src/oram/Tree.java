@@ -34,6 +34,9 @@ public class Tree implements Serializable {
 
 	private Array64<Bucket> buckets;
 
+	// only for cheat
+	private Bucket[] pathBuckets;
+
 	public Tree(int index, Metadata md, Random rand) {
 		tau = md.getTau();
 		twoTauPow = md.getTwoTauPow();
@@ -55,10 +58,19 @@ public class Tree implements Serializable {
 
 		int fBytes = treeIndex == 0 ? 0 : 1;
 		int[] tupleParams = new int[] { fBytes, nBytes, lBytes, aBytes };
-		buckets = new Array64<Bucket>(numBuckets);
-		buckets.set(0, new Bucket(stashSize, tupleParams, rand));
-		for (int i = 1; i < numBuckets; i++)
-			buckets.set(i, new Bucket(w, tupleParams, rand));
+		if (!Metadata.cheat) {
+			buckets = new Array64<Bucket>(numBuckets);
+			buckets.set(0, new Bucket(stashSize, tupleParams, rand));
+			for (int i = 1; i < numBuckets; i++)
+				buckets.set(i, new Bucket(w, tupleParams, rand));
+		} else {
+			pathBuckets = new Bucket[d];
+			pathBuckets[0] = new Bucket(stashSize, tupleParams, null);
+			for (int i = 1; i < d; i++)
+				pathBuckets[i] = new Bucket(w, tupleParams, null);
+			if (rand != null && treeIndex > 0)
+				pathBuckets[0].getTuple(0).setF(new byte[] { 1 });
+		}
 	}
 
 	// only used for xor operation
@@ -131,6 +143,9 @@ public class Tree implements Serializable {
 	}
 
 	public Bucket[] getBucketsOnPath(BigInteger L) {
+		if (Metadata.cheat)
+			return pathBuckets;
+
 		long[] indices = getBucketIndicesOnPath(L);
 		Bucket[] buckets = new Bucket[indices.length];
 		for (int i = 0; i < indices.length; i++)
@@ -147,6 +162,11 @@ public class Tree implements Serializable {
 	}
 
 	public void setBucketsOnPath(BigInteger L, Bucket[] buckets) {
+		if (Metadata.cheat) {
+			pathBuckets = buckets;
+			return;
+		}
+
 		long[] indices = getBucketIndicesOnPath(L);
 		if (indices.length != buckets.length)
 			throw new LengthNotMatchException(indices.length + " != " + buckets.length);

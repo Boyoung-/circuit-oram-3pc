@@ -112,6 +112,9 @@ public class Retrieve extends Protocol {
 	// for testing correctness
 	@Override
 	public void run(Party party, Metadata md, Forest forest) {
+		if (Metadata.cheat)
+			System.out.println("Cheat Mode is On");
+
 		int records = 6;
 		int repeat = 5;
 		int reset = 1;
@@ -130,7 +133,7 @@ public class Retrieve extends Protocol {
 		System.out.println();
 
 		for (int i = 0; i < records; i++) {
-			long N = Util.nextLong(numInsert, Crypto.sr);
+			long N = Metadata.cheat ? 0 : Util.nextLong(numInsert, Crypto.sr);
 
 			for (int j = 0; j < repeat; j++) {
 				int cycleIndex = i * repeat + j;

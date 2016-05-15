@@ -49,6 +49,8 @@ public class Metadata {
 
 	private long forestBytes;
 
+	public static boolean cheat = false;
+
 	public Metadata() {
 		setup(configFileName);
 	}

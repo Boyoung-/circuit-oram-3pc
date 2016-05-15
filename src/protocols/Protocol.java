@@ -1,6 +1,7 @@
 package protocols;
 
 import communication.Communication;
+import crypto.Crypto;
 import exceptions.NoSuchPartyException;
 import oram.Forest;
 import oram.Metadata;
@@ -51,17 +52,24 @@ public abstract class Protocol {
 		Metadata md = new Metadata(configFile);
 		Forest forest = null;
 
+		Metadata.cheat = true;
+
 		if (party == Party.Eddie) {
-			if (forestFile == null)
+			if (Metadata.cheat)
+				forest = new Forest(md, Crypto.sr);
+			else if (forestFile == null)
 				forest = Forest.readFromFile(md.getDefaultSharesName1());
 			else
 				forest = Forest.readFromFile(forestFile);
 		} else if (party == Party.Debbie) {
-			if (forestFile == null)
+			if (Metadata.cheat)
+				forest = new Forest(md, null);
+			else if (forestFile == null)
 				forest = Forest.readFromFile(md.getDefaultSharesName2());
 			else
 				forest = Forest.readFromFile(forestFile);
 		} else if (party == Party.Charlie) {
+
 		} else {
 			throw new NoSuchPartyException(party.toString());
 		}
