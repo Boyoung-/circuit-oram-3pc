@@ -115,9 +115,9 @@ public class Retrieve extends Protocol {
 		if (Metadata.cheat)
 			System.out.println("Cheat Mode is On");
 
-		int records = 10;
+		int records = 7;
 		int repeat = 5;
-		int reset = 5;
+		int reset = 2;
 
 		int tau = md.getTau();
 		int numTrees = md.getNumTrees();
