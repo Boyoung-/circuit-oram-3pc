@@ -138,8 +138,11 @@ public class Retrieve extends Protocol {
 
 			for (int j = 0; j < repeat; j++) {
 				int cycleIndex = i * repeat + j;
-				if (cycleIndex == reset * repeat)
+				if (cycleIndex == reset * repeat) {
 					timer.reset();
+					ete_on.reset();
+					ete_off.reset();
+				}
 				if (cycleIndex == 1) {
 					con1.bandSwitch = false;
 					con2.bandSwitch = false;
