@@ -182,7 +182,10 @@ public class Retrieve extends Protocol {
 						throw new NoSuchPartyException(party + "");
 					}
 				}
+				
+				sanityCheck();
 				System.out.println("done!");
+				
 
 				byte[] Li = new byte[0];
 				for (int ti = 0; ti < numTrees; ti++) {
