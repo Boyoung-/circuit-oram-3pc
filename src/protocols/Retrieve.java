@@ -260,12 +260,15 @@ public class Retrieve extends Protocol {
 						byte[] sD_Nip1_pr = Util.xor(Nip1_pr, sE_Nip1_pr);
 						con1.write(sD_Nip1_pr);
 
-						ete_on.start();
-						if (!Global.pipeline)
+						if (!Global.pipeline) {
+							ete_on.start();
 							runE(predata[ti], OTi, sE_Ni, sE_Nip1_pr, numTrees, timer[0]);
-						else
+							ete_on.stop();
+						} else {
+							if (ti == 0)
+								ete_on.start();
 							threads[ti] = pipelineE(predata[ti], OTi, sE_Ni, sE_Nip1_pr, numTrees, timer);
-						ete_on.stop();
+						}
 
 						if (ti == numTrees - 1)
 							con2.write(N);
@@ -276,12 +279,15 @@ public class Retrieve extends Protocol {
 						byte[] sD_Ni = con1.read();
 						byte[] sD_Nip1_pr = con1.read();
 
-						ete_on.start();
-						if (!Global.pipeline)
+						if (!Global.pipeline) {
+							ete_on.start();
 							runD(predata[ti], OTi, sD_Ni, sD_Nip1_pr, timer[0]);
-						else
+							ete_on.stop();
+						} else {
+							if (ti == 0)
+								ete_on.start();
 							threads[ti] = pipelineD(predata[ti], OTi, sD_Ni, sD_Nip1_pr, timer);
-						ete_on.stop();
+						}
 
 					} else if (party == Party.Charlie) {
 						int lBits = md.getLBitsOfTree(ti);
@@ -289,15 +295,17 @@ public class Retrieve extends Protocol {
 								+ Util.addZeros(Util.getSubBits(new BigInteger(1, Li), lBits, 0).toString(2), lBits));
 
 						OutAccess outaccess = null;
-						ete_on.start();
-						if (!Global.pipeline)
+						if (!Global.pipeline) {
+							ete_on.start();
 							outaccess = runC(predata[ti], md, ti, Li, timer[0]);
-						else {
+							ete_on.stop();
+						} else {
+							if (ti == 0)
+								ete_on.start();
 							OutRetrieve outretrieve = pipelineC(predata[ti], md, ti, Li, timer);
 							outaccess = outretrieve.outaccess;
 							threads[ti] = outretrieve.pipeline;
 						}
-						ete_on.stop();
 
 						Li = outaccess.C_Lip1;
 
@@ -317,7 +325,7 @@ public class Retrieve extends Protocol {
 					}
 				}
 
-				if (Global.pipeline)
+				if (Global.pipeline) {
 					for (int ti = 0; ti < numTrees; ti++) {
 						try {
 							threads[ti].join();
@@ -325,6 +333,8 @@ public class Retrieve extends Protocol {
 							e.printStackTrace();
 						}
 					}
+					ete_on.stop();
+				}
 			}
 		}
 		System.out.println();
@@ -335,6 +345,8 @@ public class Retrieve extends Protocol {
 		sum.noPrePrint();
 		System.out.println();
 
+		if (Global.pipeline)
+			ete_on.elapsedCPU = 0;
 		System.out.println(ete_on.noPreToMS());
 		System.out.println(ete_off.noPreToMS());
 		System.out.println();
