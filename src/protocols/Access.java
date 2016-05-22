@@ -11,6 +11,7 @@ import exceptions.AccessException;
 import exceptions.NoSuchPartyException;
 import oram.Bucket;
 import oram.Forest;
+import oram.Global;
 import oram.Metadata;
 import oram.Tree;
 import oram.Tuple;
@@ -309,7 +310,7 @@ public class Access extends Protocol {
 		System.out.println();
 
 		for (int i = 0; i < records; i++) {
-			long N = Metadata.cheat ? 0 : Util.nextLong(numInsert, Crypto.sr);
+			long N = Global.cheat ? 0 : Util.nextLong(numInsert, Crypto.sr);
 
 			for (int j = 0; j < repeat; j++) {
 				System.out.println("Test: " + i + " " + j);

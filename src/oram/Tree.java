@@ -58,7 +58,7 @@ public class Tree implements Serializable {
 
 		int fBytes = treeIndex == 0 ? 0 : 1;
 		int[] tupleParams = new int[] { fBytes, nBytes, lBytes, aBytes };
-		if (!Metadata.cheat) {
+		if (!Global.cheat) {
 			buckets = new Array64<Bucket>(numBuckets);
 			buckets.set(0, new Bucket(stashSize, tupleParams, rand));
 			for (int i = 1; i < numBuckets; i++)
@@ -143,7 +143,7 @@ public class Tree implements Serializable {
 	}
 
 	public Bucket[] getBucketsOnPath(BigInteger L) {
-		if (Metadata.cheat)
+		if (Global.cheat)
 			return pathBuckets;
 
 		long[] indices = getBucketIndicesOnPath(L);
@@ -162,7 +162,7 @@ public class Tree implements Serializable {
 	}
 
 	public void setBucketsOnPath(BigInteger L, Bucket[] buckets) {
-		if (Metadata.cheat) {
+		if (Global.cheat) {
 			pathBuckets = buckets;
 			return;
 		}

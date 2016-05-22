@@ -19,7 +19,7 @@ final class Garbler {
 
 	ByteBuffer buffer = ByteBuffer.allocate(GCSignal.len + 9);
 
-	public GCSignal hash(GCSignal lb, long k, boolean b) {
+	public synchronized GCSignal hash(GCSignal lb, long k, boolean b) {
 		buffer.clear();
 		sha1.update(buffer.put(lb.bytes).putLong(k).put(b ? (byte) 1 : (byte) 0));
 		return GCSignal.newInstance(sha1.digest());

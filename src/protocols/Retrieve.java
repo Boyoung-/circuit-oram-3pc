@@ -8,11 +8,13 @@ import crypto.Crypto;
 import exceptions.AccessException;
 import exceptions.NoSuchPartyException;
 import oram.Forest;
+import oram.Global;
 import oram.Metadata;
 import oram.Tree;
 import oram.Tuple;
 import protocols.precomputation.PreRetrieve;
 import protocols.struct.OutAccess;
+import protocols.struct.OutRetrieve;
 import protocols.struct.Party;
 import protocols.struct.PreData;
 import util.Bandwidth;
@@ -23,11 +25,19 @@ import util.Util;
 
 public class Retrieve extends Protocol {
 
+	Communication[] cons1;
+	Communication[] cons2;
+
 	public Retrieve(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
 
-	public OutAccess runE(PreData[] predata, Tree OTi, byte[] Ni, byte[] Nip1_pr, int h, Timer timer) {
+	public void setCons(Communication[] a, Communication[] b) {
+		cons1 = a;
+		cons2 = b;
+	}
+
+	public void runE(PreData[] predata, Tree OTi, byte[] Ni, byte[] Nip1_pr, int h, Timer timer) {
 		// 1st eviction
 		Access access = new Access(con1, con2);
 		Reshuffle reshuffle = new Reshuffle(con1, con2);
@@ -53,8 +63,6 @@ public class Retrieve extends Protocol {
 		System.arraycopy(root2, 0, path2, 0, root2.length);
 		eviction.runE(predata[1], OTi.getTreeIndex() == 0, outaccess2.Li,
 				OTi.getTreeIndex() == 0 ? new Tuple[] { Ti2 } : path2, OTi, timer);
-
-		return outaccess;
 	}
 
 	public void runD(PreData predata[], Tree OTi, byte[] Ni, byte[] Nip1_pr, Timer timer) {
@@ -77,7 +85,7 @@ public class Retrieve extends Protocol {
 		eviction.runD(predata[1], OTi.getTreeIndex() == 0, Li2, OTi, timer);
 	}
 
-	public OutAccess runC(PreData[] predata, Metadata md, int ti, byte[] Li, int h, Timer timer) {
+	public OutAccess runC(PreData[] predata, Metadata md, int ti, byte[] Li, Timer timer) {
 		// 1st eviction
 		Access access = new Access(con1, con2);
 		Reshuffle reshuffle = new Reshuffle(con1, con2);
@@ -87,8 +95,8 @@ public class Retrieve extends Protocol {
 
 		OutAccess outaccess = access.runC(md, ti, Li, timer);
 		Tuple[] path = reshuffle.runC(predata[0], outaccess.C_P, ti == 0, timer);
-		Tuple Ti = postprocesst.runC(predata[0], outaccess.C_Ti, Li, outaccess.C_Lip1, outaccess.C_j2, ti == h - 1,
-				timer);
+		Tuple Ti = postprocesst.runC(predata[0], outaccess.C_Ti, Li, outaccess.C_Lip1, outaccess.C_j2,
+				ti == md.getNumTrees() - 1, timer);
 		Tuple[] root = Arrays.copyOfRange(path, 0, md.getStashSizeOfTree(ti));
 		root = updateroot.runC(predata[0], ti == 0, root, Ti, timer);
 		System.arraycopy(root, 0, path, 0, root.length);
@@ -109,10 +117,47 @@ public class Retrieve extends Protocol {
 		return outaccess;
 	}
 
+	public Pipeline pipelineE(PreData[] predata, Tree OTi, byte[] Ni, byte[] Nip1_pr, int h, Timer[] timer) {
+		Access access = new Access(con1, con2);
+		OutAccess outaccess = access.runE(predata[0], OTi, Ni, Nip1_pr, timer[0]);
+
+		int ti = OTi.getTreeIndex();
+		Pipeline pipeline = new Pipeline(cons1[ti + 1], cons2[ti + 1], Party.Eddie, predata, OTi, h, timer[ti + 1],
+				null, ti, outaccess.Li, outaccess);
+		pipeline.start();
+
+		return pipeline;
+	}
+
+	public Pipeline pipelineD(PreData predata[], Tree OTi, byte[] Ni, byte[] Nip1_pr, Timer[] timer) {
+		Access access = new Access(con1, con2);
+		byte[] Li = access.runD(predata[0], OTi, Ni, Nip1_pr, timer[0]);
+
+		int ti = OTi.getTreeIndex();
+		Pipeline pipeline = new Pipeline(cons1[ti + 1], cons2[ti + 1], Party.Debbie, predata, OTi, 0, timer[ti + 1],
+				null, ti, Li, null);
+		pipeline.start();
+
+		return pipeline;
+	}
+
+	public OutRetrieve pipelineC(PreData[] predata, Metadata md, int ti, byte[] Li, Timer[] timer) {
+		Access access = new Access(con1, con2);
+		OutAccess outaccess = access.runC(md, ti, Li, timer[0]);
+
+		Pipeline pipeline = new Pipeline(cons1[ti + 1], cons2[ti + 1], Party.Charlie, predata, null, 0, timer[ti + 1],
+				md, ti, Li, outaccess);
+		pipeline.start();
+
+		return new OutRetrieve(outaccess, pipeline);
+	}
+
 	// for testing correctness
 	@Override
 	public void run(Party party, Metadata md, Forest forest) {
-		if (Metadata.cheat)
+		if (Global.pipeline)
+			System.out.println("Pipeline Mode is On");
+		if (Global.cheat)
 			System.out.println("Cheat Mode is On");
 
 		int records = 7;
@@ -124,28 +169,37 @@ public class Retrieve extends Protocol {
 		long numInsert = md.getNumInsertRecords();
 		int addrBits = md.getAddrBits();
 
-		Timer timer = new Timer();
+		int numTimer = Global.pipeline ? numTrees + 1 : 1;
+		Timer[] timer = new Timer[numTimer];
+		for (int i = 0; i < numTimer; i++)
+			timer[i] = new Timer();
+
 		StopWatch ete_off = new StopWatch("ETE_offline");
 		StopWatch ete_on = new StopWatch("ETE_online");
 
 		long[] gates = new long[2];
 
+		Pipeline[] threads = new Pipeline[numTrees];
+
 		sanityCheck();
 		System.out.println();
 
 		for (int i = 0; i < records; i++) {
-			long N = Metadata.cheat ? 0 : Util.nextLong(numInsert, Crypto.sr);
+			long N = Global.cheat ? 0 : Util.nextLong(numInsert, Crypto.sr);
 
 			for (int j = 0; j < repeat; j++) {
 				int cycleIndex = i * repeat + j;
 				if (cycleIndex == reset * repeat) {
-					timer.reset();
+					for (int k = 0; k < timer.length; k++)
+						timer[k].reset();
 					ete_on.reset();
 					ete_off.reset();
 				}
 				if (cycleIndex == 1) {
-					con1.bandSwitch = false;
-					con2.bandSwitch = false;
+					for (int k = 0; k < cons1.length; k++) {
+						cons1[k].bandSwitch = false;
+						cons2[k].bandSwitch = false;
+					}
 				}
 
 				System.out.println("Test: " + i + " " + j);
@@ -160,12 +214,13 @@ public class Retrieve extends Protocol {
 
 					if (party == Party.Eddie) {
 						ete_off.start();
-						preretrieve.runE(predata[ti], md, ti, timer);
+						preretrieve.runE(predata[ti], md, ti, timer[0]);
 						ete_off.stop();
 
 					} else if (party == Party.Debbie) {
 						ete_off.start();
-						long[] cnt = preretrieve.runD(predata[ti], md, ti, ti == 0 ? null : predata[ti - 1][0], timer);
+						long[] cnt = preretrieve.runD(predata[ti], md, ti, ti == 0 ? null : predata[ti - 1][0],
+								timer[0]);
 						ete_off.stop();
 
 						if (cycleIndex == 0) {
@@ -175,17 +230,16 @@ public class Retrieve extends Protocol {
 
 					} else if (party == Party.Charlie) {
 						ete_off.start();
-						preretrieve.runC(predata[ti], md, ti, ti == 0 ? null : predata[ti - 1][0], timer);
+						preretrieve.runC(predata[ti], md, ti, ti == 0 ? null : predata[ti - 1][0], timer[0]);
 						ete_off.stop();
 
 					} else {
 						throw new NoSuchPartyException(party + "");
 					}
 				}
-				
+
 				sanityCheck();
 				System.out.println("done!");
-				
 
 				byte[] Li = new byte[0];
 				for (int ti = 0; ti < numTrees; ti++) {
@@ -207,7 +261,10 @@ public class Retrieve extends Protocol {
 						con1.write(sD_Nip1_pr);
 
 						ete_on.start();
-						runE(predata[ti], OTi, sE_Ni, sE_Nip1_pr, numTrees, timer);
+						if (!Global.pipeline)
+							runE(predata[ti], OTi, sE_Ni, sE_Nip1_pr, numTrees, timer[0]);
+						else
+							threads[ti] = pipelineE(predata[ti], OTi, sE_Ni, sE_Nip1_pr, numTrees, timer);
 						ete_on.stop();
 
 						if (ti == numTrees - 1)
@@ -220,7 +277,10 @@ public class Retrieve extends Protocol {
 						byte[] sD_Nip1_pr = con1.read();
 
 						ete_on.start();
-						runD(predata[ti], OTi, sD_Ni, sD_Nip1_pr, timer);
+						if (!Global.pipeline)
+							runD(predata[ti], OTi, sD_Ni, sD_Nip1_pr, timer[0]);
+						else
+							threads[ti] = pipelineD(predata[ti], OTi, sD_Ni, sD_Nip1_pr, timer);
 						ete_on.stop();
 
 					} else if (party == Party.Charlie) {
@@ -228,8 +288,15 @@ public class Retrieve extends Protocol {
 						System.out.println("L" + ti + "="
 								+ Util.addZeros(Util.getSubBits(new BigInteger(1, Li), lBits, 0).toString(2), lBits));
 
+						OutAccess outaccess = null;
 						ete_on.start();
-						OutAccess outaccess = runC(predata[ti], md, ti, Li, numTrees, timer);
+						if (!Global.pipeline)
+							outaccess = runC(predata[ti], md, ti, Li, timer[0]);
+						else {
+							OutRetrieve outretrieve = pipelineC(predata[ti], md, ti, Li, timer);
+							outaccess = outretrieve.outaccess;
+							threads[ti] = outretrieve.pipeline;
+						}
 						ete_on.stop();
 
 						Li = outaccess.C_Lip1;
@@ -249,12 +316,23 @@ public class Retrieve extends Protocol {
 						throw new NoSuchPartyException(party + "");
 					}
 				}
+
+				if (Global.pipeline)
+					for (int ti = 0; ti < numTrees; ti++) {
+						try {
+							threads[ti].join();
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
 			}
 		}
 		System.out.println();
 
-		timer.noPrePrint();
-		// timer.divideBy((records-reset)*repeat).print();
+		Timer sum = new Timer();
+		for (int i = 0; i < timer.length; i++)
+			sum = sum.add(timer[i]);
+		sum.noPrePrint();
 		System.out.println();
 
 		System.out.println(ete_on.noPreToMS());
@@ -263,7 +341,9 @@ public class Retrieve extends Protocol {
 
 		Bandwidth[] bandwidth = new Bandwidth[P.size];
 		for (int i = 0; i < P.size; i++) {
-			bandwidth[i] = con1.bandwidth[i].add(con2.bandwidth[i]);
+			bandwidth[i] = new Bandwidth(P.names[i]);
+			for (int j = 0; j < cons1.length; j++)
+				bandwidth[i] = bandwidth[i].add(cons1[j].bandwidth[i].add(cons2[j].bandwidth[i]));
 			System.out.println(bandwidth[i].noPreToString());
 		}
 		System.out.println();
@@ -271,5 +351,7 @@ public class Retrieve extends Protocol {
 		System.out.println(gates[0]);
 		System.out.println(gates[1]);
 		System.out.println();
+
+		sanityCheck();
 	}
 }

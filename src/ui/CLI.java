@@ -12,6 +12,8 @@ import org.apache.commons.cli.ParseException;
 
 import communication.Communication;
 import exceptions.NoSuchPartyException;
+import oram.Global;
+import oram.Metadata;
 import protocols.*;
 import protocols.struct.Party;
 
@@ -27,6 +29,7 @@ public class CLI {
 		options.addOption("eddie_ip", true, "IP to look for eddie");
 		options.addOption("debbie_ip", true, "IP to look for debbie");
 		options.addOption("protocol", true, "Algorithim to test");
+		options.addOption("pipeline", false, "Whether to do pipelined eviction");
 
 		// Parse the command line arguments
 		CommandLineParser cmdParser = new GnuParser();
@@ -36,6 +39,8 @@ public class CLI {
 		} catch (ParseException e1) {
 			e1.printStackTrace();
 		}
+
+		Global.pipeline = cmd.hasOption("pipeline");
 
 		String configFile = cmd.getOptionValue("config", "config.yaml");
 		String forestFile = cmd.getOptionValue("forest", null);
@@ -102,136 +107,135 @@ public class CLI {
 		// up in party specific classes.
 		System.out.println("Starting " + party + "...");
 
+		Metadata md = new Metadata(configFile);
+		int numComs = Global.pipeline ? md.getNumTrees() + 1 : 1;
+		Communication[] con1 = new Communication[numComs];
+		Communication[] con2 = new Communication[numComs];
+
 		if (party.equals("eddie")) {
-			Communication debbieCon = new Communication();
-			debbieCon.start(eddiePort1);
+			System.out.print("Waiting to establish debbie connections...");
+			for (int i = 0; i < numComs; i++) {
+				con1[i] = new Communication();
+				con1[i].start(eddiePort1);
+				eddiePort1 += 3;
+				while (con1[i].getState() != Communication.STATE_CONNECTED)
+					;
+			}
+			System.out.println(" done!");
 
-			Communication charlieCon = new Communication();
-			charlieCon.start(eddiePort2);
+			System.out.print("Waiting to establish charlie connections...");
+			for (int i = 0; i < numComs; i++) {
+				con2[i] = new Communication();
+				con2[i].start(eddiePort2);
+				eddiePort2 += 3;
+				while (con2[i].getState() != Communication.STATE_CONNECTED)
+					;
+			}
+			System.out.println(" done!");
 
-			System.out.println("Waiting to establish connections...");
-			while (debbieCon.getState() != Communication.STATE_CONNECTED)
-				;
-			while (charlieCon.getState() != Communication.STATE_CONNECTED)
-				;
-			System.out.println("Connection established.");
-
-			debbieCon.setTcpNoDelay(true);
-			charlieCon.setTcpNoDelay(true);
-
-			debbieCon.write("start");
-			charlieCon.write("start");
-			debbieCon.readString();
-			charlieCon.readString();
+			for (int i = 0; i < numComs; i++) {
+				con1[i].setTcpNoDelay(true);
+				con2[i].setTcpNoDelay(true);
+			}
 
 			try {
-				operationCtor.newInstance(debbieCon, charlieCon).run(Party.Eddie, configFile, forestFile);
+				Protocol p = operationCtor.newInstance(con1[0], con2[0]);
+				if (protocol.equals("rtv"))
+					((Retrieve) p).setCons(con1, con2);
+				p.run(Party.Eddie, md, forestFile);
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException e) {
 				e.printStackTrace();
 			}
-
-			debbieCon.write("end");
-			charlieCon.write("end");
-			debbieCon.readString();
-			charlieCon.readString();
-
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			debbieCon.stop();
-			charlieCon.stop();
 
 		} else if (party.equals("debbie")) {
-			Communication eddieCon = new Communication();
-			InetSocketAddress eddieAddr = new InetSocketAddress(eddieIp, eddiePort1);
-			eddieCon.connect(eddieAddr);
+			System.out.print("Waiting to establish eddie connections...");
+			for (int i = 0; i < numComs; i++) {
+				con1[i] = new Communication();
+				InetSocketAddress addr = new InetSocketAddress(eddieIp, eddiePort1);
+				con1[i].connect(addr);
+				eddiePort1 += 3;
+				while (con1[i].getState() != Communication.STATE_CONNECTED)
+					;
+			}
+			System.out.println(" done!");
 
-			Communication charlieCon = new Communication();
-			charlieCon.start(debbiePort);
+			System.out.print("Waiting to establish charlie connections...");
+			for (int i = 0; i < numComs; i++) {
+				con2[i] = new Communication();
+				con2[i].start(debbiePort);
+				debbiePort += 3;
+				while (con2[i].getState() != Communication.STATE_CONNECTED)
+					;
+			}
+			System.out.println(" done!");
 
-			System.out.println("Waiting to establish connections...");
-			while (eddieCon.getState() != Communication.STATE_CONNECTED)
-				;
-			while (charlieCon.getState() != Communication.STATE_CONNECTED)
-				;
-			System.out.println("Connection established");
-
-			eddieCon.setTcpNoDelay(true);
-			charlieCon.setTcpNoDelay(true);
-
-			eddieCon.write("start");
-			charlieCon.write("start");
-			eddieCon.readString();
-			charlieCon.readString();
+			for (int i = 0; i < numComs; i++) {
+				con1[i].setTcpNoDelay(true);
+				con2[i].setTcpNoDelay(true);
+			}
 
 			try {
-				operationCtor.newInstance(eddieCon, charlieCon).run(Party.Debbie, configFile, forestFile);
+				Protocol p = operationCtor.newInstance(con1[0], con2[0]);
+				if (protocol.equals("rtv"))
+					((Retrieve) p).setCons(con1, con2);
+				p.run(Party.Debbie, md, forestFile);
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException e) {
 				e.printStackTrace();
 			}
-
-			eddieCon.write("end");
-			charlieCon.write("end");
-			eddieCon.readString();
-			charlieCon.readString();
-
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			eddieCon.stop();
-			charlieCon.stop();
 
 		} else if (party.equals("charlie")) {
-			Communication debbieCon = new Communication();
-			Communication eddieCon = new Communication();
-			InetSocketAddress eddieAddr = new InetSocketAddress(eddieIp, eddiePort2);
-			eddieCon.connect(eddieAddr);
-			InetSocketAddress debbieAddr = new InetSocketAddress(debbieIp, debbiePort);
-			debbieCon.connect(debbieAddr);
+			System.out.print("Waiting to establish eddie connections...");
+			for (int i = 0; i < numComs; i++) {
+				con1[i] = new Communication();
+				InetSocketAddress addr = new InetSocketAddress(eddieIp, eddiePort2);
+				con1[i].connect(addr);
+				eddiePort2 += 3;
+				while (con1[i].getState() != Communication.STATE_CONNECTED)
+					;
+			}
+			System.out.println(" done!");
 
-			System.out.println("Waiting to establish connections...");
-			while (eddieCon.getState() != Communication.STATE_CONNECTED)
-				;
-			while (debbieCon.getState() != Communication.STATE_CONNECTED)
-				;
-			System.out.println("Connection established");
+			System.out.print("Waiting to establish debbie connections...");
+			for (int i = 0; i < numComs; i++) {
+				con2[i] = new Communication();
+				InetSocketAddress addr = new InetSocketAddress(debbieIp, debbiePort);
+				con2[i].connect(addr);
+				debbiePort += 3;
+				while (con2[i].getState() != Communication.STATE_CONNECTED)
+					;
+			}
+			System.out.println(" done!");
 
-			eddieCon.setTcpNoDelay(true);
-			debbieCon.setTcpNoDelay(true);
-
-			eddieCon.write("start");
-			debbieCon.write("start");
-			eddieCon.readString();
-			debbieCon.readString();
+			for (int i = 0; i < numComs; i++) {
+				con1[i].setTcpNoDelay(true);
+				con2[i].setTcpNoDelay(true);
+			}
 
 			try {
-				operationCtor.newInstance(eddieCon, debbieCon).run(Party.Charlie, configFile, forestFile);
+				Protocol p = operationCtor.newInstance(con1[0], con2[0]);
+				if (protocol.equals("rtv"))
+					((Retrieve) p).setCons(con1, con2);
+				p.run(Party.Charlie, md, forestFile);
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException e) {
 				e.printStackTrace();
 			}
-
-			eddieCon.write("end");
-			debbieCon.write("end");
-			eddieCon.readString();
-			debbieCon.readString();
-
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			eddieCon.stop();
-			debbieCon.stop();
 
 		} else {
 			throw new NoSuchPartyException(party);
+		}
+
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		for (int i = 0; i < numComs; i++) {
+			con1[i].stop();
+			con2[i].stop();
 		}
 
 		System.out.println(party + " exiting...");

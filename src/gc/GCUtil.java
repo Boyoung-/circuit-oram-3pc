@@ -67,7 +67,7 @@ public class GCUtil {
 		return out;
 	}
 
-	public static byte[][] genOutKeyHashes(GCSignal[] outZeroKeys) {
+	public static synchronized byte[][] genOutKeyHashes(GCSignal[] outZeroKeys) {
 		byte[][] hashes = new byte[outZeroKeys.length][];
 		for (int i = 0; i < outZeroKeys.length; i++) {
 			hashes[i] = Crypto.sha1.digest(outZeroKeys[i].bytes);
@@ -100,7 +100,7 @@ public class GCUtil {
 		return pairs;
 	}
 
-	public static byte[] hashAll(GCSignal[] keys) {
+	public static synchronized byte[] hashAll(GCSignal[] keys) {
 		for (int i = 0; i < keys.length; i++)
 			Crypto.sha1.update(keys[i].bytes);
 		return Crypto.sha1.digest();

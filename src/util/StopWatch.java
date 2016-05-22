@@ -107,4 +107,27 @@ public class StopWatch {
 		sw.elapsedCPU = elapsedCPU / n;
 		return sw;
 	}
+
+	public StopWatch add(StopWatch s) {
+		if (isOn || s.isOn) {
+			try {
+				throw new StopWatchException("StopWatch is still running");
+			} catch (StopWatchException e) {
+				e.printStackTrace();
+			}
+		}
+
+		if (!task.equals(s.task)) {
+			try {
+				throw new StopWatchException("Tasks don't match: " + task + " != " + s.task);
+			} catch (StopWatchException e) {
+				e.printStackTrace();
+			}
+		}
+
+		StopWatch sw = new StopWatch(task);
+		sw.elapsedWC = elapsedWC + s.elapsedWC;
+		sw.elapsedCPU = elapsedCPU + s.elapsedCPU;
+		return sw;
+	}
 }

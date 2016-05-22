@@ -34,7 +34,7 @@ public class PRG {
 		this.l = l;
 	}
 
-	public byte[] compute(byte[] seed) {
+	public synchronized byte[] compute(byte[] seed) {
 		byte[] input;
 		if (seed.length > 16) {
 			throw new IllegalInputException(seed.length + " > 16");

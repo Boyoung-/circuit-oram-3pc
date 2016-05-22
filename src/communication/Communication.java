@@ -196,9 +196,10 @@ public class Communication {
 			Util.disp("connect to: " + address);
 
 		// Don't throw out connections if we are already connected
-		if (mState == STATE_CONNECTING || mConnectedThread != null) {
-			return;
-		}
+		/*
+		 * if (mState == STATE_CONNECTING || mConnectedThread != null) { return;
+		 * }
+		 */
 
 		mNumTries++;
 		mAddress = address;
@@ -813,6 +814,7 @@ public class Communication {
 
 			mmInStream = tmpIn;
 			mmOutStream = tmpOut;
+
 		}
 
 		public void setTcpNoDelay(boolean on) {

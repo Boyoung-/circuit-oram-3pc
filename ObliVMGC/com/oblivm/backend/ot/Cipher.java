@@ -38,7 +38,7 @@ public final class Cipher {
 		return cph.xor(getPaddingOfLength(key, cphLength));
 	}
 
-	private BigInteger getPaddingOfLength(byte[] key, int padLength) {
+	private synchronized BigInteger getPaddingOfLength(byte[] key, int padLength) {
 
 		byte[] pad = new byte[(padLength - 1) / 8 + 1];
 		byte[] tmp;
@@ -62,7 +62,7 @@ public final class Cipher {
 		return cph.xor(getPaddingOfLength(j, key, cphLength));
 	}
 
-	private BigInteger getPaddingOfLength(int j, byte[] key, int padLength) {
+	private synchronized BigInteger getPaddingOfLength(int j, byte[] key, int padLength) {
 		sha1.update(ByteBuffer.allocate(4).putInt(j).array());
 		sha1.update(key);
 
@@ -88,7 +88,7 @@ public final class Cipher {
 		return getPadding(key, k).xor(c);
 	}
 
-	private GCSignal getPadding(GCSignal key, int k) {
+	private synchronized GCSignal getPadding(GCSignal key, int k) {
 		sha1.update(key.bytes);
 		sha1.update(ByteBuffer.allocate(4).putInt(k).array());
 		GCSignal ret = GCSignal.newInstance(sha1.digest());

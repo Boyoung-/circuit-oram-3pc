@@ -28,6 +28,7 @@ public class Timer {
 			stack.peek().stop();
 		}
 		stack.push(watches[p][m]).start();
+
 	}
 
 	public void stop(int p, int m) {
@@ -36,6 +37,7 @@ public class Timer {
 		stack.pop().stop();
 		if (!stack.empty())
 			stack.peek().start();
+
 	}
 
 	public void reset() {
@@ -69,6 +71,17 @@ public class Timer {
 		for (int i = 0; i < watches.length; i++)
 			for (int j = 0; j < watches[i].length; j++)
 				sws[i][j] = watches[i][j].divideBy(n);
+		return new Timer(sws);
+	}
+
+	public Timer add(Timer t) {
+		if (!stack.empty() || !t.stack.empty())
+			throw new TimerException("Stack not empty");
+
+		StopWatch[][] sws = new StopWatch[P.size][M.size];
+		for (int i = 0; i < watches.length; i++)
+			for (int j = 0; j < watches[i].length; j++)
+				sws[i][j] = watches[i][j].add(t.watches[i][j]);
 		return new Timer(sws);
 	}
 }

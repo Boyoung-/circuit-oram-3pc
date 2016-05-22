@@ -44,7 +44,7 @@ public class PRF {
 		}
 	}
 
-	public byte[] compute(byte[] input) {
+	public synchronized byte[] compute(byte[] input) {
 		if (input.length > maxInputBytes)
 			throw new IllegalInputException(input.length + " > " + maxInputBytes);
 

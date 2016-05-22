@@ -4,6 +4,7 @@ import communication.Communication;
 import crypto.Crypto;
 import exceptions.NoSuchPartyException;
 import oram.Forest;
+import oram.Global;
 import oram.Metadata;
 import protocols.struct.Party;
 
@@ -48,21 +49,18 @@ public abstract class Protocol {
 		}
 	}
 
-	public void run(Party party, String configFile, String forestFile) {
-		Metadata md = new Metadata(configFile);
+	public void run(Party party, Metadata md, String forestFile) {
 		Forest forest = null;
-
-		Metadata.cheat = true;
-
 		if (party == Party.Eddie) {
-			if (Metadata.cheat)
+			if (Global.cheat)
 				forest = new Forest(md, Crypto.sr);
 			else if (forestFile == null)
 				forest = Forest.readFromFile(md.getDefaultSharesName1());
 			else
 				forest = Forest.readFromFile(forestFile);
+
 		} else if (party == Party.Debbie) {
-			if (Metadata.cheat)
+			if (Global.cheat)
 				forest = new Forest(md, null);
 			else if (forestFile == null)
 				forest = Forest.readFromFile(md.getDefaultSharesName2());
