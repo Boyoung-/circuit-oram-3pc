@@ -184,6 +184,9 @@ public class Retrieve extends Protocol {
 
 		long[] gates = new long[2];
 
+		PreData[][] predata = new PreData[numTrees][2];
+		PreRetrieve preretrieve = new PreRetrieve(con1, con2);
+
 		Pipeline[] threads = new Pipeline[numTrees];
 
 		sanityCheck();
@@ -211,8 +214,6 @@ public class Retrieve extends Protocol {
 				System.out.println("N=" + BigInteger.valueOf(N).toString(2));
 
 				System.out.print("Precomputation... ");
-				PreData[][] predata = new PreData[numTrees][2];
-				PreRetrieve preretrieve = new PreRetrieve(con1, con2);
 				for (int ti = 0; ti < numTrees; ti++) {
 					predata[ti][0] = new PreData();
 					predata[ti][1] = new PreData();
@@ -359,8 +360,10 @@ public class Retrieve extends Protocol {
 		Bandwidth[] bandwidth = new Bandwidth[P.size];
 		for (int i = 0; i < P.size; i++) {
 			bandwidth[i] = new Bandwidth(P.names[i]);
-			for (int j = 0; j < cons1.length; j++)
-				bandwidth[i] = bandwidth[i].add(cons1[j].bandwidth[i].add(cons2[j].bandwidth[i]));
+			for (int j = 0; j < cons1.length; j++) {
+				bandwidth[i].add(cons1[j].bandwidth[i]);
+				bandwidth[i].add(cons2[j].bandwidth[i]);
+			}
 			System.out.println(bandwidth[i].noPreToString());
 		}
 		System.out.println();
