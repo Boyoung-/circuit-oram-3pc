@@ -122,20 +122,23 @@ public class Retrieve extends Protocol {
 		OutAccess outaccess = access.runE(predata[0], OTi, Ni, Nip1_pr, timer[0]);
 
 		int ti = OTi.getTreeIndex();
-		Pipeline pipeline = new Pipeline(cons1[ti + 1], cons2[ti + 1], Party.Eddie, predata, OTi, h, timer[ti + 1],
-				null, ti, outaccess.Li, outaccess);
+		Communication[] cons = new Communication[] { cons1[ti + 1], cons2[ti + 1], cons1[ti + h + 1],
+				cons2[ti + h + 1] };
+		Pipeline pipeline = new Pipeline(cons, Party.Eddie, predata, OTi, h, timer[ti + 1], null, ti, outaccess.Li,
+				outaccess);
 		pipeline.start();
 
 		return pipeline;
 	}
 
-	public Pipeline pipelineD(PreData predata[], Tree OTi, byte[] Ni, byte[] Nip1_pr, Timer[] timer) {
+	public Pipeline pipelineD(PreData predata[], Tree OTi, byte[] Ni, byte[] Nip1_pr, int h, Timer[] timer) {
 		Access access = new Access(con1, con2);
 		byte[] Li = access.runD(predata[0], OTi, Ni, Nip1_pr, timer[0]);
 
 		int ti = OTi.getTreeIndex();
-		Pipeline pipeline = new Pipeline(cons1[ti + 1], cons2[ti + 1], Party.Debbie, predata, OTi, 0, timer[ti + 1],
-				null, ti, Li, null);
+		Communication[] cons = new Communication[] { cons1[ti + 1], cons2[ti + 1], cons1[ti + h + 1],
+				cons2[ti + h + 1] };
+		Pipeline pipeline = new Pipeline(cons, Party.Debbie, predata, OTi, h, timer[ti + 1], null, ti, Li, null);
 		pipeline.start();
 
 		return pipeline;
@@ -145,8 +148,10 @@ public class Retrieve extends Protocol {
 		Access access = new Access(con1, con2);
 		OutAccess outaccess = access.runC(md, ti, Li, timer[0]);
 
-		Pipeline pipeline = new Pipeline(cons1[ti + 1], cons2[ti + 1], Party.Charlie, predata, null, 0, timer[ti + 1],
-				md, ti, Li, outaccess);
+		int h = md.getNumTrees();
+		Communication[] cons = new Communication[] { cons1[ti + 1], cons2[ti + 1], cons1[ti + h + 1],
+				cons2[ti + h + 1] };
+		Pipeline pipeline = new Pipeline(cons, Party.Charlie, predata, null, 0, timer[ti + 1], md, ti, Li, outaccess);
 		pipeline.start();
 
 		return new OutRetrieve(outaccess, pipeline);
@@ -286,7 +291,7 @@ public class Retrieve extends Protocol {
 						} else {
 							if (ti == 0)
 								ete_on.start();
-							threads[ti] = pipelineD(predata[ti], OTi, sD_Ni, sD_Nip1_pr, timer);
+							threads[ti] = pipelineD(predata[ti], OTi, sD_Ni, sD_Nip1_pr, numTrees, timer);
 						}
 
 					} else if (party == Party.Charlie) {
@@ -341,7 +346,7 @@ public class Retrieve extends Protocol {
 
 		Timer sum = new Timer();
 		for (int i = 0; i < timer.length; i++)
-			sum = sum.add(timer[i]);
+			sum.add(timer[i]);
 		sum.noPrePrint();
 		System.out.println();
 

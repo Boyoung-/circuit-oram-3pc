@@ -108,7 +108,20 @@ public class StopWatch {
 		return sw;
 	}
 
-	public StopWatch add(StopWatch s) {
+	/*
+	 * public StopWatch add(StopWatch s) { if (isOn || s.isOn) { try { throw new
+	 * StopWatchException("StopWatch is still running"); } catch
+	 * (StopWatchException e) { e.printStackTrace(); } }
+	 * 
+	 * if (!task.equals(s.task)) { try { throw new StopWatchException(
+	 * "Tasks don't match: " + task + " != " + s.task); } catch
+	 * (StopWatchException e) { e.printStackTrace(); } }
+	 * 
+	 * StopWatch sw = new StopWatch(task); sw.elapsedWC = elapsedWC +
+	 * s.elapsedWC; sw.elapsedCPU = elapsedCPU + s.elapsedCPU; return sw; }
+	 */
+
+	public void add(StopWatch s) {
 		if (isOn || s.isOn) {
 			try {
 				throw new StopWatchException("StopWatch is still running");
@@ -125,9 +138,7 @@ public class StopWatch {
 			}
 		}
 
-		StopWatch sw = new StopWatch(task);
-		sw.elapsedWC = elapsedWC + s.elapsedWC;
-		sw.elapsedCPU = elapsedCPU + s.elapsedCPU;
-		return sw;
+		elapsedWC = elapsedWC + s.elapsedWC;
+		elapsedCPU = elapsedCPU + s.elapsedCPU;
 	}
 }

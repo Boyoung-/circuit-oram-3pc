@@ -16,8 +16,7 @@ import util.Util;
 
 public class Pipeline extends Thread {
 
-	private Communication con1;
-	private Communication con2;
+	private Communication[] cons;
 	private Party party;
 	private PreData[] predata;
 	private Tree OTi;
@@ -28,10 +27,9 @@ public class Pipeline extends Thread {
 	private byte[] Li;
 	private OutAccess outaccess;
 
-	public Pipeline(Communication con1, Communication con2, Party party, PreData[] predata, Tree OTi, int h,
-			Timer timer, Metadata md, int treeIndex, byte[] Li, OutAccess outaccess) {
-		this.con1 = con1;
-		this.con2 = con2;
+	public Pipeline(Communication[] cons, Party party, PreData[] predata, Tree OTi, int h, Timer timer, Metadata md,
+			int treeIndex, byte[] Li, OutAccess outaccess) {
+		this.cons = cons;
 		this.party = party;
 		this.predata = predata;
 		this.OTi = OTi;
@@ -45,14 +43,25 @@ public class Pipeline extends Thread {
 
 	public void runE(PreData[] predata, Tree OTi, int h, Timer timer) {
 		// 1st eviction
-		Access access = new Access(con1, con2);
-		Reshuffle reshuffle = new Reshuffle(con1, con2);
-		PostProcessT postprocesst = new PostProcessT(con1, con2);
-		UpdateRoot updateroot = new UpdateRoot(con1, con2);
-		Eviction eviction = new Eviction(con1, con2);
+		Access access = new Access(cons[0], cons[1]);
+		Reshuffle reshuffle = new Reshuffle(cons[2], cons[3]);
+		PostProcessT postprocesst = new PostProcessT(cons[0], cons[1]);
+		UpdateRoot updateroot = new UpdateRoot(cons[0], cons[1]);
+		Eviction eviction = new Eviction(cons[0], cons[1]);
 
-		Tuple[] path = reshuffle.runE(predata[0], outaccess.E_P, OTi.getTreeIndex() == 0, timer);
+		Timer t = new Timer();
+		reshuffle.setArgs(Party.Eddie, predata[0], outaccess.E_P, OTi.getTreeIndex() == 0, t);
+		Thread thread = new Thread(reshuffle);
+		thread.start();
 		Tuple Ti = postprocesst.runE(predata[0], outaccess.E_Ti, OTi.getTreeIndex() == h - 1, timer);
+		try {
+			thread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		Tuple[] path = reshuffle.getReturn();
+		timer.add(t);
+
 		Tuple[] root = Arrays.copyOfRange(path, 0, OTi.getStashSize());
 		root = updateroot.runE(predata[0], OTi.getTreeIndex() == 0, outaccess.Li, root, Ti, timer);
 		System.arraycopy(root, 0, path, 0, root.length);
@@ -72,14 +81,17 @@ public class Pipeline extends Thread {
 
 	public void runD(PreData predata[], Tree OTi, Timer timer) {
 		// 1st eviction
-		Access access = new Access(con1, con2);
-		Reshuffle reshuffle = new Reshuffle(con1, con2);
-		PostProcessT postprocesst = new PostProcessT(con1, con2);
-		UpdateRoot updateroot = new UpdateRoot(con1, con2);
-		Eviction eviction = new Eviction(con1, con2);
+		Access access = new Access(cons[0], cons[1]);
+		Reshuffle reshuffle = new Reshuffle(cons[2], cons[3]);
+		PostProcessT postprocesst = new PostProcessT(cons[0], cons[1]);
+		UpdateRoot updateroot = new UpdateRoot(cons[0], cons[1]);
+		Eviction eviction = new Eviction(cons[0], cons[1]);
 
+		// no extra thread for D's reshuffle and postprocesst
+		// because D does nothing online in these two protocols
 		reshuffle.runD();
 		postprocesst.runD();
+
 		updateroot.runD(predata[0], OTi.getTreeIndex() == 0, Li, OTi.getW(), timer);
 		eviction.runD(predata[0], OTi.getTreeIndex() == 0, Li, OTi, timer);
 
@@ -91,15 +103,26 @@ public class Pipeline extends Thread {
 
 	public OutAccess runC(PreData[] predata, Metadata md, int ti, byte[] Li, Timer timer) {
 		// 1st eviction
-		Access access = new Access(con1, con2);
-		Reshuffle reshuffle = new Reshuffle(con1, con2);
-		PostProcessT postprocesst = new PostProcessT(con1, con2);
-		UpdateRoot updateroot = new UpdateRoot(con1, con2);
-		Eviction eviction = new Eviction(con1, con2);
+		Access access = new Access(cons[0], cons[1]);
+		Reshuffle reshuffle = new Reshuffle(cons[2], cons[3]);
+		PostProcessT postprocesst = new PostProcessT(cons[0], cons[1]);
+		UpdateRoot updateroot = new UpdateRoot(cons[0], cons[1]);
+		Eviction eviction = new Eviction(cons[0], cons[1]);
 
-		Tuple[] path = reshuffle.runC(predata[0], outaccess.C_P, ti == 0, timer);
+		Timer t = new Timer();
+		reshuffle.setArgs(Party.Charlie, predata[0], outaccess.C_P, ti == 0, t);
+		Thread thread = new Thread(reshuffle);
+		thread.start();
 		Tuple Ti = postprocesst.runC(predata[0], outaccess.C_Ti, Li, outaccess.C_Lip1, outaccess.C_j2,
 				ti == md.getNumTrees() - 1, timer);
+		try {
+			thread.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		Tuple[] path = reshuffle.getReturn();
+		timer.add(t);
+
 		Tuple[] root = Arrays.copyOfRange(path, 0, md.getStashSizeOfTree(ti));
 		root = updateroot.runC(predata[0], ti == 0, root, Ti, timer);
 		System.arraycopy(root, 0, path, 0, root.length);

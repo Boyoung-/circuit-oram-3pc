@@ -21,12 +21,30 @@ import util.P;
 import util.Timer;
 import util.Util;
 
-public class Reshuffle extends Protocol {
+public class Reshuffle extends Protocol implements Runnable {
 
 	private int pid = P.RSF;
 
+	private Party party;
+	private PreData predata;
+	private Tuple[] path;
+	private boolean firstTree;
+	private Timer timer;
+
 	public Reshuffle(Communication con1, Communication con2) {
 		super(con1, con2);
+	}
+
+	public void setArgs(Party party, PreData predata, Tuple[] path, boolean firstTree, Timer timer) {
+		this.party = party;
+		this.predata = predata;
+		this.path = path;
+		this.firstTree = firstTree;
+		this.timer = timer;
+	}
+
+	public Tuple[] getReturn() {
+		return path;
 	}
 
 	public Tuple[] runE(PreData predata, Tuple[] path, boolean firstTree, Timer timer) {
@@ -70,6 +88,22 @@ public class Reshuffle extends Protocol {
 
 		timer.stop(pid, M.online_comp);
 		return predata.reshuffle_a_prime;
+	}
+
+	@Override
+	public void run() {
+		if (party == Party.Eddie) {
+			path = runE(predata, path, firstTree, timer);
+
+		} else if (party == Party.Debbie) {
+			runD();
+
+		} else if (party == Party.Charlie) {
+			path = runC(predata, path, firstTree, timer);
+
+		} else {
+			throw new NoSuchPartyException(party + "");
+		}
 	}
 
 	// for testing correctness
