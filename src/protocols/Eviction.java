@@ -9,6 +9,7 @@ import communication.Communication;
 import gc.GCUtil;
 import oram.Bucket;
 import oram.Forest;
+import oram.Global;
 import oram.Metadata;
 import oram.Tree;
 import oram.Tuple;
@@ -23,8 +24,15 @@ public class Eviction extends Protocol {
 
 	private int pid = P.EVI;
 
+	private Communication[] cons;
+
 	public Eviction(Communication con1, Communication con2) {
 		super(con1, con2);
+	}
+
+	public Eviction(Communication[] cons) {
+		super(cons[0], cons[1]);
+		this.cons = cons;
 	}
 
 	private int[] prepareEviction(int target[], int[] ti, int W) {
@@ -155,11 +163,32 @@ public class Eviction extends Protocol {
 					(logW + 7) / 8);
 		}
 
-		PermuteTarget permutetarget = new PermuteTarget(con1, con2);
-		int[] target_pp = permutetarget.runD(predata, firstTree, outKeys[0], timer);
+		PermuteTarget permutetarget = null;
+		int[] target_pp = null;
+		Timer t = null;
+		Thread thread = null;
+		if (!Global.pipeline) {
+			permutetarget = new PermuteTarget(con1, con2);
+			target_pp = permutetarget.runD(predata, firstTree, outKeys[0], timer);
+		} else {
+			permutetarget = new PermuteTarget(cons[2], cons[3]);
+			t = new Timer();
+			permutetarget.setArgs(Party.Debbie, predata, firstTree, outKeys[0], t);
+			thread = new Thread(permutetarget);
+			thread.start();
+		}
 
 		PermuteIndex permuteindex = new PermuteIndex(con1, con2);
 		int[] ti_pp = permuteindex.runD(predata, firstTree, ti_p, w, timer);
+
+		if (Global.pipeline) {
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			target_pp = permutetarget.getReturn();
+		}
 
 		int W = (int) Math.pow(2, logW);
 		int[] evict = prepareEviction(target_pp, ti_pp, W);
@@ -174,6 +203,9 @@ public class Eviction extends Protocol {
 		OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), pathBuckets);
 
 		timer.stop(pid, M.online_comp);
+
+		if (Global.pipeline)
+			timer.add(t);
 	}
 
 	public void runC(PreData predata, boolean firstTree, Tuple[] originalPath, int d, int sw, int w, Timer timer) {
@@ -204,11 +236,30 @@ public class Eviction extends Protocol {
 		con2.write(pid, C_labelInputKeys);
 		timer.stop(pid, M.online_write);
 
-		PermuteTarget permutetarget = new PermuteTarget(con1, con2);
-		permutetarget.runC(predata, firstTree, timer);
+		PermuteTarget permutetarget = null;
+		Timer t = null;
+		Thread thread = null;
+		if (!Global.pipeline) {
+			permutetarget = new PermuteTarget(con1, con2);
+			permutetarget.runC(predata, firstTree, timer);
+		} else {
+			permutetarget = new PermuteTarget(cons[2], cons[3]);
+			t = new Timer();
+			permutetarget.setArgs(Party.Charlie, predata, firstTree, null, t);
+			thread = new Thread(permutetarget);
+			thread.start();
+		}
 
 		PermuteIndex permuteindex = new PermuteIndex(con1, con2);
 		permuteindex.runC(predata, firstTree, timer);
+
+		if (Global.pipeline) {
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 
 		int logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2));
 		int W = (int) Math.pow(2, logW);
@@ -245,6 +296,9 @@ public class Eviction extends Protocol {
 		timer.stop(pid, M.online_write);
 
 		timer.stop(pid, M.online_comp);
+
+		if (Global.pipeline)
+			timer.add(t);
 	}
 
 	// for testing correctness

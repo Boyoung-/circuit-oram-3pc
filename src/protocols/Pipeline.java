@@ -47,7 +47,7 @@ public class Pipeline extends Thread {
 		Reshuffle reshuffle = new Reshuffle(cons[2], cons[3]);
 		PostProcessT postprocesst = new PostProcessT(cons[0], cons[1]);
 		UpdateRoot updateroot = new UpdateRoot(cons[0], cons[1]);
-		Eviction eviction = new Eviction(cons[0], cons[1]);
+		Eviction eviction = new Eviction(cons);
 
 		Timer t = new Timer();
 		reshuffle.setArgs(Party.Eddie, predata[0], outaccess.E_P, OTi.getTreeIndex() == 0, t);
@@ -85,7 +85,7 @@ public class Pipeline extends Thread {
 		Reshuffle reshuffle = new Reshuffle(cons[2], cons[3]);
 		PostProcessT postprocesst = new PostProcessT(cons[0], cons[1]);
 		UpdateRoot updateroot = new UpdateRoot(cons[0], cons[1]);
-		Eviction eviction = new Eviction(cons[0], cons[1]);
+		Eviction eviction = new Eviction(cons);
 
 		// no extra thread for D's reshuffle and postprocesst
 		// because D does nothing online in these two protocols
@@ -107,7 +107,7 @@ public class Pipeline extends Thread {
 		Reshuffle reshuffle = new Reshuffle(cons[2], cons[3]);
 		PostProcessT postprocesst = new PostProcessT(cons[0], cons[1]);
 		UpdateRoot updateroot = new UpdateRoot(cons[0], cons[1]);
-		Eviction eviction = new Eviction(cons[0], cons[1]);
+		Eviction eviction = new Eviction(cons);
 
 		Timer t = new Timer();
 		reshuffle.setArgs(Party.Charlie, predata[0], outaccess.C_P, ti == 0, t);
