@@ -108,7 +108,7 @@ public class StopWatch {
 		return sw;
 	}
 
-	public void add(StopWatch s) {
+	public StopWatch add(StopWatch s) {
 		if (isOn || s.isOn) {
 			try {
 				throw new StopWatchException("StopWatch is still running");
@@ -125,7 +125,9 @@ public class StopWatch {
 			}
 		}
 
-		elapsedWC = elapsedWC + s.elapsedWC;
-		elapsedCPU = elapsedCPU + s.elapsedCPU;
+		StopWatch sw = new StopWatch(task);
+		sw.elapsedWC = elapsedWC + s.elapsedWC;
+		sw.elapsedCPU = elapsedCPU + s.elapsedCPU;
+		return sw;
 	}
 }

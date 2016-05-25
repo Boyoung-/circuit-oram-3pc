@@ -18,31 +18,12 @@ import util.P;
 import util.Timer;
 import util.Util;
 
-public class PermuteTarget extends Protocol implements Runnable {
+public class PermuteTarget extends Protocol {
 
 	private int pid = P.PT;
 
-	private Party party;
-	private PreData predata;
-	private boolean firstTree;
-	private GCSignal[][] targetOutKeys;
-	private Timer timer;
-	private int[] target;
-
 	public PermuteTarget(Communication con1, Communication con2) {
 		super(con1, con2);
-	}
-
-	public void setArgs(Party party, PreData predata, boolean firstTree, GCSignal[][] targetOutKeys, Timer timer) {
-		this.party = party;
-		this.predata = predata;
-		this.firstTree = firstTree;
-		this.targetOutKeys = targetOutKeys;
-		this.timer = timer;
-	}
-
-	public int[] getReturn() {
-		return target;
 	}
 
 	public void runE() {
@@ -117,22 +98,6 @@ public class PermuteTarget extends Protocol implements Runnable {
 		timer.stop(pid, M.online_write);
 
 		timer.stop(pid, M.online_comp);
-	}
-
-	@Override
-	public void run() {
-		if (party == Party.Eddie) {
-			runE();
-
-		} else if (party == Party.Debbie) {
-			target = runD(predata, firstTree, targetOutKeys, timer);
-
-		} else if (party == Party.Charlie) {
-			runC(predata, firstTree, timer);
-
-		} else {
-			throw new NoSuchPartyException(party + "");
-		}
 	}
 
 	// for testing correctness

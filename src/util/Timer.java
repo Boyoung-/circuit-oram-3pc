@@ -74,12 +74,14 @@ public class Timer {
 		return new Timer(sws);
 	}
 
-	public void add(Timer t) {
+	public Timer add(Timer t) {
 		if (!stack.empty() || !t.stack.empty())
 			throw new TimerException("Stack not empty");
 
+		StopWatch[][] sws = new StopWatch[P.size][M.size];
 		for (int i = 0; i < watches.length; i++)
 			for (int j = 0; j < watches[i].length; j++)
-				watches[i][j].add(t.watches[i][j]);
+				sws[i][j] = watches[i][j].add(t.watches[i][j]);
+		return new Timer(sws);
 	}
 }

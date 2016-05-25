@@ -108,7 +108,7 @@ public class CLI {
 		System.out.println("Starting " + party + "...");
 
 		Metadata md = new Metadata(configFile);
-		int numComs = Global.pipeline ? md.getNumTrees() * 2 + 1 : 1;
+		int numComs = Global.pipeline ? md.getNumTrees() + 1 : 1;
 		Communication[] con1 = new Communication[numComs];
 		Communication[] con2 = new Communication[numComs];
 
