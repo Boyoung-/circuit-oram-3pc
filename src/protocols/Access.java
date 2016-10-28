@@ -41,7 +41,7 @@ public class Access extends Protocol {
 		byte[] Li = new byte[0];
 		timer.start(pid, M.online_read);
 		if (OTi.getTreeIndex() > 0)
-			Li = con2.read();
+			Li = con2.read(pid);
 		timer.stop(pid, M.online_read);
 
 		// step 1
@@ -105,7 +105,7 @@ public class Access extends Protocol {
 		byte[] Li = new byte[0];
 		timer.start(pid, M.online_read);
 		if (OTi.getTreeIndex() > 0)
-			Li = con2.read();
+			Li = con2.read(pid);
 		timer.stop(pid, M.online_read);
 
 		// step 1
@@ -152,15 +152,15 @@ public class Access extends Protocol {
 		// step 0: send Li to E and D
 		timer.start(pid, M.online_write);
 		if (treeIndex > 0) {
-			con1.write(Li);
-			con2.write(Li);
+			con1.write(pid, Li);
+			con2.write(pid, Li);
 		}
 		timer.stop(pid, M.online_write);
 
 		// step 2
 		timer.start(pid, M.online_read);
-		Tuple[] pathTuples = con2.readTupleArray();
-		byte[] Ni = con2.read();
+		Tuple[] pathTuples = con2.readTupleArray(pid);
+		byte[] Ni = con2.read(pid);
 		timer.stop(pid, M.online_read);
 
 		// step 3
@@ -215,7 +215,7 @@ public class Access extends Protocol {
 		byte[] Li = new byte[0];
 		timer.start(pid, M.online_read);
 		if (OTi.getTreeIndex() > 0)
-			Li = con2.read();
+			Li = con2.read(pid);
 		timer.stop(pid, M.online_read);
 
 		// step 1
@@ -244,7 +244,7 @@ public class Access extends Protocol {
 		byte[] Li = new byte[0];
 		timer.start(pid, M.online_read);
 		if (OTi.getTreeIndex() > 0)
-			Li = con2.read();
+			Li = con2.read(pid);
 		timer.stop(pid, M.online_read);
 
 		// step 1
@@ -266,14 +266,14 @@ public class Access extends Protocol {
 		// step 0: send Li to E and D
 		timer.start(pid, M.online_write);
 		if (treeIndex > 0) {
-			con1.write(Li);
-			con2.write(Li);
+			con1.write(pid, Li);
+			con2.write(pid, Li);
 		}
 		timer.stop(pid, M.online_write);
 
 		// step 2
 		timer.start(pid, M.online_read);
-		Tuple[] pathTuples = con2.readTupleArray();
+		Tuple[] pathTuples = con2.readTupleArray(pid);
 		timer.stop(pid, M.online_read);
 
 		// step 5

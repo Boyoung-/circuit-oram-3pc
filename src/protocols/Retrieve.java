@@ -206,6 +206,7 @@ public class Retrieve extends Protocol {
 				System.out.println("N=" + BigInteger.valueOf(N).toString(2));
 
 				System.out.print("Precomputation... ");
+
 				PreData[][] predata = new PreData[numTrees][2];
 				PreRetrieve preretrieve = new PreRetrieve(con1, con2);
 				for (int ti = 0; ti < numTrees; ti++) {
@@ -343,6 +344,12 @@ public class Retrieve extends Protocol {
 		for (int i = 0; i < timer.length; i++)
 			sum = sum.add(timer[i]);
 		sum.noPrePrint();
+		System.out.println();
+
+		StopWatch comEnc = new StopWatch("CE_online_comp");
+		for (int i = 0; i < cons1.length; i++)
+			comEnc = comEnc.add(cons1[i].comEnc.add(cons2[i].comEnc));
+		System.out.println(comEnc.noPreToMS());
 		System.out.println();
 
 		if (Global.pipeline)

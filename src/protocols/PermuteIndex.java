@@ -39,7 +39,7 @@ public class PermuteIndex extends Protocol {
 		timer.stop(pid, M.online_write);
 
 		timer.start(pid, M.online_read);
-		byte[][] g = con2.readDoubleByteArray();
+		byte[][] g = con2.readDoubleByteArray(pid);
 		timer.stop(pid, M.online_read);
 
 		ti = Util.xor(predata.pi_a, g);
@@ -60,7 +60,7 @@ public class PermuteIndex extends Protocol {
 		timer.start(pid, M.online_comp);
 
 		timer.start(pid, M.online_read);
-		byte[][] z = con2.readDoubleByteArray();
+		byte[][] z = con2.readDoubleByteArray(pid);
 		timer.stop(pid, M.online_read);
 
 		z = Util.xor(z, predata.pi_r);

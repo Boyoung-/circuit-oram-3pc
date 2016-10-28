@@ -16,10 +16,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import com.oblivm.backend.gc.GCSignal;
 
+import crypto.SimpleAES;
 import oram.Bucket;
 import oram.Tuple;
 import util.Bandwidth;
 import util.P;
+import util.StopWatch;
 import util.Util;
 
 /**
@@ -70,7 +72,11 @@ public class Communication {
 	protected InetSocketAddress mAddress;
 
 	public Bandwidth[] bandwidth;
-	public boolean bandSwitch = true;
+	public boolean bandSwitch = true; // TODO: change this to static (or to
+										// Global)
+
+	private static SimpleAES aes = new SimpleAES();
+	public StopWatch comEnc = new StopWatch("CE_online_comp");
 
 	public Communication() {
 		mState = STATE_NONE;
@@ -332,7 +338,12 @@ public class Communication {
 	}
 
 	public void write(int pid, byte[] out) {
+		comEnc.start();
+		out = aes.encrypt(out);
+		comEnc.stop();
+
 		write(out);
+
 		if (bandSwitch)
 			bandwidth[pid].add(out.length);
 	}
@@ -440,7 +451,7 @@ public class Communication {
 	}
 
 	public void write(int pid, Bucket[] arr) {
-		write(ComUtil.serialize(arr));
+		write(pid, ComUtil.serialize(arr));
 	}
 
 	public void write(GCSignal key) {
@@ -544,6 +555,14 @@ public class Communication {
 		return readMessage;
 	}
 
+	public byte[] read(int pid) {
+		byte[] msg = read();
+		comEnc.start();
+		msg = aes.decrypt(msg);
+		comEnc.stop();
+		return msg;
+	}
+
 	/**
 	 * Read a specific number of bytes from the ConnectedThread in an
 	 * unsynchronized manner Note, this is a blocking call
@@ -580,68 +599,136 @@ public class Communication {
 		return new BigInteger(read());
 	}
 
+	public BigInteger readBigInteger(int pid) {
+		return new BigInteger(read(pid));
+	}
+
 	public int readInt() {
 		return readBigInteger().intValue();
+	}
+
+	public int readInt(int pid) {
+		return readBigInteger(pid).intValue();
 	}
 
 	public long readLong() {
 		return readBigInteger().longValue();
 	}
 
+	public long readLong(int pid) {
+		return readBigInteger(pid).longValue();
+	}
+
 	public byte[][] readDoubleByteArray() {
 		return ComUtil.toDoubleByteArray(read());
+	}
+
+	public byte[][] readDoubleByteArray(int pid) {
+		return ComUtil.toDoubleByteArray(read(pid));
 	}
 
 	public byte[][][] readTripleByteArray() {
 		return ComUtil.toTripleByteArray(read());
 	}
 
+	public byte[][][] readTripleByteArray(int pid) {
+		return ComUtil.toTripleByteArray(read(pid));
+	}
+
 	public int[] readIntArray() {
 		return ComUtil.toIntArray(read());
+	}
+
+	public int[] readIntArray(int pid) {
+		return ComUtil.toIntArray(read(pid));
 	}
 
 	public int[][] readDoubleIntArray() {
 		return ComUtil.toDoubleIntArray(read());
 	}
 
+	public int[][] readDoubleIntArray(int pid) {
+		return ComUtil.toDoubleIntArray(read(pid));
+	}
+
 	public Tuple readTuple() {
 		return ComUtil.toTuple(read());
+	}
+
+	public Tuple readTuple(int pid) {
+		return ComUtil.toTuple(read(pid));
 	}
 
 	public Tuple[] readTupleArray() {
 		return ComUtil.toTupleArray(read());
 	}
 
+	public Tuple[] readTupleArray(int pid) {
+		return ComUtil.toTupleArray(read(pid));
+	}
+
 	public Bucket readBucket() {
 		return new Bucket(readTupleArray());
+	}
+
+	public Bucket readBucket(int pid) {
+		return new Bucket(readTupleArray(pid));
 	}
 
 	public Bucket[] readBucketArray() {
 		return ComUtil.toBucketArray(read());
 	}
 
+	public Bucket[] readBucketArray(int pid) {
+		return ComUtil.toBucketArray(read(pid));
+	}
+
 	public GCSignal readGCSignal() {
 		return new GCSignal(read());
+	}
+
+	public GCSignal readGCSignal(int pid) {
+		return new GCSignal(read(pid));
 	}
 
 	public GCSignal[] readGCSignalArray() {
 		return ComUtil.toGCSignalArray(read());
 	}
 
+	public GCSignal[] readGCSignalArray(int pid) {
+		return ComUtil.toGCSignalArray(read(pid));
+	}
+
 	public GCSignal[][] readDoubleGCSignalArray() {
 		return ComUtil.toDoubleGCSignalArray(read());
+	}
+
+	public GCSignal[][] readDoubleGCSignalArray(int pid) {
+		return ComUtil.toDoubleGCSignalArray(read(pid));
 	}
 
 	public GCSignal[][][] readTripleGCSignalArray() {
 		return ComUtil.toTripleGCSignalArray(read());
 	}
 
+	public GCSignal[][][] readTripleGCSignalArray(int pid) {
+		return ComUtil.toTripleGCSignalArray(read(pid));
+	}
+
 	public GCSignal[][][][] readQuadGCSignalArray() {
 		return ComUtil.toQuadGCSignalArray(read());
 	}
 
+	public GCSignal[][][][] readQuadGCSignalArray(int pid) {
+		return ComUtil.toQuadGCSignalArray(read(pid));
+	}
+
 	public ArrayList<byte[]> readArrayList() {
 		return ComUtil.toArrayList(read());
+	}
+
+	public ArrayList<byte[]> readArrayList(int pid) {
+		return ComUtil.toArrayList(read(pid));
 	}
 
 	/**

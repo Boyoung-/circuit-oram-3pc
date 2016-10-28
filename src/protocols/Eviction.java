@@ -124,7 +124,7 @@ public class Eviction extends Protocol {
 
 		if (firstTree) {
 			timer.start(pid, M.online_read);
-			Tuple[] originalPath = con2.readTupleArray();
+			Tuple[] originalPath = con2.readTupleArray(pid);
 			timer.stop(pid, M.online_read);
 
 			OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), new Bucket[] { new Bucket(originalPath) });
@@ -134,13 +134,13 @@ public class Eviction extends Protocol {
 		}
 
 		timer.start(pid, M.online_read);
-		GCSignal[] LiInputKeys = con1.readGCSignalArray();
-		GCSignal[][] E_feInputKeys = con1.readDoubleGCSignalArray();
-		GCSignal[][][] E_labelInputKeys = con1.readTripleGCSignalArray();
-		GCSignal[][] deltaInputKeys = con1.readDoubleGCSignalArray();
+		GCSignal[] LiInputKeys = con1.readGCSignalArray(pid);
+		GCSignal[][] E_feInputKeys = con1.readDoubleGCSignalArray(pid);
+		GCSignal[][][] E_labelInputKeys = con1.readTripleGCSignalArray(pid);
+		GCSignal[][] deltaInputKeys = con1.readDoubleGCSignalArray(pid);
 
-		GCSignal[][] C_feInputKeys = con2.readDoubleGCSignalArray();
-		GCSignal[][][] C_labelInputKeys = con2.readTripleGCSignalArray();
+		GCSignal[][] C_feInputKeys = con2.readDoubleGCSignalArray(pid);
+		GCSignal[][][] C_labelInputKeys = con2.readTripleGCSignalArray(pid);
 		timer.stop(pid, M.online_read);
 
 		int w = OTi.getW();
@@ -168,7 +168,7 @@ public class Eviction extends Protocol {
 		ssxot.runD(predata, evict, timer);
 
 		timer.start(pid, M.online_read);
-		Bucket[] pathBuckets = con2.readBucketArray();
+		Bucket[] pathBuckets = con2.readBucketArray(pid);
 		timer.stop(pid, M.online_read);
 
 		OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), pathBuckets);

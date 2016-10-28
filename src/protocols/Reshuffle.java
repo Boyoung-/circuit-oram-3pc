@@ -37,7 +37,7 @@ public class Reshuffle extends Protocol {
 
 		// step 1
 		timer.start(pid, M.online_read);
-		Tuple[] z = con2.readTupleArray();
+		Tuple[] z = con2.readTupleArray(pid);
 		timer.stop(pid, M.online_read);
 
 		// step 2

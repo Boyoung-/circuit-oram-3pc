@@ -42,7 +42,7 @@ public class PostProcessT extends Protocol {
 
 		// step 1
 		timer.start(pid, M.online_read);
-		int delta = con2.readInt();
+		int delta = con2.readInt(pid);
 		timer.stop(pid, M.online_read);
 
 		// step 3

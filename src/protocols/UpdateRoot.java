@@ -66,12 +66,12 @@ public class UpdateRoot extends Protocol {
 
 		// step 1
 		timer.start(pid, M.online_read);
-		GCSignal[] j1InputKeys = con1.readGCSignalArray();
-		GCSignal[] LiInputKeys = con1.readGCSignalArray();
-		GCSignal[] E_feInputKeys = con1.readGCSignalArray();
-		GCSignal[][] E_labelInputKeys = con1.readDoubleGCSignalArray();
-		GCSignal[] C_feInputKeys = con2.readGCSignalArray();
-		GCSignal[][] C_labelInputKeys = con2.readDoubleGCSignalArray();
+		GCSignal[] j1InputKeys = con1.readGCSignalArray(pid);
+		GCSignal[] LiInputKeys = con1.readGCSignalArray(pid);
+		GCSignal[] E_feInputKeys = con1.readGCSignalArray(pid);
+		GCSignal[][] E_labelInputKeys = con1.readDoubleGCSignalArray(pid);
+		GCSignal[] C_feInputKeys = con2.readGCSignalArray(pid);
+		GCSignal[][] C_labelInputKeys = con2.readDoubleGCSignalArray(pid);
 		timer.stop(pid, M.online_read);
 
 		// step 2

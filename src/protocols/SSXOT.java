@@ -45,11 +45,11 @@ public class SSXOT extends Protocol {
 		timer.stop(pid, M.online_write);
 
 		timer.start(pid, M.online_read);
-		a = con2.readTupleArray();
+		a = con2.readTupleArray(pid);
 
 		// step 2
-		int[] j = con1.readIntArray();
-		Tuple[] p = con1.readTupleArray();
+		int[] j = con1.readIntArray(pid);
+		Tuple[] p = con1.readTupleArray(pid);
 		timer.stop(pid, M.online_read);
 
 		// step 3
@@ -100,11 +100,11 @@ public class SSXOT extends Protocol {
 		timer.stop(pid, M.online_write);
 
 		timer.start(pid, M.online_read);
-		a = con1.readTupleArray();
+		a = con1.readTupleArray(pid);
 
 		// step 2
-		int[] j = con2.readIntArray();
-		Tuple[] p = con2.readTupleArray();
+		int[] j = con2.readIntArray(pid);
+		Tuple[] p = con2.readTupleArray(pid);
 		timer.stop(pid, M.online_read);
 
 		// step 3

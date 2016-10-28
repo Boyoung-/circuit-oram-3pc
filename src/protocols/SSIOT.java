@@ -76,12 +76,12 @@ public class SSIOT extends Protocol {
 
 		// step 1
 		timer.start(pid, M.online_read);
-		byte[][] e = con1.readDoubleByteArray();
-		byte[][] v = con1.readDoubleByteArray();
+		byte[][] e = con1.readDoubleByteArray(pid);
+		byte[][] v = con1.readDoubleByteArray(pid);
 
 		// step 2
-		byte[] p = con2.read();
-		byte[] w = con2.read();
+		byte[] p = con2.read(pid);
+		byte[] w = con2.read(pid);
 		timer.stop(pid, M.online_read);
 
 		// step 3

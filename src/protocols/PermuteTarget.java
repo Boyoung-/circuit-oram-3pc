@@ -61,7 +61,7 @@ public class PermuteTarget extends Protocol {
 		timer.stop(pid, M.online_write);
 
 		timer.start(pid, M.online_read);
-		byte[][] g = con2.readDoubleByteArray();
+		byte[][] g = con2.readDoubleByteArray(pid);
 		timer.stop(pid, M.online_read);
 
 		target = Util.xor(predata.pt_a, g);
@@ -82,8 +82,8 @@ public class PermuteTarget extends Protocol {
 
 		// PermuteTargetII
 		timer.start(pid, M.online_read);
-		byte[][] z = con2.readDoubleByteArray();
-		int[] I = con2.readIntArray();
+		byte[][] z = con2.readDoubleByteArray(pid);
+		int[] I = con2.readIntArray(pid);
 		timer.stop(pid, M.online_read);
 
 		byte[][] mk = new byte[z.length][];
