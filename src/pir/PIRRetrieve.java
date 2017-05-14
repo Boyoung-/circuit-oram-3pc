@@ -12,12 +12,11 @@ import oram.Global;
 import oram.Metadata;
 import oram.Tree;
 import oram.Tuple;
+import pir.precomputation.PrePIRRetrieve;
 import protocols.Pipeline;
 import protocols.PostProcessT;
 import protocols.Protocol;
-import protocols.Reshuffle;
 import protocols.UpdateRoot;
-import protocols.precomputation.PreRetrieve;
 import protocols.struct.OutAccess;
 import protocols.struct.OutRetrieve;
 import protocols.struct.Party;
@@ -45,13 +44,19 @@ public class PIRRetrieve extends Protocol {
 	public byte[] runE(PreData[] predata, Tree OTi, byte[] Ni, byte[] Nip1_pr, int h, Timer timer) {
 		// 1st eviction
 		PIRAccess access = new PIRAccess(con1, con2);
-		Reshuffle reshuffle = new Reshuffle(con1, con2);
+		PIRReshuffle reshuffle = new PIRReshuffle(con1, con2);
 		PostProcessT postprocesst = new PostProcessT(con1, con2);
 		UpdateRoot updateroot = new UpdateRoot(con1, con2);
 		PIREviction eviction = new PIREviction(con1, con2);
 
 		OutAccess outaccess = access.runE(predata[0], OTi, Ni, Nip1_pr, timer);
-		Tuple[] path = reshuffle.runE(predata[0], outaccess.E_P, OTi.getTreeIndex() == 0, timer);
+		// Tuple[] path = reshuffle.runE(predata[0], outaccess.E_P,
+		// OTi.getTreeIndex() == 0, timer);
+		Tuple[] path = outaccess.E_P;
+		byte[][] fbArray = new byte[outaccess.E_P.length][];
+		for (int i = 0; i < fbArray.length; i++)
+			fbArray[i] = outaccess.E_P[i].getF();
+		reshuffle.runE(predata[0], fbArray, OTi.getTreeIndex() == 0, timer);
 		Tuple Ti = postprocesst.runE(predata[0], outaccess.E_Ti, OTi.getTreeIndex() == h - 1, timer);
 		Tuple[] root = Arrays.copyOfRange(path, 0, OTi.getStashSize());
 		root = updateroot.runE(predata[0], OTi.getTreeIndex() == 0, outaccess.Li, root, Ti, timer);
@@ -75,7 +80,7 @@ public class PIRRetrieve extends Protocol {
 	public void runD(PreData predata[], Tree OTi, byte[] Ni, byte[] Nip1_pr, Timer timer) {
 		// 1st eviction
 		PIRAccess access = new PIRAccess(con1, con2);
-		Reshuffle reshuffle = new Reshuffle(con1, con2);
+		PIRReshuffle reshuffle = new PIRReshuffle(con1, con2);
 		PostProcessT postprocesst = new PostProcessT(con1, con2);
 		UpdateRoot updateroot = new UpdateRoot(con1, con2);
 		PIREviction eviction = new PIREviction(con1, con2);
@@ -95,13 +100,19 @@ public class PIRRetrieve extends Protocol {
 	public OutAccess runC(PreData[] predata, Metadata md, Tree OTi, int ti, byte[] Li, Timer timer) {
 		// 1st eviction
 		PIRAccess access = new PIRAccess(con1, con2);
-		Reshuffle reshuffle = new Reshuffle(con1, con2);
+		PIRReshuffle reshuffle = new PIRReshuffle(con1, con2);
 		PostProcessT postprocesst = new PostProcessT(con1, con2);
 		UpdateRoot updateroot = new UpdateRoot(con1, con2);
 		PIREviction eviction = new PIREviction(con1, con2);
 
 		OutAccess outaccess = access.runC(md, OTi, ti, Li, timer);
-		Tuple[] path = reshuffle.runC(predata[0], outaccess.C_P, ti == 0, timer);
+		// Tuple[] path = reshuffle.runC(predata[0], outaccess.C_P, ti == 0,
+		// timer);
+		Tuple[] path = outaccess.C_P;
+		byte[][] fbArray = new byte[outaccess.C_P.length][];
+		for (int i = 0; i < fbArray.length; i++)
+			fbArray[i] = outaccess.C_P[i].getF();
+		reshuffle.runC(predata[0], fbArray, ti == 0, timer);
 		Tuple Ti = postprocesst.runC(predata[0], outaccess.C_Ti, Li, outaccess.C_Lip1, outaccess.C_j2,
 				ti == md.getNumTrees() - 1, timer);
 		Tuple[] root = Arrays.copyOfRange(path, 0, md.getStashSizeOfTree(ti));
@@ -216,7 +227,7 @@ public class PIRRetrieve extends Protocol {
 				System.out.print("Precomputation... ");
 
 				PreData[][] predata = new PreData[numTrees][2];
-				PreRetrieve preretrieve = new PreRetrieve(con1, con2);
+				PrePIRRetrieve preretrieve = new PrePIRRetrieve(con1, con2);
 				for (int ti = 0; ti < numTrees; ti++) {
 					predata[ti][0] = new PreData();
 					predata[ti][1] = new PreData();

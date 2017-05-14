@@ -6,7 +6,6 @@ import oram.Metadata;
 import protocols.Protocol;
 import protocols.precomputation.PreEviction;
 import protocols.precomputation.PrePostProcessT;
-import protocols.precomputation.PreReshuffle;
 import protocols.precomputation.PreUpdateRoot;
 import protocols.struct.Party;
 import protocols.struct.PreData;
@@ -22,7 +21,7 @@ public class PrePIRRetrieve extends Protocol {
 	public void runE(PreData[] predata, Metadata md, int ti, Timer timer) {
 		// 1st eviction
 		PrePIRAccess preaccess = new PrePIRAccess(con1, con2);
-		PreReshuffle prereshuffle = new PreReshuffle(con1, con2);
+		PrePIRReshuffle prereshuffle = new PrePIRReshuffle(con1, con2);
 		PrePostProcessT prepostprocesst = new PrePostProcessT(con1, con2);
 		PreUpdateRoot preupdateroot = new PreUpdateRoot(con1, con2);
 		PreEviction preeviction = new PreEviction(con1, con2);
@@ -45,7 +44,7 @@ public class PrePIRRetrieve extends Protocol {
 	public long[] runD(PreData[] predata, Metadata md, int ti, PreData prev, Timer timer) {
 		// 1st eviction
 		PrePIRAccess preaccess = new PrePIRAccess(con1, con2);
-		PreReshuffle prereshuffle = new PreReshuffle(con1, con2);
+		PrePIRReshuffle prereshuffle = new PrePIRReshuffle(con1, con2);
 		PrePostProcessT prepostprocesst = new PrePostProcessT(con1, con2);
 		PreUpdateRoot preupdateroot = new PreUpdateRoot(con1, con2);
 		PreEviction preeviction = new PreEviction(con1, con2);
@@ -72,7 +71,7 @@ public class PrePIRRetrieve extends Protocol {
 	public void runC(PreData[] predata, Metadata md, int ti, PreData prev, Timer timer) {
 		// 1st eviction
 		PrePIRAccess preaccess = new PrePIRAccess(con1, con2);
-		PreReshuffle prereshuffle = new PreReshuffle(con1, con2);
+		PrePIRReshuffle prereshuffle = new PrePIRReshuffle(con1, con2);
 		PrePostProcessT prepostprocesst = new PrePostProcessT(con1, con2);
 		PreUpdateRoot preupdateroot = new PreUpdateRoot(con1, con2);
 		PreEviction preeviction = new PreEviction(con1, con2);
