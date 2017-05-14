@@ -15,6 +15,7 @@ import exceptions.NoSuchPartyException;
 import oram.Global;
 import oram.Metadata;
 import protocols.*;
+import pir.*;
 import protocols.struct.Party;
 
 public class CLI {
@@ -91,6 +92,10 @@ public class CLI {
 			operation = SSXOT.class;
 		} else if (protocol.equals("rtv")) {
 			operation = Retrieve.class;
+
+		} else if (protocol.equals("pircot")) {
+			operation = PIRCOT.class;
+
 		} else {
 			System.out.println("Protocol " + protocol + " not supported");
 			System.exit(-1);
