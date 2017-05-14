@@ -118,6 +118,15 @@ public class PIREviction extends Protocol {
 		}
 
 		pathBuckets[0].expand(Arrays.copyOfRange(originalPath, w, sw));
+
+		timer.start(pid, M.online_write);
+		con2.write(pid, pathBuckets);
+		timer.stop(pid, M.online_write);
+
+		timer.start(pid, M.online_read);
+		con2.readBucketArray(pid);
+		timer.stop(pid, M.online_read);
+
 		// OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), pathBuckets);
 
 		timer.stop(pid, M.online_comp);
@@ -171,9 +180,9 @@ public class PIREviction extends Protocol {
 		SSXOT ssxot = new SSXOT(con1, con2, 1);
 		ssxot.runD(predata, evict, timer);
 
-		timer.start(pid, M.online_read);
-		Bucket[] pathBuckets = con2.readBucketArray(pid);
-		timer.stop(pid, M.online_read);
+		// timer.start(pid, M.online_read);
+		// Bucket[] pathBuckets = con2.readBucketArray(pid);
+		// timer.stop(pid, M.online_read);
 
 		// OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), pathBuckets);
 
@@ -245,8 +254,12 @@ public class PIREviction extends Protocol {
 		pathBuckets[0].expand(Arrays.copyOfRange(originalPath, w, sw));
 
 		timer.start(pid, M.online_write);
-		con2.write(pid, pathBuckets);
+		con1.write(pid, pathBuckets);
 		timer.stop(pid, M.online_write);
+
+		timer.start(pid, M.online_read);
+		con1.readBucketArray(pid);
+		timer.stop(pid, M.online_read);
 
 		timer.stop(pid, M.online_comp);
 	}

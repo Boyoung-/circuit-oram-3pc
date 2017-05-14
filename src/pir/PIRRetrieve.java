@@ -178,9 +178,9 @@ public class PIRRetrieve extends Protocol {
 		if (Global.cheat)
 			System.out.println("Cheat Mode is On");
 
-		int records = 5;
-		int reset = 1;
-		int repeat = 4;
+		int records = 30;
+		int reset = 5;
+		int repeat = 10;
 
 		int tau = md.getTau();
 		int numTrees = md.getNumTrees();
