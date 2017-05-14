@@ -228,8 +228,8 @@ public class PIRAccess extends Protocol {
 		byte[] Ni = con2.read(pid);
 		timer.stop(pid, M.online_read);
 
-		for (int i = 0; i < pathTuples.length; i++)
-			System.out.println("AAAAA " + pathTuples[i]);
+		// for (int i = 0; i < pathTuples.length; i++)
+		// System.out.println("AAAAA " + pathTuples[i]);
 
 		// step 3
 		int j1 = 0;

@@ -99,6 +99,8 @@ public class CLI {
 			operation = PIRIOT.class;
 		} else if (protocol.equals("piracc")) {
 			operation = PIRAccess.class;
+		} else if (protocol.equals("pirrtv")) {
+			operation = PIRRetrieve.class;
 
 		} else {
 			System.out.println("Protocol " + protocol + " not supported");
@@ -151,6 +153,8 @@ public class CLI {
 				Protocol p = operationCtor.newInstance(con1[0], con2[0]);
 				if (protocol.equals("rtv"))
 					((Retrieve) p).setCons(con1, con2);
+				if (protocol.equals("pirrtv"))
+					((PIRRetrieve) p).setCons(con1, con2);
 				p.run(Party.Eddie, md, forestFile);
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException e) {
@@ -188,6 +192,8 @@ public class CLI {
 				Protocol p = operationCtor.newInstance(con1[0], con2[0]);
 				if (protocol.equals("rtv"))
 					((Retrieve) p).setCons(con1, con2);
+				if (protocol.equals("pirrtv"))
+					((PIRRetrieve) p).setCons(con1, con2);
 				p.run(Party.Debbie, md, forestFile);
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException e) {
@@ -226,6 +232,8 @@ public class CLI {
 				Protocol p = operationCtor.newInstance(con1[0], con2[0]);
 				if (protocol.equals("rtv"))
 					((Retrieve) p).setCons(con1, con2);
+				if (protocol.equals("pirrtv"))
+					((PIRRetrieve) p).setCons(con1, con2);
 				p.run(Party.Charlie, md, forestFile);
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException e) {
