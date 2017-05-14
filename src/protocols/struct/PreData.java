@@ -41,6 +41,10 @@ public class PreData {
 	public Tuple[] reshuffle_p;
 	public Tuple[] reshuffle_r;
 	public Tuple[] reshuffle_a_prime;
+	// pir
+	public byte[][] pir_reshuffle_p;
+	public byte[][] pir_reshuffle_r;
+	public byte[][] pir_reshuffle_a_prime;
 
 	public GCSignal[][] ur_j1KeyPairs;
 	public GCSignal[][] ur_LiKeyPairs;

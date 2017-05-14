@@ -6,7 +6,7 @@ import exceptions.NoSuchPartyException;
 import exceptions.SSIOTException;
 import oram.Forest;
 import oram.Metadata;
-import precomputation.PrePIRIOT;
+import pir.precomputation.PrePIRIOT;
 import protocols.Protocol;
 import protocols.struct.OutSSIOT;
 import protocols.struct.Party;

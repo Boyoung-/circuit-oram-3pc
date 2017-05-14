@@ -101,6 +101,8 @@ public class CLI {
 			operation = PIRAccess.class;
 		} else if (protocol.equals("pirrtv")) {
 			operation = PIRRetrieve.class;
+		} else if (protocol.equals("pirrsf")) {
+			operation = PIRReshuffle.class;
 
 		} else {
 			System.out.println("Protocol " + protocol + " not supported");

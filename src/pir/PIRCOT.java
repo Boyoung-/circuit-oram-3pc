@@ -6,7 +6,7 @@ import exceptions.NoSuchPartyException;
 import exceptions.SSCOTException;
 import oram.Forest;
 import oram.Metadata;
-import precomputation.PrePIRCOT;
+import pir.precomputation.PrePIRCOT;
 import protocols.Protocol;
 import protocols.struct.OutSSCOT;
 import protocols.struct.Party;

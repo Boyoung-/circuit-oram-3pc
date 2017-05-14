@@ -1,4 +1,4 @@
-package precomputation;
+package pir.precomputation;
 
 import communication.Communication;
 import crypto.Crypto;
@@ -11,32 +11,29 @@ import protocols.struct.PreData;
 import util.M;
 import util.P;
 import util.Timer;
+import util.Util;
 
-public class PrePIRCOT extends Protocol {
+public class PrePIRIOT extends Protocol {
 
-	private int pid = P.COT;
+	private int pid = P.IOT;
 
-	public PrePIRCOT(Communication con1, Communication con2) {
+	public PrePIRIOT(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
 
 	public void runE(PreData predata, int n, Timer timer) {
 		timer.start(pid, M.offline_comp);
 
-		predata.sscot_kprime = PRF.generateKey(Crypto.sr);
-		predata.sscot_r = new byte[n][];
-		for (int i = 0; i < n; i++) {
-			predata.sscot_r[i] = new byte[Crypto.secParamBytes];
-			Crypto.sr.nextBytes(predata.sscot_r[i]);
-		}
+		predata.ssiot_kprime = PRF.generateKey(Crypto.sr);
+		predata.ssiot_r = Util.nextBytes(Crypto.secParamBytes, Crypto.sr);
 
 		timer.start(pid, M.offline_write);
-		con1.write(predata.sscot_kprime);
-		con1.write(predata.sscot_r);
+		con1.write(predata.ssiot_kprime);
+		con1.write(predata.ssiot_r);
 		timer.stop(pid, M.offline_write);
 
-		predata.sscot_F_kprime = new PRF(Crypto.secParam);
-		predata.sscot_F_kprime.init(predata.sscot_kprime);
+		predata.ssiot_F_kprime = new PRF(Crypto.secParam);
+		predata.ssiot_F_kprime.init(predata.ssiot_kprime);
 
 		timer.stop(pid, M.offline_comp);
 	}
@@ -45,12 +42,12 @@ public class PrePIRCOT extends Protocol {
 		timer.start(pid, M.offline_comp);
 
 		timer.start(pid, M.offline_read);
-		predata.sscot_kprime = con1.read();
-		predata.sscot_r = con1.readDoubleByteArray();
+		predata.ssiot_kprime = con1.read();
+		predata.ssiot_r = con1.read();
 		timer.stop(pid, M.offline_read);
 
-		predata.sscot_F_kprime = new PRF(Crypto.secParam);
-		predata.sscot_F_kprime.init(predata.sscot_kprime);
+		predata.ssiot_F_kprime = new PRF(Crypto.secParam);
+		predata.ssiot_F_kprime.init(predata.ssiot_kprime);
 
 		timer.stop(pid, M.offline_comp);
 	}

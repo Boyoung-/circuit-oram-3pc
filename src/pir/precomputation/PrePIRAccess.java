@@ -1,4 +1,4 @@
-package precomputation;
+package pir.precomputation;
 
 import communication.Communication;
 //import crypto.Crypto;
