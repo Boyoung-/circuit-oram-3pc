@@ -123,7 +123,7 @@ public class PIRRetrieve extends Protocol {
 
 		// 2nd eviction
 		byte[] Li2 = Util.nextBytes(md.getLBytesOfTree(ti), Crypto.sr);
-		OutAccess outaccess2 = access.runC2(md, ti, Li2, timer);
+		OutAccess outaccess2 = access.runC2(md, OTi, ti, Li2, timer);
 		Tuple[] path2 = outaccess2.C_P;
 		Tuple Ti2 = outaccess2.C_Ti;
 		Tuple[] root2 = Arrays.copyOfRange(path2, 0, md.getStashSizeOfTree(ti));

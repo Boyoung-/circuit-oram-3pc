@@ -353,19 +353,19 @@ public class PIRAccess extends Protocol {
 		timer.stop(pid, M.online_read);
 
 		// step 1
-		Bucket[] pathBuckets = OTi.getBucketsOnPath(Li);
-		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
+		// Bucket[] pathBuckets = OTi.getBucketsOnPath(Li);
+		// Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
 
 		// step 2
-		timer.start(pid, M.online_write);
-		con2.write(pid, pathTuples);
-		timer.stop(pid, M.online_write);
+		// timer.start(pid, M.online_write);
+		// con2.write(pid, pathTuples);
+		// timer.stop(pid, M.online_write);
 
 		timer.stop(pid, M.online_comp);
 		return Li;
 	}
 
-	public OutAccess runC2(Metadata md, int treeIndex, byte[] Li, Timer timer) {
+	public OutAccess runC2(Metadata md, Tree OTi, int treeIndex, byte[] Li, Timer timer) {
 		timer.start(pid, M.online_comp);
 
 		// step 0: send Li to E and D
@@ -376,10 +376,14 @@ public class PIRAccess extends Protocol {
 		}
 		timer.stop(pid, M.online_write);
 
+		// step 1
+		Bucket[] pathBuckets = OTi.getBucketsOnPath(Li);
+		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
+
 		// step 2
-		timer.start(pid, M.online_read);
-		Tuple[] pathTuples = con2.readTupleArray(pid);
-		timer.stop(pid, M.online_read);
+		// timer.start(pid, M.online_read);
+		// Tuple[] pathTuples = con2.readTupleArray(pid);
+		// timer.stop(pid, M.online_read);
 
 		// step 5
 		Tuple Ti = null;
