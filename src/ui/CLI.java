@@ -95,6 +95,8 @@ public class CLI {
 
 		} else if (protocol.equals("pircot")) {
 			operation = PIRCOT.class;
+		} else if (protocol.equals("piriot")) {
+			operation = PIRIOT.class;
 
 		} else {
 			System.out.println("Protocol " + protocol + " not supported");
