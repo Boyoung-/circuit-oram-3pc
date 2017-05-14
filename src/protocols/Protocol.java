@@ -67,6 +67,8 @@ public abstract class Protocol {
 			else
 				forest = Forest.readFromFile(forestFile);
 		} else if (party == Party.Charlie) {
+			if (Global.cheat)
+				forest = new Forest(md, null);
 
 		} else {
 			throw new NoSuchPartyException(party.toString());
