@@ -40,10 +40,10 @@ public class PIRAccess extends Protocol {
 
 		// step 0: get Li from C
 		byte[] Li = new byte[0];
-		// timer.start(pid, M.online_read);
+		timer.start(pid, M.online_read);
 		if (OTi.getTreeIndex() > 0)
 			Li = con2.read();
-		// timer.stop(pid, M.online_read);
+		timer.stop(pid, M.online_read);
 
 		// step 1
 		Bucket[] pathBuckets = OTi.getBucketsOnPath(Li);
@@ -136,10 +136,10 @@ public class PIRAccess extends Protocol {
 
 		// step 0: get Li from C
 		byte[] Li = new byte[0];
-		// timer.start(pid, M.online_read);
+		timer.start(pid, M.online_read);
 		if (OTi.getTreeIndex() > 0)
 			Li = con2.read();
-		// timer.stop(pid, M.online_read);
+		timer.stop(pid, M.online_read);
 
 		// step 1
 		Bucket[] pathBuckets = OTi.getBucketsOnPath(Li);
@@ -208,12 +208,12 @@ public class PIRAccess extends Protocol {
 		timer.start(pid, M.online_comp);
 
 		// step 0: send Li to E and D
-		// timer.start(pid, M.online_write);
+		timer.start(pid, M.online_write);
 		if (treeIndex > 0) {
 			con1.write(Li);
 			con2.write(Li);
 		}
-		// timer.stop(pid, M.online_write);
+		timer.stop(pid, M.online_write);
 
 		// step 1
 		Bucket[] pathBuckets = OTi.getBucketsOnPath(Li);
@@ -318,10 +318,10 @@ public class PIRAccess extends Protocol {
 
 		// step 0: get Li from C
 		byte[] Li = new byte[0];
-		// timer.start(pid, M.online_read);
+		timer.start(pid, M.online_read);
 		if (OTi.getTreeIndex() > 0)
 			Li = con2.read();
-		// timer.stop(pid, M.online_read);
+		timer.stop(pid, M.online_read);
 
 		// step 1
 		Bucket[] pathBuckets = OTi.getBucketsOnPath(Li);
@@ -347,10 +347,10 @@ public class PIRAccess extends Protocol {
 
 		// step 0: get Li from C
 		byte[] Li = new byte[0];
-		// timer.start(pid, M.online_read);
+		timer.start(pid, M.online_read);
 		if (OTi.getTreeIndex() > 0)
 			Li = con2.read();
-		// timer.stop(pid, M.online_read);
+		timer.stop(pid, M.online_read);
 
 		// step 1
 		// Bucket[] pathBuckets = OTi.getBucketsOnPath(Li);
@@ -369,12 +369,12 @@ public class PIRAccess extends Protocol {
 		timer.start(pid, M.online_comp);
 
 		// step 0: send Li to E and D
-		// timer.start(pid, M.online_write);
+		timer.start(pid, M.online_write);
 		if (treeIndex > 0) {
 			con1.write(Li);
 			con2.write(Li);
 		}
-		// timer.stop(pid, M.online_write);
+		timer.stop(pid, M.online_write);
 
 		// step 1
 		Bucket[] pathBuckets = OTi.getBucketsOnPath(Li);
