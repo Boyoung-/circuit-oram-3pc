@@ -214,7 +214,6 @@ public class PIRRetrieve extends Protocol {
 					ete_off.reset();
 				}
 				if (cycleIndex == 1) {
-					System.out.println("CCC " + (cons1 == null));
 					for (int k = 0; k < cons1.length; k++) {
 						cons1[k].bandSwitch = false;
 						cons2[k].bandSwitch = false;
