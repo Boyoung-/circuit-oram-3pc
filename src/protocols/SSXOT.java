@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import communication.Communication;
 import crypto.Crypto;
 import exceptions.NoSuchPartyException;
+import oram.Forest;
 import oram.Metadata;
 import oram.Tuple;
 import protocols.precomputation.PreSSXOT;
@@ -176,5 +177,11 @@ public class SSXOT extends Protocol {
 		}
 
 		// timer.print();
+	}
+
+	@Override
+	public void run(Party party, Metadata md, Forest[] forest) {
+		// TODO Auto-generated method stub
+		
 	}
 }

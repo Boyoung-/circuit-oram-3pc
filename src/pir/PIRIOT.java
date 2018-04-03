@@ -136,4 +136,10 @@ public class PIRIOT extends Protocol {
 
 		// timer.print();
 	}
+
+	@Override
+	public void run(Party party, Metadata md, Forest[] forest) {
+		// TODO Auto-generated method stub
+		
+	}
 }

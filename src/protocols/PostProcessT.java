@@ -237,4 +237,10 @@ public class PostProcessT extends Protocol {
 
 		// timer.print();
 	}
+
+	@Override
+	public void run(Party party, Metadata md, Forest[] forest) {
+		// TODO Auto-generated method stub
+		
+	}
 }

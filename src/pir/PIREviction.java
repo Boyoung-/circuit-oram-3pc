@@ -269,4 +269,10 @@ public class PIREviction extends Protocol {
 	public void run(Party party, Metadata md, Forest forest) {
 		System.out.println("Use Retrieve to test Eviction");
 	}
+
+	@Override
+	public void run(Party party, Metadata md, Forest[] forest) {
+		// TODO Auto-generated method stub
+		
+	}
 }

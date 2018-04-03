@@ -373,4 +373,10 @@ public class Retrieve extends Protocol {
 
 		sanityCheck();
 	}
+
+	@Override
+	public void run(Party party, Metadata md, Forest[] forest) {
+		// TODO Auto-generated method stub
+		
+	}
 }

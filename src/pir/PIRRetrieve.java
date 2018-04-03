@@ -178,9 +178,9 @@ public class PIRRetrieve extends Protocol {
 		if (Global.cheat)
 			System.out.println("Cheat Mode is On");
 
-		int records = 30;
+		int records = 10;
 		int reset = 5;
-		int repeat = 10;
+		int repeat = 1;
 
 		int tau = md.getTau();
 		int numTrees = md.getNumTrees();
@@ -313,6 +313,233 @@ public class PIRRetrieve extends Protocol {
 
 					} else if (party == Party.Charlie) {
 						Tree OTi = forest.getTree(ti);
+						int lBits = md.getLBitsOfTree(ti);
+						System.out.println("L" + ti + "="
+								+ Util.addZeros(Util.getSubBits(new BigInteger(1, Li), lBits, 0).toString(2), lBits));
+
+						OutAccess outaccess = null;
+						if (!Global.pipeline) {
+							ete_on.start();
+							outaccess = runC(predata[ti], md, OTi, ti, Li, timer[0]);
+							ete_on.stop();
+						} else {
+							if (ti == 0)
+								ete_on.start();
+							OutRetrieve outretrieve = pipelineC(predata[ti], md, OTi, ti, Li, timer);
+							outaccess = outretrieve.outaccess;
+							threads[ti] = outretrieve.pipeline;
+						}
+
+						Li = outaccess.C_Lip1;
+
+						if (ti == numTrees - 1) {
+							N = con1.readLong();
+							byte[] E_A = con1.read();
+							long data = new BigInteger(1, Util.xor(outaccess.C_Ti.getA(), E_A)).longValue();
+							if (N == data) {
+								System.out.println("PIR Retrieval passed");
+								System.out.println();
+							} else {
+								throw new AccessException("PIR Retrieval failed");
+							}
+						}
+
+					} else {
+						throw new NoSuchPartyException(party + "");
+					}
+				}
+
+				if (Global.pipeline) {
+					for (int ti = 0; ti < numTrees; ti++) {
+						try {
+							threads[ti].join();
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					}
+					ete_on.stop();
+				}
+			}
+		}
+		System.out.println();
+
+		Timer sum = new Timer();
+		for (int i = 0; i < timer.length; i++)
+			sum = sum.add(timer[i]);
+		sum.noPrePrint();
+		System.out.println();
+
+		StopWatch comEnc = new StopWatch("CE_online_comp");
+		for (int i = 0; i < cons1.length; i++)
+			comEnc = comEnc.add(cons1[i].comEnc.add(cons2[i].comEnc));
+		System.out.println(comEnc.noPreToMS());
+		System.out.println();
+
+		if (Global.pipeline)
+			ete_on.elapsedCPU = 0;
+		System.out.println(ete_on.noPreToMS());
+		System.out.println(ete_off.noPreToMS());
+		System.out.println();
+
+		Bandwidth[] bandwidth = new Bandwidth[P.size];
+		for (int i = 0; i < P.size; i++) {
+			bandwidth[i] = new Bandwidth(P.names[i]);
+			for (int j = 0; j < cons1.length; j++)
+				bandwidth[i] = bandwidth[i].add(cons1[j].bandwidth[i].add(cons2[j].bandwidth[i]));
+			System.out.println(bandwidth[i].noPreToString());
+		}
+		System.out.println();
+
+		System.out.println(gates[0]);
+		System.out.println(gates[1]);
+		System.out.println();
+
+		sanityCheck();
+	}
+
+	@Override
+	public void run(Party party, Metadata md, Forest[] forests) {
+		System.err.println("Check2");
+		if (Global.pipeline)
+			System.out.println("Pipeline Mode is On");
+		if (Global.cheat)
+			System.out.println("Cheat Mode is On");
+
+		int records = 10;
+		int reset = 5;
+		int repeat = 1;
+
+		int tau = md.getTau();
+		int numTrees = md.getNumTrees();
+		long numInsert = md.getNumInsertRecords();
+		int addrBits = md.getAddrBits();
+
+		int numTimer = Global.pipeline ? numTrees + 1 : 1;
+		Timer[] timer = new Timer[numTimer];
+		for (int i = 0; i < numTimer; i++)
+			timer[i] = new Timer();
+
+		StopWatch ete_off = new StopWatch("ETE_offline");
+		StopWatch ete_on = new StopWatch("ETE_online");
+
+		long[] gates = new long[2];
+
+		Pipeline[] threads = new Pipeline[numTrees];
+
+		sanityCheck();
+		System.out.println();
+
+		for (int i = 0; i < records; i++) {
+			long N = Global.cheat ? 0 : Util.nextLong(numInsert, Crypto.sr);
+
+			for (int j = 0; j < repeat; j++) {
+				int cycleIndex = i * repeat + j;
+				if (cycleIndex == reset * repeat) {
+					for (int k = 0; k < timer.length; k++)
+						timer[k].reset();
+					ete_on.reset();
+					ete_off.reset();
+				}
+				if (cycleIndex == 1) {
+					for (int k = 0; k < cons1.length; k++) {
+						cons1[k].bandSwitch = false;
+						cons2[k].bandSwitch = false;
+					}
+				}
+
+				System.out.println("Test: " + i + " " + j);
+				System.out.println("N=" + BigInteger.valueOf(N).toString(2));
+
+				System.out.print("Precomputation... ");
+
+				PreData[][] predata = new PreData[numTrees][2];
+				PrePIRRetrieve preretrieve = new PrePIRRetrieve(con1, con2);
+				for (int ti = 0; ti < numTrees; ti++) {
+					predata[ti][0] = new PreData();
+					predata[ti][1] = new PreData();
+
+					if (party == Party.Eddie) {
+						ete_off.start();
+						preretrieve.runE(predata[ti], md, ti, timer[0]);
+						ete_off.stop();
+
+					} else if (party == Party.Debbie) {
+						ete_off.start();
+						long[] cnt = preretrieve.runD(predata[ti], md, ti, ti == 0 ? null : predata[ti - 1][0],
+								timer[0]);
+						ete_off.stop();
+
+						if (cycleIndex == 0) {
+							gates[0] += cnt[0];
+							gates[1] += cnt[1];
+						}
+
+					} else if (party == Party.Charlie) {
+						ete_off.start();
+						preretrieve.runC(predata[ti], md, ti, ti == 0 ? null : predata[ti - 1][0], timer[0]);
+						ete_off.stop();
+
+					} else {
+						throw new NoSuchPartyException(party + "");
+					}
+				}
+
+				sanityCheck();
+				System.out.println("done!");
+
+				byte[] Li = new byte[0];
+				for (int ti = 0; ti < numTrees; ti++) {
+					long Ni_value = Util.getSubBits(N, addrBits, addrBits - md.getNBitsOfTree(ti));
+					long Nip1_pr_value = Util.getSubBits(N, addrBits - md.getNBitsOfTree(ti),
+							Math.max(addrBits - md.getNBitsOfTree(ti) - tau, 0));
+					byte[] Ni = Util.longToBytes(Ni_value, md.getNBytesOfTree(ti));
+					byte[] Nip1_pr = Util.longToBytes(Nip1_pr_value, (tau + 7) / 8);
+
+					if (party == Party.Eddie) {
+						Tree OTi = forests[0].getTree(ti);
+
+						byte[] sE_Ni = Util.nextBytes(Ni.length, Crypto.sr);
+						byte[] sD_Ni = Util.xor(Ni, sE_Ni);
+						con1.write(sD_Ni);
+
+						byte[] sE_Nip1_pr = Util.nextBytes(Nip1_pr.length, Crypto.sr);
+						byte[] sD_Nip1_pr = Util.xor(Nip1_pr, sE_Nip1_pr);
+						con1.write(sD_Nip1_pr);
+
+						byte[] E_A = null;
+						if (!Global.pipeline) {
+							ete_on.start();
+							E_A = runE(predata[ti], OTi, sE_Ni, sE_Nip1_pr, numTrees, timer[0]);
+							ete_on.stop();
+						} else {
+							if (ti == 0)
+								ete_on.start();
+							threads[ti] = pipelineE(predata[ti], OTi, sE_Ni, sE_Nip1_pr, numTrees, timer);
+						}
+
+						if (ti == numTrees - 1) {
+							con2.write(N);
+							con2.write(E_A);
+						}
+
+					} else if (party == Party.Debbie) {
+						Tree OTi = forests[1].getTree(ti);
+
+						byte[] sD_Ni = con1.read();
+						byte[] sD_Nip1_pr = con1.read();
+
+						if (!Global.pipeline) {
+							ete_on.start();
+							runD(predata[ti], OTi, sD_Ni, sD_Nip1_pr, timer[0]);
+							ete_on.stop();
+						} else {
+							if (ti == 0)
+								ete_on.start();
+							threads[ti] = pipelineD(predata[ti], OTi, sD_Ni, sD_Nip1_pr, timer);
+						}
+
+					} else if (party == Party.Charlie) {
+						Tree OTi = forests[1].getTree(ti);
 						int lBits = md.getLBitsOfTree(ti);
 						System.out.println("L" + ti + "="
 								+ Util.addZeros(Util.getSubBits(new BigInteger(1, Li), lBits, 0).toString(2), lBits));
