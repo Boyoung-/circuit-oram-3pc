@@ -11,6 +11,9 @@ public class PreData {
 	public byte[] sscot_k;
 	public byte[] sscot_kprime;
 	public byte[][] sscot_r;
+	public int sscot_s_DE;
+	public int sscot_s_CE;
+	public int sscot_s_CD;
 	public PRF sscot_F_k;
 	public PRF sscot_F_kprime;
 

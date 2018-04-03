@@ -111,8 +111,8 @@ public class Communication {
 	}
 
 	/**
-	 * Start the communication service. Specifically start AcceptThread to begin
-	 * a session in listening (server) mode.
+	 * Start the communication service. Specifically start AcceptThread to begin a
+	 * session in listening (server) mode.
 	 */
 	public synchronized void start(int port) {
 		if (D)
@@ -203,8 +203,7 @@ public class Communication {
 
 		// Don't throw out connections if we are already connected
 		/*
-		 * if (mState == STATE_CONNECTING || mConnectedThread != null) { return;
-		 * }
+		 * if (mState == STATE_CONNECTING || mConnectedThread != null) { return; }
 		 */
 
 		mNumTries++;
@@ -511,9 +510,9 @@ public class Communication {
 	}
 
 	/*
-	 * This was added to allow backwords compaitibility with older versions
-	 * which used the default charset (usually utf-8) instead of asc-ii. This is
-	 * almost never what we want to do
+	 * This was added to allow backwords compaitibility with older versions which
+	 * used the default charset (usually utf-8) instead of asc-ii. This is almost
+	 * never what we want to do
 	 */
 	public void write(String buffer, Charset charset) {
 		write(buffer.getBytes(charset));
@@ -564,8 +563,8 @@ public class Communication {
 	}
 
 	/**
-	 * Read a specific number of bytes from the ConnectedThread in an
-	 * unsynchronized manner Note, this is a blocking call
+	 * Read a specific number of bytes from the ConnectedThread in an unsynchronized
+	 * manner Note, this is a blocking call
 	 * 
 	 * @return the bytes read
 	 * @see ConnectedThread#read()
@@ -732,9 +731,9 @@ public class Communication {
 	}
 
 	/**
-	 * This thread runs while listening for incoming connections. It behaves
-	 * like a server-side client. It runs until a connection is accepted (or
-	 * until cancelled).
+	 * This thread runs while listening for incoming connections. It behaves like a
+	 * server-side client. It runs until a connection is accepted (or until
+	 * cancelled).
 	 */
 	private class AcceptThread extends Thread {
 		// The local server socket
@@ -813,8 +812,7 @@ public class Communication {
 
 	/**
 	 * This thread runs while attempting to make an outgoing connection with a
-	 * device. It runs straight through; the connection either succeeds or
-	 * fails.
+	 * device. It runs straight through; the connection either succeeds or fails.
 	 */
 	private class ConnectThread extends Thread {
 		private final Socket mmSocket;
@@ -916,8 +914,8 @@ public class Communication {
 		/**
 		 * Read from the ConnectedThread in an unsynchronized manner
 		 * 
-		 * This is a blocking call and will only return data if the readLoop
-		 * flag is false
+		 * This is a blocking call and will only return data if the readLoop flag is
+		 * false
 		 * 
 		 * @return the bytes read
 		 * @see ConnectedThread#read()

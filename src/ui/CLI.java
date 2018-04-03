@@ -155,10 +155,13 @@ public class CLI {
 				Protocol p = operationCtor.newInstance(con1[0], con2[0]);
 				if (protocol.equals("rtv")) {
 					((Retrieve) p).setCons(con1, con2);
-					p.run(Party.Eddie, md, forestFile);
 				}
 				if (protocol.equals("pirrtv")) {
 					((PIRRetrieve) p).setCons(con1, con2);
+				}
+				if (!Global.usePIR) {
+					p.run(Party.Eddie, md, forestFile);
+				} else {
 					p.run(Party.Eddie, md);
 				}
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
@@ -197,10 +200,13 @@ public class CLI {
 				Protocol p = operationCtor.newInstance(con1[0], con2[0]);
 				if (protocol.equals("rtv")) {
 					((Retrieve) p).setCons(con1, con2);
-					p.run(Party.Debbie, md, forestFile);
 				}
 				if (protocol.equals("pirrtv")) {
 					((PIRRetrieve) p).setCons(con1, con2);
+				}
+				if (!Global.usePIR) {
+					p.run(Party.Debbie, md, forestFile);
+				} else {
 					p.run(Party.Debbie, md);
 				}
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
@@ -240,10 +246,13 @@ public class CLI {
 				Protocol p = operationCtor.newInstance(con1[0], con2[0]);
 				if (protocol.equals("rtv")) {
 					((Retrieve) p).setCons(con1, con2);
-					p.run(Party.Charlie, md, forestFile);
 				}
 				if (protocol.equals("pirrtv")) {
 					((PIRRetrieve) p).setCons(con1, con2);
+				}
+				if (!Global.usePIR) {
+					p.run(Party.Charlie, md, forestFile);
+				} else {
 					p.run(Party.Charlie, md);
 				}
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException

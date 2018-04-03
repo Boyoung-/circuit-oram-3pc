@@ -76,10 +76,10 @@ public abstract class Protocol {
 
 		run(party, md, forest);
 	}
-	
+
 	// a simulation using a path instead of building whole tree
 	public void run(Party party, Metadata md) {
-		System.err.println("Check");
+		// System.err.println("Check");
 		assert Global.cheat;
 		Forest[] forests = new Forest[2];
 		// Eddie has x1, x2
@@ -93,7 +93,7 @@ public abstract class Protocol {
 		} else if (party == Party.Debbie) {
 			forests[0] = new Forest(md, Crypto.sr);
 			forests[1] = new Forest(md, null);
-			
+
 		} else if (party == Party.Charlie) {
 			forests[0] = new Forest(md, null);
 			forests[1] = new Forest(md, null);
@@ -106,10 +106,10 @@ public abstract class Protocol {
 	}
 
 	/*
-	 * This is mostly just testing code and may need to change for the purpose
-	 * of an actual execution
+	 * This is mostly just testing code and may need to change for the purpose of an
+	 * actual execution
 	 */
 	public abstract void run(Party party, Metadata md, Forest forest);
-	
+
 	public abstract void run(Party party, Metadata md, Forest[] forests);
 }

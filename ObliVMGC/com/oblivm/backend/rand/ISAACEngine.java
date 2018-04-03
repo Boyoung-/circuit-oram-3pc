@@ -83,8 +83,8 @@ public class ISAACEngine extends SecureRandomSpi {
 	}
 
 	/**
-	 * Reseeds this random object. The given seed supplements, rather than
-	 * replaces, the existing seed.
+	 * Reseeds this random object. The given seed supplements, rather than replaces,
+	 * the existing seed.
 	 * 
 	 * @param seed
 	 *            The seed.
@@ -100,10 +100,10 @@ public class ISAACEngine extends SecureRandomSpi {
 	private static final int[] mask = new int[] { 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF };
 
 	/**
-	 * Returns a byte array containing the two's-complement representation of
-	 * the integer.<br>
-	 * The byte array will be in big-endian byte-order with a fixes length of 4
-	 * (the least significant byte is in the 4th element).<br>
+	 * Returns a byte array containing the two's-complement representation of the
+	 * integer.<br>
+	 * The byte array will be in big-endian byte-order with a fixes length of 4 (the
+	 * least significant byte is in the 4th element).<br>
 	 * <br>
 	 * <u>Example:</u><br>
 	 * <code>toByteArray(258)</code> returns { 0, 0, 1, 2 },<br>
@@ -128,9 +128,9 @@ public class ISAACEngine extends SecureRandomSpi {
 	 * one-bit in the two's complement binary representation of the specified
 	 * integer value.
 	 * 
-	 * @return The number of zero bits preceding the highest-order one-bit in
-	 *         the two's complement binary representation of the specified
-	 *         integer value, or 32 if the value is equal to zero.
+	 * @return The number of zero bits preceding the highest-order one-bit in the
+	 *         two's complement binary representation of the specified integer
+	 *         value, or 32 if the value is equal to zero.
 	 */
 	private static int numberOfLeadingZeros(int intValue) {
 		if (intValue == 0)
@@ -150,16 +150,15 @@ public class ISAACEngine extends SecureRandomSpi {
 	}
 
 	/**
-	 * Creates an array of integers and "packs" the bytes from the byte array
-	 * into it.<br>
+	 * Creates an array of integers and "packs" the bytes from the byte array into
+	 * it.<br>
 	 * This method returns an integer array of length zero if <code>ba</code> is
 	 * <code>null</code>.<br>
 	 * <br>
 	 * <u>Example:</u><br>
-	 * <code>packToIntArray(new byte[] { 0x1, 0x2, 0x3, 0x4, 0x5 })</code>
-	 * returns an integer array<br>
-	 * containing the values <code>0x01020304</code> and <code>0x00000005</code>
-	 * .
+	 * <code>packToIntArray(new byte[] { 0x1, 0x2, 0x3, 0x4, 0x5 })</code> returns
+	 * an integer array<br>
+	 * containing the values <code>0x01020304</code> and <code>0x00000005</code> .
 	 * 
 	 * @param ba
 	 *            The byte array, may be <code>null</code>.

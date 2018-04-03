@@ -9,6 +9,8 @@ public class Crypto {
 	public static MessageDigest sha1;
 	public static int secParam;
 	public static int secParamBytes;
+	public static int KSearchRerunParam;
+	public static int KSearchRerunParamBytes;
 
 	static {
 		try {
@@ -19,5 +21,7 @@ public class Crypto {
 		}
 		secParam = 80;
 		secParamBytes = (secParam + 7) / 8;
+		KSearchRerunParam = 32;
+		KSearchRerunParamBytes = (KSearchRerunParam + 7) / 8;
 	}
 }
