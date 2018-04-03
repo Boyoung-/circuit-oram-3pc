@@ -26,6 +26,8 @@ public class PIRCOT extends Protocol {
 	}
 
 	public OutPIRCOT runE(PreData predata, byte[][] u, byte[] v, Timer timer) {
+		timer.start(pid, M.online_comp);
+
 		int l = u.length;
 		byte[][] a = new byte[l][];
 		for (int j = 0; j < l; j++) {
@@ -35,19 +37,28 @@ public class PIRCOT extends Protocol {
 			a[j] = predata.sscot_F_k.compute(a[j]);
 		}
 
+		timer.start(pid, M.online_write);
 		con2.write(pid, a);
+		timer.stop(pid, M.online_write);
 
+		timer.start(pid, M.online_read);
 		int delta = con2.readInt(pid);
+		timer.stop(pid, M.online_read);
+
 		int t_E = (predata.sscot_s_DE + delta) % l;
 
 		OutPIRCOT out = new OutPIRCOT();
 		out.t_E = t_E;
 		out.s_DE = predata.sscot_s_DE;
 		out.s_CE = predata.sscot_s_CE;
+
+		timer.stop(pid, M.online_comp);
 		return out;
 	}
 
 	public OutPIRCOT runD(PreData predata, byte[][] u, byte[] v, Timer timer) {
+		timer.start(pid, M.online_comp);
+
 		int l = u.length;
 		byte[][] a = new byte[l][];
 		for (int j = 0; j < l; j++) {
@@ -57,23 +68,34 @@ public class PIRCOT extends Protocol {
 			a[j] = predata.sscot_F_k.compute(a[j]);
 		}
 
+		timer.start(pid, M.online_write);
 		con2.write(pid, a);
+		timer.stop(pid, M.online_write);
 
+		timer.start(pid, M.online_read);
 		int delta = con2.readInt(pid);
+		timer.stop(pid, M.online_read);
+
 		int t_D = (predata.sscot_s_DE + delta) % l;
 
 		OutPIRCOT out = new OutPIRCOT();
 		out.t_D = t_D;
 		out.s_DE = predata.sscot_s_DE;
 		out.s_CD = predata.sscot_s_CD;
+
+		timer.stop(pid, M.online_comp);
 		return out;
 	}
 
 	public OutPIRCOT runC(PreData predata, Timer timer) {
+		timer.start(pid, M.online_comp);
+
+		timer.start(pid, M.online_read);
 		byte[][] x = con1.readDoubleByteArray(pid);
 		byte[][] y = con2.readDoubleByteArray(pid);
-		int l = x.length;
+		timer.stop(pid, M.online_read);
 
+		int l = x.length;
 		int count = 0;
 		int t_C = 0;
 		for (int i = 0; i < l; i++) {
@@ -88,14 +110,19 @@ public class PIRCOT extends Protocol {
 		}
 
 		int delta_D = (t_C - predata.sscot_s_CE + l) % l;
-		con2.write(pid, delta_D);
 		int delta_E = (t_C - predata.sscot_s_CD + l) % l;
+
+		timer.start(pid, M.online_write);
+		con2.write(pid, delta_D);
 		con1.write(pid, delta_E);
+		timer.stop(pid, M.online_write);
 
 		OutPIRCOT out = new OutPIRCOT();
 		out.t_C = t_C;
 		out.s_CE = predata.sscot_s_CE;
 		out.s_CD = predata.sscot_s_CD;
+
+		timer.stop(pid, M.online_comp);
 		return out;
 	}
 
