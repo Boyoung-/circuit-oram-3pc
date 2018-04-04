@@ -17,8 +17,9 @@ public class P {
 	public static final int SftPIR = 12;
 	public static final int TSPIR = 13;
 	public static final int SftXorPIR = 14;
+	public static final int TSXPIR = 15;
 
 	public static final String[] names = { "ACC", "COT", "IOT", "PPT", "RSF", "UR", "URXOT", "EVI", "PT", "PI", "XOT",
-			"SSPIR", "SftPIR", "TSPIR", "SftXorPIR" };
+			"SSPIR", "SftPIR", "TSPIR", "SftXorPIR", "TSXPIR" };
 	public static final int size = names.length;
 }
