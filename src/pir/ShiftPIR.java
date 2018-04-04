@@ -15,7 +15,7 @@ import util.Util;
 
 public class ShiftPIR extends Protocol {
 
-	private int pid = P.ShiftPIR;
+	private int pid = P.SftPIR;
 
 	public ShiftPIR(Communication con1, Communication con2) {
 		super(con1, con2);

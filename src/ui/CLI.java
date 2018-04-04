@@ -107,6 +107,8 @@ public class CLI {
 			operation = SSPIR.class;
 		} else if (protocol.equals("shiftpir")) {
 			operation = ShiftPIR.class;
+		} else if (protocol.equals("tspir")) {
+			operation = ThreeShiftPIR.class;
 
 		} else {
 			System.out.println("Protocol " + protocol + " not supported");
