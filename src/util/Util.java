@@ -199,6 +199,17 @@ public class Util {
 		}
 	}
 
+	public static byte[] xorSelect(byte[][] array, byte[] ind) {
+		assert array.length == ind.length;
+		byte[] out = new byte[array[0].length];
+		for (int i = 0; i < ind.length; i++) {
+			if ((ind[i] & 1) == 1) {
+				setXor(out, array[i]);
+			}
+		}
+		return out;
+	}
+
 	public static void debug(String s) {
 		// only to make Communication.java compile
 	}

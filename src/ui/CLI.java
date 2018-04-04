@@ -103,6 +103,8 @@ public class CLI {
 			operation = PIRRetrieve.class;
 		} else if (protocol.equals("pirrsf")) {
 			operation = PIRReshuffle.class;
+		} else if (protocol.equals("sspir")) {
+			operation = SSPIR.class;
 
 		} else {
 			System.out.println("Protocol " + protocol + " not supported");
