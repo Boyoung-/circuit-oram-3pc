@@ -115,6 +115,8 @@ public class CLI {
 			operation = ThreeShiftXorPIR.class;
 		} else if (protocol.equals("shift")) {
 			operation = Shift.class;
+		} else if (protocol.equals("ff")) {
+			operation = FlipFlag.class;
 
 		} else {
 			System.out.println("Protocol " + protocol + " not supported");

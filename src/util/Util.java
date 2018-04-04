@@ -98,6 +98,13 @@ public class Util {
 			a[i] = (byte) (a[i] ^ b[i]);
 	}
 
+	public static void setXor(byte[][] a, byte[][] b) {
+		assert a.length == b.length;
+		for (int i = 0; i < a.length; i++) {
+			setXor(a[i], b[i]);
+		}
+	}
+
 	public static BigInteger[] xor(BigInteger[] a, BigInteger[] b) {
 		if (a.length != b.length)
 			throw new LengthNotMatchException(a.length + " != " + b.length);
