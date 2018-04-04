@@ -105,6 +105,8 @@ public class CLI {
 			operation = PIRReshuffle.class;
 		} else if (protocol.equals("sspir")) {
 			operation = SSPIR.class;
+		} else if (protocol.equals("shiftpir")) {
+			operation = ShiftPIR.class;
 
 		} else {
 			System.out.println("Protocol " + protocol + " not supported");
