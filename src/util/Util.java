@@ -217,6 +217,55 @@ public class Util {
 		return out;
 	}
 
+	public static byte[] xorRotate(byte[] arr, int r, int ttp, int l) {
+		assert arr.length == ttp * l;
+		assert r >= 0 && r < ttp;
+		byte[] ret = new byte[arr.length];
+		for (int i = 0; i < ttp; i++) {
+			for (int j = 0; j < l; j++) {
+				ret[i * l + j] = arr[(i ^ r) * l + j];
+			}
+		}
+		return ret;
+	}
+
+	public static byte[] createRotate(byte[] arr, int order) {
+		byte[] ret = arr.clone();
+		rotate(ret, order);
+		return ret;
+	}
+
+	public static void rotate(byte[] arr, int order) {
+		if (arr == null || arr.length == 0 || order < 0) {
+			throw new IllegalArgumentException("Illegal argument!");
+		}
+
+		if (order > arr.length) {
+			order = order % arr.length;
+		}
+
+		// length of first part
+		int a = arr.length - order;
+
+		reverse(arr, 0, a - 1);
+		reverse(arr, a, arr.length - 1);
+		reverse(arr, 0, arr.length - 1);
+
+	}
+
+	public static void reverse(byte[] arr, int left, int right) {
+		if (arr == null || arr.length == 1)
+			return;
+
+		while (left < right) {
+			byte temp = arr[left];
+			arr[left] = arr[right];
+			arr[right] = temp;
+			left++;
+			right--;
+		}
+	}
+
 	public static void debug(String s) {
 		// only to make Communication.java compile
 	}

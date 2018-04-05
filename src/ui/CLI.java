@@ -117,6 +117,8 @@ public class CLI {
 			operation = Shift.class;
 		} else if (protocol.equals("ff")) {
 			operation = FlipFlag.class;
+		} else if (protocol.equals("inslbl")) {
+			operation = InsLbl.class;
 
 		} else {
 			System.out.println("Protocol " + protocol + " not supported");
