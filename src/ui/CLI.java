@@ -119,6 +119,8 @@ public class CLI {
 			operation = FlipFlag.class;
 		} else if (protocol.equals("inslbl")) {
 			operation = InsLbl.class;
+		} else if (protocol.equals("ulit")) {
+			operation = ULiT.class;
 
 		} else {
 			System.out.println("Protocol " + protocol + " not supported");
