@@ -9,6 +9,7 @@ import protocols.Protocol;
 import protocols.struct.OutPIRCOT;
 import protocols.struct.Party;
 import protocols.struct.PreData;
+import protocols.struct.TwoThreeXorByte;
 import util.M;
 import util.P;
 import util.Timer;
@@ -22,7 +23,7 @@ public class ThreeShiftPIR extends Protocol {
 		super(con1, con2);
 	}
 
-	public byte[] runE(PreData predata, byte[][] x_DE, byte[][] x_CE, OutPIRCOT i, Timer timer) {
+	public TwoThreeXorByte runE(PreData predata, byte[][] x_DE, byte[][] x_CE, OutPIRCOT i, Timer timer) {
 		timer.start(pid, M.online_comp);
 
 		ShiftPIR sftpir = new ShiftPIR(con1, con2);
@@ -33,11 +34,22 @@ public class ThreeShiftPIR extends Protocol {
 		sftpir.runP3(predata, i.t_E, timer);
 		Util.setXor(e1, e2);
 
+		TwoThreeXorByte X = new TwoThreeXorByte();
+		X.DE = e1;
+
+		timer.start(pid, M.online_write);
+		con1.write(pid, X.DE);
+		timer.stop(pid, M.online_write);
+
+		timer.start(pid, M.online_read);
+		X.CE = con2.read(pid);
+		timer.stop(pid, M.online_read);
+
 		timer.stop(pid, M.online_comp);
-		return e1;
+		return X;
 	}
 
-	public byte[] runD(PreData predata, byte[][] x_DE, byte[][] x_CD, OutPIRCOT i, Timer timer) {
+	public TwoThreeXorByte runD(PreData predata, byte[][] x_DE, byte[][] x_CD, OutPIRCOT i, Timer timer) {
 		timer.start(pid, M.online_comp);
 
 		ShiftPIR sftpir = new ShiftPIR(con1, con2);
@@ -48,11 +60,22 @@ public class ThreeShiftPIR extends Protocol {
 		byte[] d2 = sftpir.runP1(predata, x_CD, i.s_CD, timer);
 		Util.setXor(d1, d2);
 
+		TwoThreeXorByte X = new TwoThreeXorByte();
+		X.CD = d1;
+
+		timer.start(pid, M.online_write);
+		con2.write(pid, X.CD);
+		timer.stop(pid, M.online_write);
+
+		timer.start(pid, M.online_read);
+		X.DE = con1.read(pid);
+		timer.stop(pid, M.online_read);
+
 		timer.stop(pid, M.online_comp);
-		return d1;
+		return X;
 	}
 
-	public byte[] runC(PreData predata, byte[][] x_CD, byte[][] x_CE, OutPIRCOT i, Timer timer) {
+	public TwoThreeXorByte runC(PreData predata, byte[][] x_CD, byte[][] x_CE, OutPIRCOT i, Timer timer) {
 		timer.start(pid, M.online_comp);
 
 		ShiftPIR sftpir = new ShiftPIR(con1, con2);
@@ -63,8 +86,19 @@ public class ThreeShiftPIR extends Protocol {
 		byte[] c2 = sftpir.runP2(predata, x_CD, i.s_CD, timer);
 		Util.setXor(c1, c2);
 
+		TwoThreeXorByte X = new TwoThreeXorByte();
+		X.CE = c1;
+
+		timer.start(pid, M.online_write);
+		con1.write(pid, X.CE);
+		timer.stop(pid, M.online_write);
+
+		timer.start(pid, M.online_read);
+		X.CD = con2.read(pid);
+		timer.stop(pid, M.online_read);
+
 		timer.stop(pid, M.online_comp);
-		return c1;
+		return X;
 	}
 
 	@Override
@@ -93,6 +127,8 @@ public class ThreeShiftPIR extends Protocol {
 			ks.s_CE = (index - ks.t_D + l) % l;
 			ks.s_CD = (index - ks.t_E + l) % l;
 
+			TwoThreeXorByte X = new TwoThreeXorByte();
+
 			if (party == Party.Eddie) {
 				con1.write(x_CD);
 				con1.write(x_DE);
@@ -105,11 +141,11 @@ public class ThreeShiftPIR extends Protocol {
 				con2.write(ks.s_CE);
 				con2.write(ks.s_CD);
 
-				byte[] e = this.runE(predata, x_DE, x_CE, ks, timer);
-				byte[] d = con1.read();
-				byte[] c = con2.read();
-				Util.setXor(e, d);
-				Util.setXor(e, c);
+				X = this.runE(predata, x_DE, x_CE, ks, timer);
+				X.CD = con1.read();
+				byte[] e = X.CE;
+				Util.setXor(e, X.CD);
+				Util.setXor(e, X.DE);
 				byte[] x = x_DE[index];
 				Util.setXor(x, x_CE[index]);
 				Util.setXor(x, x_CD[index]);
@@ -126,8 +162,8 @@ public class ThreeShiftPIR extends Protocol {
 				ks.s_DE = con1.readInt();
 				ks.s_CD = con1.readInt();
 
-				byte[] d = this.runD(predata, x_DE, x_CD, ks, timer);
-				con1.write(d);
+				X = this.runD(predata, x_DE, x_CD, ks, timer);
+				con1.write(X.CD);
 
 			} else if (party == Party.Charlie) {
 				x_CD = con1.readDoubleByteArray();
@@ -136,8 +172,7 @@ public class ThreeShiftPIR extends Protocol {
 				ks.s_CE = con1.readInt();
 				ks.s_CD = con1.readInt();
 
-				byte[] c = this.runC(predata, x_CD, x_CE, ks, timer);
-				con1.write(c);
+				this.runC(predata, x_CD, x_CE, ks, timer);
 
 			} else {
 				throw new NoSuchPartyException(party + "");

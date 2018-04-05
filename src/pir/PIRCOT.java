@@ -62,7 +62,7 @@ public class PIRCOT extends Protocol {
 		int l = u.length;
 		byte[][] a = new byte[l][];
 		for (int j = 0; j < l; j++) {
-			a[j] = Util.xor(u[(j + l - predata.sscot_s_DE) % l], v);
+			a[j] = Util.xor(u[(j + predata.sscot_s_DE) % l], v);
 			a[j] = Util.padArray(a[j], predata.sscot_r[j].length);
 			Util.setXor(a[j], predata.sscot_r[j]);
 			a[j] = predata.sscot_F_k.compute(a[j]);

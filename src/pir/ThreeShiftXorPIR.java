@@ -12,6 +12,7 @@ import protocols.struct.OutPIRCOT;
 import protocols.struct.Party;
 import protocols.struct.PreData;
 import protocols.struct.TwoOneXor;
+import protocols.struct.TwoThreeXorByte;
 import util.M;
 import util.P;
 import util.Timer;
@@ -25,15 +26,16 @@ public class ThreeShiftXorPIR extends Protocol {
 		super(con1, con2);
 	}
 
-	public byte[] runE(PreData predata, byte[][] x_DE, byte[][] x_CE, OutPIRCOT i, TwoOneXor j, int m, Timer timer) {
+	public TwoThreeXorByte runE(PreData predata, byte[][] x_DE, byte[][] x_CE, OutPIRCOT i, TwoOneXor dN, int ttp,
+			Timer timer) {
 		timer.start(pid, M.online_comp);
 
 		ShiftXorPIR sftpir = new ShiftXorPIR(con1, con2);
-		byte[] e1 = sftpir.runP1(predata, x_DE, i.s_DE, j.s_DE, m, timer);
+		byte[] e1 = sftpir.runP1(predata, x_DE, i.s_DE, dN.s_DE, ttp, timer);
 		sftpir = new ShiftXorPIR(con2, con1);
-		byte[] e2 = sftpir.runP2(predata, x_CE, i.s_CE, j.s_CE, m, timer);
+		byte[] e2 = sftpir.runP2(predata, x_CE, i.s_CE, dN.s_CE, ttp, timer);
 		sftpir = new ShiftXorPIR(con1, con2);
-		sftpir.runP3(predata, i.t_E, j.t_E, m, timer);
+		sftpir.runP3(predata, i.t_E, dN.t_E, ttp, timer);
 		Util.setXor(e1, e2);
 
 		timer.start(pid, M.online_write);
@@ -46,22 +48,25 @@ public class ThreeShiftXorPIR extends Protocol {
 		byte[] c = con2.read(pid);
 		timer.stop(pid, M.online_read);
 
-		Util.setXor(e1, d);
-		Util.setXor(e1, c);
+		TwoThreeXorByte nextL = new TwoThreeXorByte();
+		nextL.DE = e1;
+		nextL.CD = d;
+		nextL.CE = c;
 
 		timer.stop(pid, M.online_comp);
-		return e1;
+		return nextL;
 	}
 
-	public byte[] runD(PreData predata, byte[][] x_DE, byte[][] x_CD, OutPIRCOT i, TwoOneXor j, int m, Timer timer) {
+	public TwoThreeXorByte runD(PreData predata, byte[][] x_DE, byte[][] x_CD, OutPIRCOT i, TwoOneXor dN, int ttp,
+			Timer timer) {
 		timer.start(pid, M.online_comp);
 
 		ShiftXorPIR sftpir = new ShiftXorPIR(con1, con2);
-		byte[] d1 = sftpir.runP2(predata, x_DE, i.s_DE, j.s_DE, m, timer);
+		byte[] d1 = sftpir.runP2(predata, x_DE, i.s_DE, dN.s_DE, ttp, timer);
 		sftpir = new ShiftXorPIR(con2, con1);
-		sftpir.runP3(predata, i.t_D, j.t_D, m, timer);
+		sftpir.runP3(predata, i.t_D, dN.t_D, ttp, timer);
 		sftpir = new ShiftXorPIR(con2, con1);
-		byte[] d2 = sftpir.runP1(predata, x_CD, i.s_CD, j.s_CD, m, timer);
+		byte[] d2 = sftpir.runP1(predata, x_CD, i.s_CD, dN.s_CD, ttp, timer);
 		Util.setXor(d1, d2);
 
 		timer.start(pid, M.online_write);
@@ -74,22 +79,25 @@ public class ThreeShiftXorPIR extends Protocol {
 		byte[] c = con2.read(pid);
 		timer.stop(pid, M.online_read);
 
-		Util.setXor(d1, e);
-		Util.setXor(d1, c);
+		TwoThreeXorByte nextL = new TwoThreeXorByte();
+		nextL.DE = e;
+		nextL.CD = d1;
+		nextL.CE = c;
 
 		timer.stop(pid, M.online_comp);
-		return d1;
+		return nextL;
 	}
 
-	public byte[] runC(PreData predata, byte[][] x_CD, byte[][] x_CE, OutPIRCOT i, TwoOneXor j, int m, Timer timer) {
+	public TwoThreeXorByte runC(PreData predata, byte[][] x_CD, byte[][] x_CE, OutPIRCOT i, TwoOneXor dN, int ttp,
+			Timer timer) {
 		timer.start(pid, M.online_comp);
 
 		ShiftXorPIR sftpir = new ShiftXorPIR(con1, con2);
-		sftpir.runP3(predata, i.t_C, j.t_C, m, timer);
+		sftpir.runP3(predata, i.t_C, dN.t_C, ttp, timer);
 		sftpir = new ShiftXorPIR(con1, con2);
-		byte[] c1 = sftpir.runP1(predata, x_CE, i.s_CE, j.s_CE, m, timer);
+		byte[] c1 = sftpir.runP1(predata, x_CE, i.s_CE, dN.s_CE, ttp, timer);
 		sftpir = new ShiftXorPIR(con2, con1);
-		byte[] c2 = sftpir.runP2(predata, x_CD, i.s_CD, j.s_CD, m, timer);
+		byte[] c2 = sftpir.runP2(predata, x_CD, i.s_CD, dN.s_CD, ttp, timer);
 		Util.setXor(c1, c2);
 
 		timer.start(pid, M.online_write);
@@ -102,11 +110,13 @@ public class ThreeShiftXorPIR extends Protocol {
 		byte[] d = con2.read(pid);
 		timer.stop(pid, M.online_read);
 
-		Util.setXor(c1, e);
-		Util.setXor(c1, d);
+		TwoThreeXorByte nextL = new TwoThreeXorByte();
+		nextL.DE = e;
+		nextL.CD = d;
+		nextL.CE = c1;
 
 		timer.stop(pid, M.online_comp);
-		return c1;
+		return nextL;
 	}
 
 	@Override
@@ -163,7 +173,8 @@ public class ThreeShiftXorPIR extends Protocol {
 				con2.write(tox.s_CE);
 				con2.write(tox.s_CD);
 
-				byte[] e = this.runE(predata, x_DE, x_CE, ks, tox, m, timer);
+				TwoThreeXorByte nextL = this.runE(predata, x_DE, x_CE, ks, tox, m, timer);
+				byte[] e = Util.xor(Util.xor(nextL.DE, nextL.CE), nextL.CD);
 				byte[] d = con1.read();
 				byte[] c = con2.read();
 
@@ -187,7 +198,8 @@ public class ThreeShiftXorPIR extends Protocol {
 				tox.s_DE = con1.readInt();
 				tox.s_CD = con1.readInt();
 
-				byte[] d = this.runD(predata, x_DE, x_CD, ks, tox, m, timer);
+				TwoThreeXorByte nextL = this.runD(predata, x_DE, x_CD, ks, tox, m, timer);
+				byte[] d = Util.xor(Util.xor(nextL.DE, nextL.CE), nextL.CD);
 				con1.write(d);
 
 			} else if (party == Party.Charlie) {
@@ -200,7 +212,8 @@ public class ThreeShiftXorPIR extends Protocol {
 				tox.s_CE = con1.readInt();
 				tox.s_CD = con1.readInt();
 
-				byte[] c = this.runC(predata, x_CD, x_CE, ks, tox, m, timer);
+				TwoThreeXorByte nextL = this.runC(predata, x_CD, x_CE, ks, tox, m, timer);
+				byte[] c = Util.xor(Util.xor(nextL.DE, nextL.CE), nextL.CD);
 				con1.write(c);
 
 			} else {
