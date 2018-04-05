@@ -271,7 +271,7 @@ public class ULiT extends Protocol {
 				}
 				for (int i = trueDN * l + l; i < trueX.length; i++) {
 					if (expectX[i] != trueX[i]) {
-						System.err.println(j + ": ULiT test failed 1");
+						System.err.println(j + ": ULiT test failed 2");
 						fail = true;
 						break;
 					}
