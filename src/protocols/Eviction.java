@@ -127,7 +127,7 @@ public class Eviction extends Protocol {
 
 		if (firstTree) {
 			timer.start(pid, M.online_read);
-			Tuple[] originalPath = con2.readTupleArray(pid);
+			// Tuple[] originalPath = con2.readTupleArray(pid);
 			timer.stop(pid, M.online_read);
 
 			// OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), new Bucket[] { new
@@ -172,7 +172,7 @@ public class Eviction extends Protocol {
 		ssxot.runD(predata, evict, timer);
 
 		timer.start(pid, M.online_read);
-		Bucket[] pathBuckets = con2.readBucketArray(pid);
+		// Bucket[] pathBuckets = con2.readBucketArray(pid);
 		timer.stop(pid, M.online_read);
 
 		// OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), pathBuckets);
@@ -183,7 +183,7 @@ public class Eviction extends Protocol {
 	public void runC(PreData predata, boolean firstTree, Tuple[] originalPath, int d, int sw, int w, Timer timer) {
 		if (firstTree) {
 			timer.start(pid, M.online_write);
-			con2.write(pid, originalPath);
+			// con2.write(pid, originalPath);
 			timer.stop(pid, M.online_write);
 			return;
 		}
@@ -245,7 +245,7 @@ public class Eviction extends Protocol {
 		pathBuckets[0].expand(Arrays.copyOfRange(originalPath, w, sw));
 
 		timer.start(pid, M.online_write);
-		con2.write(pid, pathBuckets);
+		// con2.write(pid, pathBuckets);
 		timer.stop(pid, M.online_write);
 
 		timer.stop(pid, M.online_comp);

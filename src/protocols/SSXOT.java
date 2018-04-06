@@ -16,6 +16,8 @@ import util.P;
 import util.Timer;
 import util.Util;
 
+// TODO: change XOT to do 2 rounds and 2|path| bndw
+
 public class SSXOT extends Protocol {
 
 	private int id;
@@ -41,12 +43,14 @@ public class SSXOT extends Protocol {
 		for (int i = 0; i < m.length; i++)
 			a[i] = m[predata.ssxot_E_pi[id][i]].xor(predata.ssxot_E_r[id][i]);
 
-		timer.start(pid, M.online_write);
-		con2.write(pid, a);
-		timer.stop(pid, M.online_write);
+		// timer.start(pid, M.online_write);
+		// con2.write(pid, a);
+		// timer.stop(pid, M.online_write);
+		con2.write(a);
 
+		a = con2.readTupleArray();
 		timer.start(pid, M.online_read);
-		a = con2.readTupleArray(pid);
+		// a = con2.readTupleArray(pid);
 
 		// step 2
 		int[] j = con1.readIntArray(pid);
@@ -96,12 +100,14 @@ public class SSXOT extends Protocol {
 		for (int i = 0; i < m.length; i++)
 			a[i] = m[predata.ssxot_C_pi[id][i]].xor(predata.ssxot_C_r[id][i]);
 
-		timer.start(pid, M.online_write);
-		con1.write(pid, a);
-		timer.stop(pid, M.online_write);
+		// timer.start(pid, M.online_write);
+		// con1.write(pid, a);
+		// timer.stop(pid, M.online_write);
+		con1.write(a);
 
+		a = con1.readTupleArray();
 		timer.start(pid, M.online_read);
-		a = con1.readTupleArray(pid);
+		// a = con1.readTupleArray(pid);
 
 		// step 2
 		int[] j = con2.readIntArray(pid);

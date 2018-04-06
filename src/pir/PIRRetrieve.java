@@ -1,5 +1,6 @@
 package pir;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 
 import communication.Communication;
@@ -20,11 +21,16 @@ import protocols.struct.Party;
 import protocols.struct.PreData;
 import protocols.struct.TwoThreeXorByte;
 import protocols.struct.TwoThreeXorInt;
+import util.M;
+import util.P;
 import util.Timer;
+import util.Util;
 
 // TODO: really FlipFlag on path, and update path in Eviction
 
 public class PIRRetrieve extends Protocol {
+
+	private int pid = P.PIRRtv;
 
 	Communication[] cons1;
 	Communication[] cons2;
@@ -38,8 +44,10 @@ public class PIRRetrieve extends Protocol {
 		cons2 = b;
 	}
 
-	public void runE(Metadata md, PreData predata, Tree tree_DE, Tree tree_CE, byte[] Li, TwoThreeXorByte L,
+	public OutPIRAccess runE(Metadata md, PreData predata, Tree tree_DE, Tree tree_CE, byte[] Li, TwoThreeXorByte L,
 			TwoThreeXorByte N, TwoThreeXorInt dN, Timer timer) {
+		timer.start(pid, M.online_comp);
+
 		int treeIndex = tree_DE.getTreeIndex();
 		boolean isLastTree = treeIndex == md.getNumTrees() - 1;
 		boolean isFirstTree = treeIndex == 0;
@@ -93,10 +101,47 @@ public class PIRRetrieve extends Protocol {
 
 		Eviction eviction = new Eviction(con1, con2);
 		eviction.runE(predata, isFirstTree, Li, path, tree_DE, timer);
+
+		// simulation of Reshare
+		timer.start(pid, M.online_write);
+		con2.write(pid, path);
+		timer.stop(pid, M.online_write);
+
+		timer.start(pid, M.online_read);
+		con2.readTupleArray(pid);
+		timer.stop(pid, M.online_read);
+
+		// second eviction sim
+		preupdateroot.runE(predata, isFirstTree, stashSize, md.getLBitsOfTree(treeIndex), timer);
+
+		for (int i = 0; i < pathTuples; i++) {
+			path[i] = outpiracc.pathTuples_DE[i].xor(outpiracc.pathTuples_CE[i]);
+		}
+		R = Arrays.copyOfRange(path, 0, stashSize);
+		R = updateroot.runE(predata, isFirstTree, Li, R, T.DE.xor(T.CE), timer);
+		System.arraycopy(R, 0, path, 0, R.length);
+
+		preeviction.runE(predata, isFirstTree, tree_DE.getD(), tree_DE.getW(), timer);
+
+		eviction.runE(predata, isFirstTree, Li, path, tree_DE, timer);
+
+		// simulation of Reshare
+		timer.start(pid, M.online_write);
+		con2.write(pid, path);
+		timer.stop(pid, M.online_write);
+
+		timer.start(pid, M.online_read);
+		con2.readTupleArray(pid);
+		timer.stop(pid, M.online_read);
+
+		timer.stop(pid, M.online_comp);
+		return outpiracc;
 	}
 
-	public void runD(Metadata md, PreData predata, Tree tree_DE, Tree tree_CD, byte[] Li, TwoThreeXorByte L,
+	public OutPIRAccess runD(Metadata md, PreData predata, Tree tree_DE, Tree tree_CD, byte[] Li, TwoThreeXorByte L,
 			TwoThreeXorByte N, TwoThreeXorInt dN, Timer timer) {
+		timer.start(pid, M.online_comp);
+
 		int treeIndex = tree_DE.getTreeIndex();
 		boolean isLastTree = treeIndex == md.getNumTrees() - 1;
 		boolean isFirstTree = treeIndex == 0;
@@ -146,10 +191,24 @@ public class PIRRetrieve extends Protocol {
 
 		Eviction eviction = new Eviction(con1, con2);
 		eviction.runD(predata, isFirstTree, Li, tree_DE, timer);
+
+		// second eviction sim
+		preupdateroot.runD(predata, isFirstTree, stashSize, md.getLBitsOfTree(treeIndex), tupleParam, timer);
+
+		updateroot.runD(predata, isFirstTree, Li, tree_DE.getW(), timer);
+
+		preeviction.runD(predata, isFirstTree, tree_DE.getD(), tree_DE.getW(), tupleParam, timer);
+
+		eviction.runD(predata, isFirstTree, Li, tree_DE, timer);
+
+		timer.stop(pid, M.online_comp);
+		return outpiracc;
 	}
 
-	public void runC(Metadata md, PreData predata, Tree tree_CD, Tree tree_CE, byte[] Li, TwoThreeXorByte L,
+	public OutPIRAccess runC(Metadata md, PreData predata, Tree tree_CD, Tree tree_CE, byte[] Li, TwoThreeXorByte L,
 			TwoThreeXorByte N, TwoThreeXorInt dN, Timer timer) {
+		timer.start(pid, M.online_comp);
+
 		int treeIndex = tree_CE.getTreeIndex();
 		boolean isLastTree = treeIndex == md.getNumTrees() - 1;
 		boolean isFirstTree = treeIndex == 0;
@@ -201,6 +260,39 @@ public class PIRRetrieve extends Protocol {
 
 		Eviction eviction = new Eviction(con1, con2);
 		eviction.runC(predata, isFirstTree, path, tree_CD.getD(), stashSize, tree_CD.getW(), timer);
+
+		// simulation of Reshare
+		timer.start(pid, M.online_write);
+		con1.write(pid, path);
+		timer.stop(pid, M.online_write);
+
+		timer.start(pid, M.online_read);
+		con1.readTupleArray(pid);
+		timer.stop(pid, M.online_read);
+
+		// second eviction sim
+		preupdateroot.runC(predata, isFirstTree, timer);
+
+		R = Arrays.copyOfRange(path, 0, stashSize);
+
+		R = updateroot.runC(predata, isFirstTree, R, T.CD, timer);
+		System.arraycopy(R, 0, path, 0, R.length);
+
+		preeviction.runC(predata, isFirstTree, timer);
+
+		eviction.runC(predata, isFirstTree, path, tree_CD.getD(), stashSize, tree_CD.getW(), timer);
+
+		// simulation of Reshare
+		timer.start(pid, M.online_write);
+		con1.write(pid, path);
+		timer.stop(pid, M.online_write);
+
+		timer.start(pid, M.online_read);
+		con1.readTupleArray(pid);
+		timer.stop(pid, M.online_read);
+
+		timer.stop(pid, M.online_comp);
+		return outpiracc;
 	}
 
 	@Override
@@ -245,48 +337,38 @@ public class PIRRetrieve extends Protocol {
 				byte[] Li = new byte[Llen];
 
 				if (party == Party.Eddie) {
-					this.runE(md, predata, tree_DE, tree_CE, Li, L, N, dN, timer);
-					// OutPIRAccess out = this.runE(md, predata, tree_DE, tree_CE, Li, L, N, dN,
-					// timer);
-					// out.j.t_D = con1.readInt();
-					// out.j.t_C = con2.readInt();
-					// out.X.CD = con1.read();
-					// int pathTuples = out.pathTuples_CE.length;
-					// int index = (out.j.t_D + out.j.s_CE) % pathTuples;
-					// byte[] X = Util.xor(Util.xor(out.X.DE, out.X.CE), out.X.CD);
-					//
+					OutPIRAccess out = this.runE(md, predata, tree_DE, tree_CE, Li, L, N, dN, timer);
+					out.j.t_D = con1.readInt();
+					out.j.t_C = con2.readInt();
+					out.X.CD = con1.read();
+					int pathTuples = out.pathTuples_CE.length;
+					int index = (out.j.t_D + out.j.s_CE) % pathTuples;
+					byte[] X = Util.xor(Util.xor(out.X.DE, out.X.CE), out.X.CD);
+
 					boolean fail = false;
-					// if (index != 0) {
-					// System.err.println(test + " " + treeIndex + ": PIRAcc test failed on KSearch
-					// index");
-					// fail = true;
-					// }
-					// if (new BigInteger(1, X).intValue() != 0) {
-					// System.err.println(test + " " + treeIndex + ": PIRAcc test failed on
-					// 3ShiftPIR X");
-					// fail = true;
-					// }
-					// if (treeIndex < md.getNumTrees() - 1 && new BigInteger(1,
-					// out.Lip1).intValue() != 0) {
-					// System.err.println(test + " " + treeIndex + ": PIRAcc test failed on
-					// 3ShiftXorPIR Lip1");
-					// fail = true;
-					// }
+					if (index != 0) {
+						System.err.println(test + " " + treeIndex + ": PIRAcc test failed on KSearch index");
+						fail = true;
+					}
+					if (new BigInteger(1, X).intValue() != 0) {
+						System.err.println(test + " " + treeIndex + ": PIRAcc test failed on 3ShiftPIR X");
+						fail = true;
+					}
+					if (treeIndex < md.getNumTrees() - 1 && new BigInteger(1, out.Lip1).intValue() != 0) {
+						System.err.println(test + " " + treeIndex + ": PIRAcc test failed on 3ShiftXorPIR Lip1");
+						fail = true;
+					}
 					if (!fail)
 						System.out.println(test + " " + treeIndex + ": PIRAcc test passed");
 
 				} else if (party == Party.Debbie) {
-					this.runD(md, predata, tree_DE, tree_CD, Li, L, N, dN, timer);
-					// OutPIRAccess out = this.runD(md, predata, tree_DE, tree_CD, Li, L, N, dN,
-					// timer);
-					// con1.write(out.j.t_D);
-					// con1.write(out.X.CD);
+					OutPIRAccess out = this.runD(md, predata, tree_DE, tree_CD, Li, L, N, dN, timer);
+					con1.write(out.j.t_D);
+					con1.write(out.X.CD);
 
 				} else if (party == Party.Charlie) {
-					this.runC(md, predata, tree_CD, tree_CE, Li, L, N, dN, timer);
-					// OutPIRAccess out = this.runC(md, predata, tree_CD, tree_CE, Li, L, N, dN,
-					// timer);
-					// con1.write(out.j.t_C);
+					OutPIRAccess out = this.runC(md, predata, tree_CD, tree_CE, Li, L, N, dN, timer);
+					con1.write(out.j.t_C);
 
 				} else {
 					throw new NoSuchPartyException(party + "");

@@ -22,8 +22,9 @@ public class P {
 	public static final int FF = 17;
 	public static final int InsLbl = 18;
 	public static final int ULiT = 19;
+	public static final int PIRRtv = 20;
 
 	public static final String[] names = { "ACC", "COT", "IOT", "PPT", "RSF", "UR", "URXOT", "EVI", "PT", "PI", "XOT",
-			"SSPIR", "SftPIR", "TSPIR", "SftXorPIR", "TSXPIR", "Shift", "FF", "InsLbl", "ULiT" };
+			"SSPIR", "SftPIR", "TSPIR", "SftXorPIR", "TSXPIR", "Shift", "FF", "InsLbl", "ULiT", "PIRRtv" };
 	public static final int size = names.length;
 }
