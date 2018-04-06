@@ -19,6 +19,8 @@ import util.P;
 import util.Timer;
 import util.Util;
 
+// TODO: set bucket on path
+
 public class Eviction extends Protocol {
 
 	private int pid = P.EVI;
@@ -48,7 +50,8 @@ public class Eviction extends Protocol {
 		timer.start(pid, M.online_comp);
 
 		if (firstTree) {
-			OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), new Bucket[] { new Bucket(originalPath) });
+			// OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), new Bucket[] { new
+			// Bucket(originalPath) });
 			timer.stop(pid, M.online_comp);
 			return;
 		}
@@ -114,7 +117,7 @@ public class Eviction extends Protocol {
 		}
 
 		pathBuckets[0].expand(Arrays.copyOfRange(originalPath, w, sw));
-		OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), pathBuckets);
+		// OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), pathBuckets);
 
 		timer.stop(pid, M.online_comp);
 	}
@@ -127,7 +130,8 @@ public class Eviction extends Protocol {
 			Tuple[] originalPath = con2.readTupleArray(pid);
 			timer.stop(pid, M.online_read);
 
-			OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), new Bucket[] { new Bucket(originalPath) });
+			// OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), new Bucket[] { new
+			// Bucket(originalPath) });
 
 			timer.stop(pid, M.online_comp);
 			return;
@@ -171,7 +175,7 @@ public class Eviction extends Protocol {
 		Bucket[] pathBuckets = con2.readBucketArray(pid);
 		timer.stop(pid, M.online_read);
 
-		OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), pathBuckets);
+		// OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), pathBuckets);
 
 		timer.stop(pid, M.online_comp);
 	}

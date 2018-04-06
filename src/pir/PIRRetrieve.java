@@ -1,31 +1,28 @@
 package pir;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 
 import communication.Communication;
-import crypto.Crypto;
-import exceptions.AccessException;
 import exceptions.NoSuchPartyException;
 import oram.Forest;
-import oram.Global;
 import oram.Metadata;
 import oram.Tree;
 import oram.Tuple;
-import pir.precomputation.PrePIRRetrieve;
-import protocols.Pipeline;
-import protocols.PostProcessT;
+import protocols.Eviction;
 import protocols.Protocol;
 import protocols.UpdateRoot;
-import protocols.struct.OutAccess;
-import protocols.struct.OutRetrieve;
+import protocols.precomputation.PreEviction;
+import protocols.precomputation.PreUpdateRoot;
+import protocols.struct.OutFF;
+import protocols.struct.OutPIRAccess;
+import protocols.struct.OutULiT;
 import protocols.struct.Party;
 import protocols.struct.PreData;
-import util.Bandwidth;
-import util.P;
-import util.StopWatch;
+import protocols.struct.TwoThreeXorByte;
+import protocols.struct.TwoThreeXorInt;
 import util.Timer;
-import util.Util;
+
+// TODO: really FlipFlag on path, and update path in Eviction
 
 public class PIRRetrieve extends Protocol {
 
@@ -41,586 +38,266 @@ public class PIRRetrieve extends Protocol {
 		cons2 = b;
 	}
 
-	public byte[] runE(PreData[] predata, Tree OTi, byte[] Ni, byte[] Nip1_pr, int h, Timer timer) {
-		// 1st eviction
-		PIRAccess access = new PIRAccess(con1, con2);
-		PIRReshuffle reshuffle = new PIRReshuffle(con1, con2);
-		PostProcessT postprocesst = new PostProcessT(con1, con2);
+	public void runE(Metadata md, PreData predata, Tree tree_DE, Tree tree_CE, byte[] Li, TwoThreeXorByte L,
+			TwoThreeXorByte N, TwoThreeXorInt dN, Timer timer) {
+		int treeIndex = tree_DE.getTreeIndex();
+		boolean isLastTree = treeIndex == md.getNumTrees() - 1;
+		boolean isFirstTree = treeIndex == 0;
+
+		PIRAccess piracc = new PIRAccess(con1, con2);
+		OutPIRAccess outpiracc = piracc.runE(md, predata, tree_DE, tree_CE, Li, L, N, dN, timer);
+
+		OutULiT T = new OutULiT();
+		if (!isLastTree) {
+			TwoThreeXorByte Lp = new TwoThreeXorByte(md.getLBytesOfTree(treeIndex));
+			TwoThreeXorByte Lpi = new TwoThreeXorByte(md.getLBytesOfTree(treeIndex + 1));
+			ULiT ulit = new ULiT(con1, con2);
+			T = ulit.runE(predata, outpiracc.X, N, dN, Lp, Lpi, outpiracc.nextL, md.getTwoTauPow(), timer);
+		} else {
+			T.DE = outpiracc.pathTuples_DE[0];
+			T.CE = outpiracc.pathTuples_CE[0];
+		}
+
+		int pathTuples = outpiracc.pathTuples_CE.length;
+
+		if (!isFirstTree) {
+			byte[][] fb_DE = new byte[pathTuples][];
+			byte[][] fb_CE = new byte[pathTuples][];
+			for (int i = 0; i < pathTuples; i++) {
+				fb_DE[i] = outpiracc.pathTuples_DE[i].getF();
+				fb_CE[i] = outpiracc.pathTuples_CE[i].getF();
+			}
+			FlipFlag ff = new FlipFlag(con1, con2);
+			OutFF outff = ff.runE(predata, fb_DE, fb_CE, outpiracc.j.s_DE, timer);
+			for (int i = 0; i < pathTuples; i++) {
+				// outpiracc.pathTuples_DE[i].setF(outff.fb_DE[i]);
+				// outpiracc.pathTuples_CE[i].setF(outff.fb_CE[i]);
+			}
+		}
+
+		int stashSize = tree_DE.getStashSize();
+		PreUpdateRoot preupdateroot = new PreUpdateRoot(con1, con2);
+		preupdateroot.runE(predata, isFirstTree, stashSize, md.getLBitsOfTree(treeIndex), timer);
+
+		Tuple[] path = new Tuple[pathTuples];
+		for (int i = 0; i < pathTuples; i++) {
+			path[i] = outpiracc.pathTuples_DE[i].xor(outpiracc.pathTuples_CE[i]);
+		}
+		Tuple[] R = Arrays.copyOfRange(path, 0, stashSize);
 		UpdateRoot updateroot = new UpdateRoot(con1, con2);
-		PIREviction eviction = new PIREviction(con1, con2);
+		R = updateroot.runE(predata, isFirstTree, Li, R, T.DE.xor(T.CE), timer);
+		System.arraycopy(R, 0, path, 0, R.length);
 
-		OutAccess outaccess = access.runE(predata[0], OTi, Ni, Nip1_pr, timer);
-		// Tuple[] path = reshuffle.runE(predata[0], outaccess.E_P,
-		// OTi.getTreeIndex() == 0, timer);
-		Tuple[] path = outaccess.E_P;
-		byte[][] fbArray = new byte[outaccess.E_P.length][];
-		for (int i = 0; i < fbArray.length; i++)
-			fbArray[i] = outaccess.E_P[i].getF();
-		reshuffle.runE(predata[0], fbArray, OTi.getTreeIndex() == 0, timer);
-		Tuple Ti = postprocesst.runE(predata[0], outaccess.E_Ti, OTi.getTreeIndex() == h - 1, timer);
-		Tuple[] root = Arrays.copyOfRange(path, 0, OTi.getStashSize());
-		root = updateroot.runE(predata[0], OTi.getTreeIndex() == 0, outaccess.Li, root, Ti, timer);
-		System.arraycopy(root, 0, path, 0, root.length);
-		eviction.runE(predata[0], OTi.getTreeIndex() == 0, outaccess.Li,
-				OTi.getTreeIndex() == 0 ? new Tuple[] { Ti } : path, OTi, timer);
+		PreEviction preeviction = new PreEviction(con1, con2);
+		preeviction.runE(predata, isFirstTree, tree_DE.getD(), tree_DE.getW(), timer);
 
-		// 2nd eviction
-		OutAccess outaccess2 = access.runE2(OTi, timer);
-		Tuple[] path2 = outaccess2.E_P;
-		Tuple Ti2 = outaccess2.E_Ti;
-		Tuple[] root2 = Arrays.copyOfRange(path2, 0, OTi.getStashSize());
-		root2 = updateroot.runE(predata[1], OTi.getTreeIndex() == 0, outaccess2.Li, root2, Ti2, timer);
-		System.arraycopy(root2, 0, path2, 0, root2.length);
-		eviction.runE(predata[1], OTi.getTreeIndex() == 0, outaccess2.Li,
-				OTi.getTreeIndex() == 0 ? new Tuple[] { Ti2 } : path2, OTi, timer);
-
-		return Ti.getA();
+		Eviction eviction = new Eviction(con1, con2);
+		eviction.runE(predata, isFirstTree, Li, path, tree_DE, timer);
 	}
 
-	public void runD(PreData predata[], Tree OTi, byte[] Ni, byte[] Nip1_pr, Timer timer) {
-		// 1st eviction
-		PIRAccess access = new PIRAccess(con1, con2);
-		PIRReshuffle reshuffle = new PIRReshuffle(con1, con2);
-		PostProcessT postprocesst = new PostProcessT(con1, con2);
+	public void runD(Metadata md, PreData predata, Tree tree_DE, Tree tree_CD, byte[] Li, TwoThreeXorByte L,
+			TwoThreeXorByte N, TwoThreeXorInt dN, Timer timer) {
+		int treeIndex = tree_DE.getTreeIndex();
+		boolean isLastTree = treeIndex == md.getNumTrees() - 1;
+		boolean isFirstTree = treeIndex == 0;
+
+		PIRAccess piracc = new PIRAccess(con1, con2);
+		OutPIRAccess outpiracc = piracc.runD(md, predata, tree_DE, tree_CD, Li, L, N, dN, timer);
+
+		OutULiT T = new OutULiT();
+		if (!isLastTree) {
+			TwoThreeXorByte Lp = new TwoThreeXorByte(md.getLBytesOfTree(treeIndex));
+			TwoThreeXorByte Lpi = new TwoThreeXorByte(md.getLBytesOfTree(treeIndex + 1));
+			ULiT ulit = new ULiT(con1, con2);
+			T = ulit.runD(predata, outpiracc.X, N, dN, Lp, Lpi, outpiracc.nextL, md.getTwoTauPow(), timer);
+		} else {
+			T.CD = outpiracc.pathTuples_CD[0];
+			T.DE = outpiracc.pathTuples_DE[0];
+		}
+
+		int pathTuples = outpiracc.pathTuples_CD.length;
+
+		if (!isFirstTree) {
+			byte[][] fb_DE = new byte[pathTuples][];
+			byte[][] fb_CD = new byte[pathTuples][];
+			for (int i = 0; i < pathTuples; i++) {
+				fb_DE[i] = outpiracc.pathTuples_DE[i].getF();
+				fb_CD[i] = outpiracc.pathTuples_CD[i].getF();
+			}
+			FlipFlag ff = new FlipFlag(con1, con2);
+			OutFF outff = ff.runD(predata, fb_DE, fb_CD, outpiracc.j.s_DE, timer);
+			for (int i = 0; i < pathTuples; i++) {
+				// outpiracc.pathTuples_DE[i].setF(outff.fb_DE[i]);
+				// outpiracc.pathTuples_CD[i].setF(outff.fb_CD[i]);
+			}
+		}
+
+		int stashSize = tree_DE.getStashSize();
+		int[] tupleParam = new int[] { treeIndex == 0 ? 0 : 1, md.getNBytesOfTree(treeIndex),
+				md.getLBytesOfTree(treeIndex), md.getABytesOfTree(treeIndex) };
+		PreUpdateRoot preupdateroot = new PreUpdateRoot(con1, con2);
+		preupdateroot.runD(predata, isFirstTree, stashSize, md.getLBitsOfTree(treeIndex), tupleParam, timer);
+
 		UpdateRoot updateroot = new UpdateRoot(con1, con2);
-		PIREviction eviction = new PIREviction(con1, con2);
+		updateroot.runD(predata, isFirstTree, Li, tree_DE.getW(), timer);
 
-		byte[] Li = access.runD(predata[0], OTi, Ni, Nip1_pr, timer);
-		reshuffle.runD();
-		postprocesst.runD();
-		updateroot.runD(predata[0], OTi.getTreeIndex() == 0, Li, OTi.getW(), timer);
-		eviction.runD(predata[0], OTi.getTreeIndex() == 0, Li, OTi, timer);
+		PreEviction preeviction = new PreEviction(con1, con2);
+		preeviction.runD(predata, isFirstTree, tree_DE.getD(), tree_DE.getW(), tupleParam, timer);
 
-		// 2nd eviction
-		byte[] Li2 = access.runD2(OTi, timer);
-		updateroot.runD(predata[1], OTi.getTreeIndex() == 0, Li2, OTi.getW(), timer);
-		eviction.runD(predata[1], OTi.getTreeIndex() == 0, Li2, OTi, timer);
+		Eviction eviction = new Eviction(con1, con2);
+		eviction.runD(predata, isFirstTree, Li, tree_DE, timer);
 	}
 
-	public OutAccess runC(PreData[] predata, Metadata md, Tree OTi, int ti, byte[] Li, Timer timer) {
-		// 1st eviction
-		PIRAccess access = new PIRAccess(con1, con2);
-		PIRReshuffle reshuffle = new PIRReshuffle(con1, con2);
-		PostProcessT postprocesst = new PostProcessT(con1, con2);
+	public void runC(Metadata md, PreData predata, Tree tree_CD, Tree tree_CE, byte[] Li, TwoThreeXorByte L,
+			TwoThreeXorByte N, TwoThreeXorInt dN, Timer timer) {
+		int treeIndex = tree_CE.getTreeIndex();
+		boolean isLastTree = treeIndex == md.getNumTrees() - 1;
+		boolean isFirstTree = treeIndex == 0;
+
+		PIRAccess piracc = new PIRAccess(con1, con2);
+		OutPIRAccess outpiracc = piracc.runC(md, predata, tree_CD, tree_CE, Li, L, N, dN, timer);
+
+		OutULiT T = new OutULiT();
+		if (!isLastTree) {
+			TwoThreeXorByte Lp = new TwoThreeXorByte(md.getLBytesOfTree(treeIndex));
+			TwoThreeXorByte Lpi = new TwoThreeXorByte(md.getLBytesOfTree(treeIndex + 1));
+			ULiT ulit = new ULiT(con1, con2);
+			T = ulit.runC(predata, outpiracc.X, N, dN, Lp, Lpi, outpiracc.nextL, md.getTwoTauPow(), timer);
+		} else {
+			T.CD = outpiracc.pathTuples_CD[0];
+			T.CE = outpiracc.pathTuples_CE[0];
+		}
+
+		int pathTuples = outpiracc.pathTuples_CD.length;
+
+		if (!isFirstTree) {
+			byte[][] fb_CE = new byte[pathTuples][];
+			byte[][] fb_CD = new byte[pathTuples][];
+			for (int i = 0; i < pathTuples; i++) {
+				fb_CE[i] = outpiracc.pathTuples_CE[i].getF();
+				fb_CD[i] = outpiracc.pathTuples_CD[i].getF();
+			}
+			FlipFlag ff = new FlipFlag(con1, con2);
+			OutFF outff = ff.runC(predata, fb_CD, fb_CE, outpiracc.j.t_C, timer);
+			for (int i = 0; i < pathTuples; i++) {
+				// outpiracc.pathTuples_CD[i].setF(outff.fb_CD[i]);
+				// outpiracc.pathTuples_CE[i].setF(outff.fb_CE[i]);
+			}
+		}
+
+		int stashSize = tree_CE.getStashSize();
+		PreUpdateRoot preupdateroot = new PreUpdateRoot(con1, con2);
+		preupdateroot.runC(predata, isFirstTree, timer);
+
+		Tuple[] path = outpiracc.pathTuples_CD;
+		Tuple[] R = Arrays.copyOfRange(path, 0, stashSize);
+
 		UpdateRoot updateroot = new UpdateRoot(con1, con2);
-		PIREviction eviction = new PIREviction(con1, con2);
+		R = updateroot.runC(predata, isFirstTree, R, T.CD, timer);
+		System.arraycopy(R, 0, path, 0, R.length);
 
-		OutAccess outaccess = access.runC(md, OTi, ti, Li, timer);
-		// Tuple[] path = reshuffle.runC(predata[0], outaccess.C_P, ti == 0,
-		// timer);
-		Tuple[] path = outaccess.C_P;
-		byte[][] fbArray = new byte[outaccess.C_P.length][];
-		for (int i = 0; i < fbArray.length; i++)
-			fbArray[i] = outaccess.C_P[i].getF();
-		reshuffle.runC(predata[0], fbArray, ti == 0, timer);
-		Tuple Ti = postprocesst.runC(predata[0], outaccess.C_Ti, Li, outaccess.C_Lip1, outaccess.C_j2,
-				ti == md.getNumTrees() - 1, timer);
-		Tuple[] root = Arrays.copyOfRange(path, 0, md.getStashSizeOfTree(ti));
-		root = updateroot.runC(predata[0], ti == 0, root, Ti, timer);
-		System.arraycopy(root, 0, path, 0, root.length);
-		eviction.runC(predata[0], ti == 0, ti == 0 ? new Tuple[] { Ti } : path, md.getLBitsOfTree(ti) + 1,
-				md.getStashSizeOfTree(ti), md.getW(), timer);
+		PreEviction preeviction = new PreEviction(con1, con2);
+		preeviction.runC(predata, isFirstTree, timer);
 
-		// 2nd eviction
-		byte[] Li2 = Util.nextBytes(md.getLBytesOfTree(ti), Crypto.sr);
-		OutAccess outaccess2 = access.runC2(md, OTi, ti, Li2, timer);
-		Tuple[] path2 = outaccess2.C_P;
-		Tuple Ti2 = outaccess2.C_Ti;
-		Tuple[] root2 = Arrays.copyOfRange(path2, 0, md.getStashSizeOfTree(ti));
-		root2 = updateroot.runC(predata[1], ti == 0, root2, Ti2, timer);
-		System.arraycopy(root2, 0, path2, 0, root2.length);
-		eviction.runC(predata[1], ti == 0, ti == 0 ? new Tuple[] { Ti2 } : path2, md.getLBitsOfTree(ti) + 1,
-				md.getStashSizeOfTree(ti), md.getW(), timer);
-
-		return outaccess;
+		Eviction eviction = new Eviction(con1, con2);
+		eviction.runC(predata, isFirstTree, path, tree_CD.getD(), stashSize, tree_CD.getW(), timer);
 	}
 
-	public Pipeline pipelineE(PreData[] predata, Tree OTi, byte[] Ni, byte[] Nip1_pr, int h, Timer[] timer) {
-		PIRAccess access = new PIRAccess(con1, con2);
-		OutAccess outaccess = access.runE(predata[0], OTi, Ni, Nip1_pr, timer[0]);
+	@Override
+	public void run(Party party, Metadata md, Forest[] forest) {
 
-		int ti = OTi.getTreeIndex();
-		Pipeline pipeline = new Pipeline(cons1[ti + 1], cons2[ti + 1], Party.Eddie, predata, OTi, h, timer[ti + 1],
-				null, ti, outaccess.Li, outaccess);
-		pipeline.start();
+		Timer timer = new Timer();
+		PreData predata = new PreData();
 
-		return pipeline;
-	}
+		Tree tree_CD = null;
+		Tree tree_DE = null;
+		Tree tree_CE = null;
 
-	public Pipeline pipelineD(PreData predata[], Tree OTi, byte[] Ni, byte[] Nip1_pr, Timer[] timer) {
-		PIRAccess access = new PIRAccess(con1, con2);
-		byte[] Li = access.runD(predata[0], OTi, Ni, Nip1_pr, timer[0]);
+		for (int test = 0; test < 100; test++) {
 
-		int ti = OTi.getTreeIndex();
-		Pipeline pipeline = new Pipeline(cons1[ti + 1], cons2[ti + 1], Party.Debbie, predata, OTi, 0, timer[ti + 1],
-				null, ti, Li, null);
-		pipeline.start();
+			for (int treeIndex = 0; treeIndex < md.getNumTrees(); treeIndex++) {
+				if (party == Party.Eddie) {
+					tree_DE = forest[0].getTree(treeIndex);
+					tree_CE = forest[1].getTree(treeIndex);
+				} else if (party == Party.Debbie) {
+					tree_DE = forest[0].getTree(treeIndex);
+					tree_CD = forest[1].getTree(treeIndex);
+				} else if (party == Party.Charlie) {
+					tree_CE = forest[0].getTree(treeIndex);
+					tree_CD = forest[1].getTree(treeIndex);
+				} else {
+					throw new NoSuchPartyException(party + "");
+				}
 
-		return pipeline;
-	}
+				int Llen = md.getLBytesOfTree(treeIndex);
+				int Nlen = md.getNBytesOfTree(treeIndex);
 
-	public OutRetrieve pipelineC(PreData[] predata, Metadata md, Tree OTi, int ti, byte[] Li, Timer[] timer) {
-		PIRAccess access = new PIRAccess(con1, con2);
-		OutAccess outaccess = access.runC(md, OTi, ti, Li, timer[0]);
+				TwoThreeXorInt dN = new TwoThreeXorInt();
 
-		Pipeline pipeline = new Pipeline(cons1[ti + 1], cons2[ti + 1], Party.Charlie, predata, null, 0, timer[ti + 1],
-				md, ti, Li, outaccess);
-		pipeline.start();
+				TwoThreeXorByte N = new TwoThreeXorByte();
+				N.CD = new byte[Nlen];
+				N.DE = new byte[Nlen];
+				N.CE = new byte[Nlen];
+				TwoThreeXorByte L = new TwoThreeXorByte();
+				L.CD = new byte[Llen];
+				L.DE = new byte[Llen];
+				L.CE = new byte[Llen];
+				byte[] Li = new byte[Llen];
 
-		return new OutRetrieve(outaccess, pipeline);
+				if (party == Party.Eddie) {
+					this.runE(md, predata, tree_DE, tree_CE, Li, L, N, dN, timer);
+					// OutPIRAccess out = this.runE(md, predata, tree_DE, tree_CE, Li, L, N, dN,
+					// timer);
+					// out.j.t_D = con1.readInt();
+					// out.j.t_C = con2.readInt();
+					// out.X.CD = con1.read();
+					// int pathTuples = out.pathTuples_CE.length;
+					// int index = (out.j.t_D + out.j.s_CE) % pathTuples;
+					// byte[] X = Util.xor(Util.xor(out.X.DE, out.X.CE), out.X.CD);
+					//
+					boolean fail = false;
+					// if (index != 0) {
+					// System.err.println(test + " " + treeIndex + ": PIRAcc test failed on KSearch
+					// index");
+					// fail = true;
+					// }
+					// if (new BigInteger(1, X).intValue() != 0) {
+					// System.err.println(test + " " + treeIndex + ": PIRAcc test failed on
+					// 3ShiftPIR X");
+					// fail = true;
+					// }
+					// if (treeIndex < md.getNumTrees() - 1 && new BigInteger(1,
+					// out.Lip1).intValue() != 0) {
+					// System.err.println(test + " " + treeIndex + ": PIRAcc test failed on
+					// 3ShiftXorPIR Lip1");
+					// fail = true;
+					// }
+					if (!fail)
+						System.out.println(test + " " + treeIndex + ": PIRAcc test passed");
+
+				} else if (party == Party.Debbie) {
+					this.runD(md, predata, tree_DE, tree_CD, Li, L, N, dN, timer);
+					// OutPIRAccess out = this.runD(md, predata, tree_DE, tree_CD, Li, L, N, dN,
+					// timer);
+					// con1.write(out.j.t_D);
+					// con1.write(out.X.CD);
+
+				} else if (party == Party.Charlie) {
+					this.runC(md, predata, tree_CD, tree_CE, Li, L, N, dN, timer);
+					// OutPIRAccess out = this.runC(md, predata, tree_CD, tree_CE, Li, L, N, dN,
+					// timer);
+					// con1.write(out.j.t_C);
+
+				} else {
+					throw new NoSuchPartyException(party + "");
+				}
+			}
+
+		}
 	}
 
 	// for testing correctness
 	@Override
 	public void run(Party party, Metadata md, Forest forest) {
-		if (Global.pipeline)
-			System.out.println("Pipeline Mode is On");
-		if (Global.cheat)
-			System.out.println("Cheat Mode is On");
-
-		int records = 10;
-		int reset = 5;
-		int repeat = 1;
-
-		int tau = md.getTau();
-		int numTrees = md.getNumTrees();
-		long numInsert = md.getNumInsertRecords();
-		int addrBits = md.getAddrBits();
-
-		int numTimer = Global.pipeline ? numTrees + 1 : 1;
-		Timer[] timer = new Timer[numTimer];
-		for (int i = 0; i < numTimer; i++)
-			timer[i] = new Timer();
-
-		StopWatch ete_off = new StopWatch("ETE_offline");
-		StopWatch ete_on = new StopWatch("ETE_online");
-
-		long[] gates = new long[2];
-
-		Pipeline[] threads = new Pipeline[numTrees];
-
-		sanityCheck();
-		System.out.println();
-
-		for (int i = 0; i < records; i++) {
-			long N = Global.cheat ? 0 : Util.nextLong(numInsert, Crypto.sr);
-
-			for (int j = 0; j < repeat; j++) {
-				int cycleIndex = i * repeat + j;
-				if (cycleIndex == reset * repeat) {
-					for (int k = 0; k < timer.length; k++)
-						timer[k].reset();
-					ete_on.reset();
-					ete_off.reset();
-				}
-				if (cycleIndex == 1) {
-					for (int k = 0; k < cons1.length; k++) {
-						cons1[k].bandSwitch = false;
-						cons2[k].bandSwitch = false;
-					}
-				}
-
-				System.out.println("Test: " + i + " " + j);
-				System.out.println("N=" + BigInteger.valueOf(N).toString(2));
-
-				System.out.print("Precomputation... ");
-
-				PreData[][] predata = new PreData[numTrees][2];
-				PrePIRRetrieve preretrieve = new PrePIRRetrieve(con1, con2);
-				for (int ti = 0; ti < numTrees; ti++) {
-					predata[ti][0] = new PreData();
-					predata[ti][1] = new PreData();
-
-					if (party == Party.Eddie) {
-						ete_off.start();
-						preretrieve.runE(predata[ti], md, ti, timer[0]);
-						ete_off.stop();
-
-					} else if (party == Party.Debbie) {
-						ete_off.start();
-						long[] cnt = preretrieve.runD(predata[ti], md, ti, ti == 0 ? null : predata[ti - 1][0],
-								timer[0]);
-						ete_off.stop();
-
-						if (cycleIndex == 0) {
-							gates[0] += cnt[0];
-							gates[1] += cnt[1];
-						}
-
-					} else if (party == Party.Charlie) {
-						ete_off.start();
-						preretrieve.runC(predata[ti], md, ti, ti == 0 ? null : predata[ti - 1][0], timer[0]);
-						ete_off.stop();
-
-					} else {
-						throw new NoSuchPartyException(party + "");
-					}
-				}
-
-				sanityCheck();
-				System.out.println("done!");
-
-				byte[] Li = new byte[0];
-				for (int ti = 0; ti < numTrees; ti++) {
-					long Ni_value = Util.getSubBits(N, addrBits, addrBits - md.getNBitsOfTree(ti));
-					long Nip1_pr_value = Util.getSubBits(N, addrBits - md.getNBitsOfTree(ti),
-							Math.max(addrBits - md.getNBitsOfTree(ti) - tau, 0));
-					byte[] Ni = Util.longToBytes(Ni_value, md.getNBytesOfTree(ti));
-					byte[] Nip1_pr = Util.longToBytes(Nip1_pr_value, (tau + 7) / 8);
-
-					if (party == Party.Eddie) {
-						Tree OTi = forest.getTree(ti);
-
-						byte[] sE_Ni = Util.nextBytes(Ni.length, Crypto.sr);
-						byte[] sD_Ni = Util.xor(Ni, sE_Ni);
-						con1.write(sD_Ni);
-
-						byte[] sE_Nip1_pr = Util.nextBytes(Nip1_pr.length, Crypto.sr);
-						byte[] sD_Nip1_pr = Util.xor(Nip1_pr, sE_Nip1_pr);
-						con1.write(sD_Nip1_pr);
-
-						byte[] E_A = null;
-						if (!Global.pipeline) {
-							ete_on.start();
-							E_A = runE(predata[ti], OTi, sE_Ni, sE_Nip1_pr, numTrees, timer[0]);
-							ete_on.stop();
-						} else {
-							if (ti == 0)
-								ete_on.start();
-							threads[ti] = pipelineE(predata[ti], OTi, sE_Ni, sE_Nip1_pr, numTrees, timer);
-						}
-
-						if (ti == numTrees - 1) {
-							con2.write(N);
-							con2.write(E_A);
-						}
-
-					} else if (party == Party.Debbie) {
-						Tree OTi = forest.getTree(ti);
-
-						byte[] sD_Ni = con1.read();
-						byte[] sD_Nip1_pr = con1.read();
-
-						if (!Global.pipeline) {
-							ete_on.start();
-							runD(predata[ti], OTi, sD_Ni, sD_Nip1_pr, timer[0]);
-							ete_on.stop();
-						} else {
-							if (ti == 0)
-								ete_on.start();
-							threads[ti] = pipelineD(predata[ti], OTi, sD_Ni, sD_Nip1_pr, timer);
-						}
-
-					} else if (party == Party.Charlie) {
-						Tree OTi = forest.getTree(ti);
-						int lBits = md.getLBitsOfTree(ti);
-						System.out.println("L" + ti + "="
-								+ Util.addZeros(Util.getSubBits(new BigInteger(1, Li), lBits, 0).toString(2), lBits));
-
-						OutAccess outaccess = null;
-						if (!Global.pipeline) {
-							ete_on.start();
-							outaccess = runC(predata[ti], md, OTi, ti, Li, timer[0]);
-							ete_on.stop();
-						} else {
-							if (ti == 0)
-								ete_on.start();
-							OutRetrieve outretrieve = pipelineC(predata[ti], md, OTi, ti, Li, timer);
-							outaccess = outretrieve.outaccess;
-							threads[ti] = outretrieve.pipeline;
-						}
-
-						Li = outaccess.C_Lip1;
-
-						if (ti == numTrees - 1) {
-							N = con1.readLong();
-							byte[] E_A = con1.read();
-							long data = new BigInteger(1, Util.xor(outaccess.C_Ti.getA(), E_A)).longValue();
-							if (N == data) {
-								System.out.println("PIR Retrieval passed");
-								System.out.println();
-							} else {
-								throw new AccessException("PIR Retrieval failed");
-							}
-						}
-
-					} else {
-						throw new NoSuchPartyException(party + "");
-					}
-				}
-
-				if (Global.pipeline) {
-					for (int ti = 0; ti < numTrees; ti++) {
-						try {
-							threads[ti].join();
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					}
-					ete_on.stop();
-				}
-			}
-		}
-		System.out.println();
-
-		Timer sum = new Timer();
-		for (int i = 0; i < timer.length; i++)
-			sum = sum.add(timer[i]);
-		sum.noPrePrint();
-		System.out.println();
-
-		StopWatch comEnc = new StopWatch("CE_online_comp");
-		for (int i = 0; i < cons1.length; i++)
-			comEnc = comEnc.add(cons1[i].comEnc.add(cons2[i].comEnc));
-		System.out.println(comEnc.noPreToMS());
-		System.out.println();
-
-		if (Global.pipeline)
-			ete_on.elapsedCPU = 0;
-		System.out.println(ete_on.noPreToMS());
-		System.out.println(ete_off.noPreToMS());
-		System.out.println();
-
-		Bandwidth[] bandwidth = new Bandwidth[P.size];
-		for (int i = 0; i < P.size; i++) {
-			bandwidth[i] = new Bandwidth(P.names[i]);
-			for (int j = 0; j < cons1.length; j++)
-				bandwidth[i] = bandwidth[i].add(cons1[j].bandwidth[i].add(cons2[j].bandwidth[i]));
-			System.out.println(bandwidth[i].noPreToString());
-		}
-		System.out.println();
-
-		System.out.println(gates[0]);
-		System.out.println(gates[1]);
-		System.out.println();
-
-		sanityCheck();
-	}
-
-	@Override
-	public void run(Party party, Metadata md, Forest[] forests) {
-		System.err.println("Check2");
-		if (Global.pipeline)
-			System.out.println("Pipeline Mode is On");
-		if (Global.cheat)
-			System.out.println("Cheat Mode is On");
-
-		int records = 10;
-		int reset = 5;
-		int repeat = 1;
-
-		int tau = md.getTau();
-		int numTrees = md.getNumTrees();
-		long numInsert = md.getNumInsertRecords();
-		int addrBits = md.getAddrBits();
-
-		int numTimer = Global.pipeline ? numTrees + 1 : 1;
-		Timer[] timer = new Timer[numTimer];
-		for (int i = 0; i < numTimer; i++)
-			timer[i] = new Timer();
-
-		StopWatch ete_off = new StopWatch("ETE_offline");
-		StopWatch ete_on = new StopWatch("ETE_online");
-
-		long[] gates = new long[2];
-
-		Pipeline[] threads = new Pipeline[numTrees];
-
-		sanityCheck();
-		System.out.println();
-
-		for (int i = 0; i < records; i++) {
-			long N = Global.cheat ? 0 : Util.nextLong(numInsert, Crypto.sr);
-
-			for (int j = 0; j < repeat; j++) {
-				int cycleIndex = i * repeat + j;
-				if (cycleIndex == reset * repeat) {
-					for (int k = 0; k < timer.length; k++)
-						timer[k].reset();
-					ete_on.reset();
-					ete_off.reset();
-				}
-				if (cycleIndex == 1) {
-					for (int k = 0; k < cons1.length; k++) {
-						cons1[k].bandSwitch = false;
-						cons2[k].bandSwitch = false;
-					}
-				}
-
-				System.out.println("Test: " + i + " " + j);
-				System.out.println("N=" + BigInteger.valueOf(N).toString(2));
-
-				System.out.print("Precomputation... ");
-
-				PreData[][] predata = new PreData[numTrees][2];
-				PrePIRRetrieve preretrieve = new PrePIRRetrieve(con1, con2);
-				for (int ti = 0; ti < numTrees; ti++) {
-					predata[ti][0] = new PreData();
-					predata[ti][1] = new PreData();
-
-					if (party == Party.Eddie) {
-						ete_off.start();
-						preretrieve.runE(predata[ti], md, ti, timer[0]);
-						ete_off.stop();
-
-					} else if (party == Party.Debbie) {
-						ete_off.start();
-						long[] cnt = preretrieve.runD(predata[ti], md, ti, ti == 0 ? null : predata[ti - 1][0],
-								timer[0]);
-						ete_off.stop();
-
-						if (cycleIndex == 0) {
-							gates[0] += cnt[0];
-							gates[1] += cnt[1];
-						}
-
-					} else if (party == Party.Charlie) {
-						ete_off.start();
-						preretrieve.runC(predata[ti], md, ti, ti == 0 ? null : predata[ti - 1][0], timer[0]);
-						ete_off.stop();
-
-					} else {
-						throw new NoSuchPartyException(party + "");
-					}
-				}
-
-				sanityCheck();
-				System.out.println("done!");
-
-				byte[] Li = new byte[0];
-				for (int ti = 0; ti < numTrees; ti++) {
-					long Ni_value = Util.getSubBits(N, addrBits, addrBits - md.getNBitsOfTree(ti));
-					long Nip1_pr_value = Util.getSubBits(N, addrBits - md.getNBitsOfTree(ti),
-							Math.max(addrBits - md.getNBitsOfTree(ti) - tau, 0));
-					byte[] Ni = Util.longToBytes(Ni_value, md.getNBytesOfTree(ti));
-					byte[] Nip1_pr = Util.longToBytes(Nip1_pr_value, (tau + 7) / 8);
-
-					if (party == Party.Eddie) {
-						Tree OTi = forests[0].getTree(ti);
-
-						byte[] sE_Ni = Util.nextBytes(Ni.length, Crypto.sr);
-						byte[] sD_Ni = Util.xor(Ni, sE_Ni);
-						con1.write(sD_Ni);
-
-						byte[] sE_Nip1_pr = Util.nextBytes(Nip1_pr.length, Crypto.sr);
-						byte[] sD_Nip1_pr = Util.xor(Nip1_pr, sE_Nip1_pr);
-						con1.write(sD_Nip1_pr);
-
-						byte[] E_A = null;
-						if (!Global.pipeline) {
-							ete_on.start();
-							E_A = runE(predata[ti], OTi, sE_Ni, sE_Nip1_pr, numTrees, timer[0]);
-							ete_on.stop();
-						} else {
-							if (ti == 0)
-								ete_on.start();
-							threads[ti] = pipelineE(predata[ti], OTi, sE_Ni, sE_Nip1_pr, numTrees, timer);
-						}
-
-						if (ti == numTrees - 1) {
-							con2.write(N);
-							con2.write(E_A);
-						}
-
-					} else if (party == Party.Debbie) {
-						Tree OTi = forests[1].getTree(ti);
-
-						byte[] sD_Ni = con1.read();
-						byte[] sD_Nip1_pr = con1.read();
-
-						if (!Global.pipeline) {
-							ete_on.start();
-							runD(predata[ti], OTi, sD_Ni, sD_Nip1_pr, timer[0]);
-							ete_on.stop();
-						} else {
-							if (ti == 0)
-								ete_on.start();
-							threads[ti] = pipelineD(predata[ti], OTi, sD_Ni, sD_Nip1_pr, timer);
-						}
-
-					} else if (party == Party.Charlie) {
-						Tree OTi = forests[1].getTree(ti);
-						int lBits = md.getLBitsOfTree(ti);
-						System.out.println("L" + ti + "="
-								+ Util.addZeros(Util.getSubBits(new BigInteger(1, Li), lBits, 0).toString(2), lBits));
-
-						OutAccess outaccess = null;
-						if (!Global.pipeline) {
-							ete_on.start();
-							outaccess = runC(predata[ti], md, OTi, ti, Li, timer[0]);
-							ete_on.stop();
-						} else {
-							if (ti == 0)
-								ete_on.start();
-							OutRetrieve outretrieve = pipelineC(predata[ti], md, OTi, ti, Li, timer);
-							outaccess = outretrieve.outaccess;
-							threads[ti] = outretrieve.pipeline;
-						}
-
-						Li = outaccess.C_Lip1;
-
-						if (ti == numTrees - 1) {
-							N = con1.readLong();
-							byte[] E_A = con1.read();
-							long data = new BigInteger(1, Util.xor(outaccess.C_Ti.getA(), E_A)).longValue();
-							if (N == data) {
-								System.out.println("PIR Retrieval passed");
-								System.out.println();
-							} else {
-								throw new AccessException("PIR Retrieval failed");
-							}
-						}
-
-					} else {
-						throw new NoSuchPartyException(party + "");
-					}
-				}
-
-				if (Global.pipeline) {
-					for (int ti = 0; ti < numTrees; ti++) {
-						try {
-							threads[ti].join();
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					}
-					ete_on.stop();
-				}
-			}
-		}
-		System.out.println();
-
-		Timer sum = new Timer();
-		for (int i = 0; i < timer.length; i++)
-			sum = sum.add(timer[i]);
-		sum.noPrePrint();
-		System.out.println();
-
-		StopWatch comEnc = new StopWatch("CE_online_comp");
-		for (int i = 0; i < cons1.length; i++)
-			comEnc = comEnc.add(cons1[i].comEnc.add(cons2[i].comEnc));
-		System.out.println(comEnc.noPreToMS());
-		System.out.println();
-
-		if (Global.pipeline)
-			ete_on.elapsedCPU = 0;
-		System.out.println(ete_on.noPreToMS());
-		System.out.println(ete_off.noPreToMS());
-		System.out.println();
-
-		Bandwidth[] bandwidth = new Bandwidth[P.size];
-		for (int i = 0; i < P.size; i++) {
-			bandwidth[i] = new Bandwidth(P.names[i]);
-			for (int j = 0; j < cons1.length; j++)
-				bandwidth[i] = bandwidth[i].add(cons1[j].bandwidth[i].add(cons2[j].bandwidth[i]));
-			System.out.println(bandwidth[i].noPreToString());
-		}
-		System.out.println();
-
-		System.out.println(gates[0]);
-		System.out.println(gates[1]);
-		System.out.println();
-
-		sanityCheck();
 	}
 }

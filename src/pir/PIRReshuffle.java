@@ -124,7 +124,9 @@ public class PIRReshuffle extends Protocol {
 						byte[] sD_Nip1_pr = Util.xor(Nip1_pr, sE_Nip1_pr);
 						con1.write(sD_Nip1_pr);
 
-						OutAccess outaccess = access.runE(predata, OTi, sE_Ni, sE_Nip1_pr, timer);
+						// TODO: fix commented line below
+						OutAccess outaccess = null;
+						// OutAccess outaccess = access.runE(predata, OTi, sE_Ni, sE_Nip1_pr, timer);
 
 						if (ti == numTrees - 1)
 							con2.write(N);
@@ -165,7 +167,8 @@ public class PIRReshuffle extends Protocol {
 
 						byte[] sD_Nip1_pr = con1.read();
 
-						access.runD(predata, OTi, sD_Ni, sD_Nip1_pr, timer);
+						// TODO: fix commented line below
+						// access.runD(predata, OTi, sD_Ni, sD_Nip1_pr, timer);
 
 						int[] tupleParam = new int[] { ti == 0 ? 0 : 1, md.getNBytesOfTree(ti), md.getLBytesOfTree(ti),
 								md.getABytesOfTree(ti) };
@@ -178,7 +181,9 @@ public class PIRReshuffle extends Protocol {
 
 						System.out.println("L" + ti + "=" + new BigInteger(1, Li).toString(2));
 
-						OutAccess outaccess = access.runC(md, OTi, ti, Li, timer);
+						// TODO: fix commented line below
+						OutAccess outaccess = null;
+						// OutAccess outaccess = access.runC(md, OTi, ti, Li, timer);
 
 						prereshuffle.runC(predata, timer);
 						byte[][] fbArray = new byte[outaccess.C_P.length][];

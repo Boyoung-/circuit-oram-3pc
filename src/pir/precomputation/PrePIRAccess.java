@@ -53,7 +53,7 @@ public class PrePIRAccess extends Protocol {
 
 		// SSCOT
 		PrePIRCOT presscot = new PrePIRCOT(con1, con2);
-		presscot.runD(predata, timer);
+		presscot.runD(predata, 0, timer); // TODO: this is incorrect due to update
 
 		// SSIOT
 		PrePIRIOT pressiot = new PrePIRIOT(con1, con2);
@@ -73,7 +73,7 @@ public class PrePIRAccess extends Protocol {
 
 		// SSCOT
 		PrePIRCOT presscot = new PrePIRCOT(con1, con2);
-		presscot.runC();
+		presscot.runC(null, timer);// TODO: this is incorrect due to update
 
 		// SSIOT
 		PrePIRIOT pressiot = new PrePIRIOT(con1, con2);
