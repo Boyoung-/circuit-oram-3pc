@@ -21,6 +21,7 @@ import protocols.struct.Party;
 import protocols.struct.PreData;
 import protocols.struct.TwoThreeXorByte;
 import protocols.struct.TwoThreeXorInt;
+import util.Bandwidth;
 import util.M;
 import util.P;
 import util.Timer;
@@ -305,7 +306,20 @@ public class PIRRetrieve extends Protocol {
 		Tree tree_DE = null;
 		Tree tree_CE = null;
 
-		for (int test = 0; test < 100; test++) {
+		int iterations = 100;
+		int reset = 20;
+
+		for (int test = 0; test < iterations; test++) {
+
+			if (test == reset) {
+				timer.reset();
+			}
+			if (test == 1) {
+				for (int k = 0; k < cons1.length; k++) {
+					cons1[k].bandSwitch = false;
+					cons2[k].bandSwitch = false;
+				}
+			}
 
 			for (int treeIndex = 0; treeIndex < md.getNumTrees(); treeIndex++) {
 				if (party == Party.Eddie) {
@@ -376,6 +390,18 @@ public class PIRRetrieve extends Protocol {
 			}
 
 		}
+
+		Bandwidth total = new Bandwidth("Total Online");
+		for (int i = 0; i < P.size; i++) {
+			for (int j = 0; j < cons1.length; j++)
+				total.add(cons1[j].bandwidth[i].add(cons2[j].bandwidth[i]).bandwidth);
+		}
+		System.out.println(total.toString());
+
+		// timer.divideBy(iterations - reset);
+		// timer.print();
+
+		sanityCheck();
 	}
 
 	// for testing correctness
