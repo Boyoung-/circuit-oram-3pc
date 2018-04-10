@@ -24,6 +24,7 @@ import protocols.struct.TwoThreeXorInt;
 import util.Bandwidth;
 import util.M;
 import util.P;
+import util.StopWatch;
 import util.Timer;
 import util.Util;
 
@@ -299,6 +300,7 @@ public class PIRRetrieve extends Protocol {
 	@Override
 	public void run(Party party, Metadata md, Forest[] forest) {
 
+		StopWatch ete = new StopWatch("ETE");
 		Timer timer = new Timer();
 		PreData predata = new PreData();
 
@@ -313,6 +315,7 @@ public class PIRRetrieve extends Protocol {
 
 			if (test == reset) {
 				timer.reset();
+				ete.reset();
 			}
 			if (test == 1) {
 				for (int k = 0; k < cons1.length; k++) {
@@ -351,7 +354,10 @@ public class PIRRetrieve extends Protocol {
 				byte[] Li = new byte[Llen];
 
 				if (party == Party.Eddie) {
+					ete.start();
 					OutPIRAccess out = this.runE(md, predata, tree_DE, tree_CE, Li, L, N, dN, timer);
+					ete.stop();
+					
 					out.j.t_D = con1.readInt();
 					out.j.t_C = con2.readInt();
 					out.X.CD = con1.read();
@@ -376,12 +382,18 @@ public class PIRRetrieve extends Protocol {
 						System.out.println(test + " " + treeIndex + ": PIRAcc test passed");
 
 				} else if (party == Party.Debbie) {
+					ete.start();
 					OutPIRAccess out = this.runD(md, predata, tree_DE, tree_CD, Li, L, N, dN, timer);
+					ete.stop();
+					
 					con1.write(out.j.t_D);
 					con1.write(out.X.CD);
 
 				} else if (party == Party.Charlie) {
+					ete.start();
 					OutPIRAccess out = this.runC(md, predata, tree_CD, tree_CE, Li, L, N, dN, timer);
+					ete.stop();
+					
 					con1.write(out.j.t_C);
 
 				} else {
@@ -400,6 +412,8 @@ public class PIRRetrieve extends Protocol {
 
 		// timer.divideBy(iterations - reset);
 		// timer.print();
+		
+		System.out.println(ete.toMS());
 
 		sanityCheck();
 	}
