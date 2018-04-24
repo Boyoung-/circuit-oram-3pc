@@ -5,7 +5,7 @@ import exceptions.BandwidthException;
 public class Bandwidth {
 
 	public String task;
-	public int bandwidth;
+	public long bandwidth;
 
 	public Bandwidth(String t) {
 		task = t;
@@ -21,7 +21,7 @@ public class Bandwidth {
 		bandwidth = 0;
 	}
 
-	public void add(int n) {
+	public void add(long n) {
 		bandwidth += n;
 	}
 

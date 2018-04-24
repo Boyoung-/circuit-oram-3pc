@@ -7,10 +7,15 @@ import oram.Forest;
 import oram.Global;
 import oram.Metadata;
 import protocols.struct.Party;
+import util.Bandwidth;
+import util.Timer;
 
 public abstract class Protocol {
 	protected Communication con1;
 	protected Communication con2;
+	public Timer timer;
+	public Bandwidth online_band;
+	public Bandwidth offline_band;
 
 	/*
 	 * Connections are alphabetized so:
@@ -24,6 +29,9 @@ public abstract class Protocol {
 	public Protocol(Communication con1, Communication con2) {
 		this.con1 = con1;
 		this.con2 = con2;
+		timer = new Timer();
+		online_band = new Bandwidth("Online");
+		offline_band = new Bandwidth("Offline");
 	}
 
 	private static final boolean ENSURE_SANITY = true;

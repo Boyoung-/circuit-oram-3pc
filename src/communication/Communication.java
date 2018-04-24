@@ -18,9 +18,9 @@ import com.oblivm.backend.gc.GCSignal;
 
 import crypto.SimpleAES;
 import oram.Bucket;
+import oram.Global;
 import oram.Tuple;
 import util.Bandwidth;
-import util.P;
 import util.StopWatch;
 import util.Util;
 
@@ -71,19 +71,12 @@ public class Communication {
 	protected int mState;
 	protected InetSocketAddress mAddress;
 
-	public Bandwidth[] bandwidth;
-	public boolean bandSwitch = true; // TODO: change this to static (or to
-										// Global)
-
+	// TODO: enable link encryption and remove manual AES Enc
 	private static SimpleAES aes = new SimpleAES();
-	public StopWatch comEnc = new StopWatch("CE_online_comp");
+	public StopWatch comEnc = new StopWatch("ComEnc_comp");
 
 	public Communication() {
 		mState = STATE_NONE;
-
-		bandwidth = new Bandwidth[P.size];
-		for (int i = 0; i < P.size; i++)
-			bandwidth[i] = new Bandwidth(P.names[i]);
 	}
 
 	public void setTcpNoDelay(boolean on) {
@@ -336,15 +329,15 @@ public class Communication {
 		r.write(out);
 	}
 
-	public void write(int pid, byte[] out) {
+	public void write(Bandwidth bandwidth, byte[] out) {
 		comEnc.start();
 		out = aes.encrypt(out);
 		comEnc.stop();
 
 		write(out);
 
-		if (bandSwitch)
-			bandwidth[pid].add(out.length);
+		if (Global.bandSwitch)
+			bandwidth.add(out.length);
 	}
 
 	/**
@@ -361,7 +354,7 @@ public class Communication {
 	 * public <T> void write(T out) {
 	 * write(SerializationUtils.serialize((Serializable) out)); }
 	 * 
-	 * public <T> void write(int pid, T out) { write(pid,
+	 * public <T> void write(Bandwidth bandwidth, T out) { write(pid,
 	 * SerializationUtils.serialize((Serializable) out)); }
 	 */
 
@@ -369,136 +362,136 @@ public class Communication {
 		write(b.toByteArray());
 	}
 
-	public void write(int pid, BigInteger b) {
-		write(pid, b.toByteArray());
+	public void write(Bandwidth bandwidth, BigInteger b) {
+		write(bandwidth, b.toByteArray());
 	}
 
 	public void write(int n) {
 		write(BigInteger.valueOf(n));
 	}
 
-	public void write(int pid, int n) {
-		write(pid, BigInteger.valueOf(n));
+	public void write(Bandwidth bandwidth, int n) {
+		write(bandwidth, BigInteger.valueOf(n));
 	}
 
 	public void write(long n) {
 		write(BigInteger.valueOf(n));
 	}
 
-	public void write(int pid, long n) {
-		write(pid, BigInteger.valueOf(n));
+	public void write(Bandwidth bandwidth, long n) {
+		write(bandwidth, BigInteger.valueOf(n));
 	}
 
 	public void write(byte[][] arr) {
 		write(ComUtil.serialize(arr));
 	}
 
-	public void write(int pid, byte[][] arr) {
-		write(pid, ComUtil.serialize(arr));
+	public void write(Bandwidth bandwidth, byte[][] arr) {
+		write(bandwidth, ComUtil.serialize(arr));
 	}
 
 	public void write(byte[][][] arr) {
 		write(ComUtil.serialize(arr));
 	}
 
-	public void write(int pid, byte[][][] arr) {
-		write(pid, ComUtil.serialize(arr));
+	public void write(Bandwidth bandwidth, byte[][][] arr) {
+		write(bandwidth, ComUtil.serialize(arr));
 	}
 
 	public void write(int[] arr) {
 		write(ComUtil.serialize(arr));
 	}
 
-	public void write(int pid, int[] arr) {
-		write(pid, ComUtil.serialize(arr));
+	public void write(Bandwidth bandwidth, int[] arr) {
+		write(bandwidth, ComUtil.serialize(arr));
 	}
 
 	public void write(int[][] arr) {
 		write(ComUtil.serialize(arr));
 	}
 
-	public void write(int pid, int[][] arr) {
-		write(pid, ComUtil.serialize(arr));
+	public void write(Bandwidth bandwidth, int[][] arr) {
+		write(bandwidth, ComUtil.serialize(arr));
 	}
 
 	public void write(Tuple t) {
 		write(ComUtil.serialize(t));
 	}
 
-	public void write(int pid, Tuple t) {
-		write(pid, ComUtil.serialize(t));
+	public void write(Bandwidth bandwidth, Tuple t) {
+		write(bandwidth, ComUtil.serialize(t));
 	}
 
 	public void write(Tuple[] arr) {
 		write(ComUtil.serialize(arr));
 	}
 
-	public void write(int pid, Tuple[] arr) {
-		write(pid, ComUtil.serialize(arr));
+	public void write(Bandwidth bandwidth, Tuple[] arr) {
+		write(bandwidth, ComUtil.serialize(arr));
 	}
 
 	public void write(Bucket b) {
 		write(b.getTuples());
 	}
 
-	public void write(int pid, Bucket b) {
-		write(pid, b.getTuples());
+	public void write(Bandwidth bandwidth, Bucket b) {
+		write(bandwidth, b.getTuples());
 	}
 
 	public void write(Bucket[] arr) {
 		write(ComUtil.serialize(arr));
 	}
 
-	public void write(int pid, Bucket[] arr) {
-		write(pid, ComUtil.serialize(arr));
+	public void write(Bandwidth bandwidth, Bucket[] arr) {
+		write(bandwidth, ComUtil.serialize(arr));
 	}
 
 	public void write(GCSignal key) {
 		write(key.bytes);
 	}
 
-	public void write(int pid, GCSignal key) {
-		write(pid, key.bytes);
+	public void write(Bandwidth bandwidth, GCSignal key) {
+		write(bandwidth, key.bytes);
 	}
 
 	public void write(GCSignal[] arr) {
 		write(ComUtil.serialize(arr));
 	}
 
-	public void write(int pid, GCSignal[] arr) {
-		write(pid, ComUtil.serialize(arr));
+	public void write(Bandwidth bandwidth, GCSignal[] arr) {
+		write(bandwidth, ComUtil.serialize(arr));
 	}
 
 	public void write(GCSignal[][] arr) {
 		write(ComUtil.serialize(arr));
 	}
 
-	public void write(int pid, GCSignal[][] arr) {
-		write(pid, ComUtil.serialize(arr));
+	public void write(Bandwidth bandwidth, GCSignal[][] arr) {
+		write(bandwidth, ComUtil.serialize(arr));
 	}
 
 	public void write(GCSignal[][][] arr) {
 		write(ComUtil.serialize(arr));
 	}
 
-	public void write(int pid, GCSignal[][][] arr) {
-		write(pid, ComUtil.serialize(arr));
+	public void write(Bandwidth bandwidth, GCSignal[][][] arr) {
+		write(bandwidth, ComUtil.serialize(arr));
 	}
 
 	public void write(GCSignal[][][][] arr) {
 		write(ComUtil.serialize(arr));
 	}
 
-	public void write(int pid, GCSignal[][][][] arr) {
-		write(pid, ComUtil.serialize(arr));
+	public void write(Bandwidth bandwidth, GCSignal[][][][] arr) {
+		write(bandwidth, ComUtil.serialize(arr));
 	}
 
 	public void write(ArrayList<byte[]> arr) {
 		write(ComUtil.serialize(arr));
 	}
 
-	public void write(int pid, ArrayList<byte[]> arr) {
-		write(pid, ComUtil.serialize(arr));
+	public void write(Bandwidth bandwidth, ArrayList<byte[]> arr) {
+		write(bandwidth, ComUtil.serialize(arr));
 	}
 
 	public static final Charset defaultCharset = Charset.forName("ASCII");
@@ -554,7 +547,7 @@ public class Communication {
 		return readMessage;
 	}
 
-	public byte[] read(int pid) {
+	public byte[] readAndDec() {
 		byte[] msg = read();
 		comEnc.start();
 		msg = aes.decrypt(msg);
@@ -598,136 +591,136 @@ public class Communication {
 		return new BigInteger(read());
 	}
 
-	public BigInteger readBigInteger(int pid) {
-		return new BigInteger(read(pid));
+	public BigInteger readBigIntegerAndDec() {
+		return new BigInteger(readAndDec());
 	}
 
 	public int readInt() {
 		return readBigInteger().intValue();
 	}
 
-	public int readInt(int pid) {
-		return readBigInteger(pid).intValue();
+	public int readIntAndDec() {
+		return readBigIntegerAndDec().intValue();
 	}
 
 	public long readLong() {
 		return readBigInteger().longValue();
 	}
 
-	public long readLong(int pid) {
-		return readBigInteger(pid).longValue();
+	public long readLongAndDec() {
+		return readBigIntegerAndDec().longValue();
 	}
 
 	public byte[][] readDoubleByteArray() {
 		return ComUtil.toDoubleByteArray(read());
 	}
 
-	public byte[][] readDoubleByteArray(int pid) {
-		return ComUtil.toDoubleByteArray(read(pid));
+	public byte[][] readDoubleByteArrayAndDec() {
+		return ComUtil.toDoubleByteArray(readAndDec());
 	}
 
 	public byte[][][] readTripleByteArray() {
 		return ComUtil.toTripleByteArray(read());
 	}
 
-	public byte[][][] readTripleByteArray(int pid) {
-		return ComUtil.toTripleByteArray(read(pid));
+	public byte[][][] readTripleByteArrayAndDec() {
+		return ComUtil.toTripleByteArray(readAndDec());
 	}
 
 	public int[] readIntArray() {
 		return ComUtil.toIntArray(read());
 	}
 
-	public int[] readIntArray(int pid) {
-		return ComUtil.toIntArray(read(pid));
+	public int[] readIntArrayAndDec() {
+		return ComUtil.toIntArray(readAndDec());
 	}
 
 	public int[][] readDoubleIntArray() {
 		return ComUtil.toDoubleIntArray(read());
 	}
 
-	public int[][] readDoubleIntArray(int pid) {
-		return ComUtil.toDoubleIntArray(read(pid));
+	public int[][] readDoubleIntArrayAndDec() {
+		return ComUtil.toDoubleIntArray(readAndDec());
 	}
 
 	public Tuple readTuple() {
 		return ComUtil.toTuple(read());
 	}
 
-	public Tuple readTuple(int pid) {
-		return ComUtil.toTuple(read(pid));
+	public Tuple readTupleAndDec() {
+		return ComUtil.toTuple(readAndDec());
 	}
 
 	public Tuple[] readTupleArray() {
 		return ComUtil.toTupleArray(read());
 	}
 
-	public Tuple[] readTupleArray(int pid) {
-		return ComUtil.toTupleArray(read(pid));
+	public Tuple[] readTupleArrayAndDec() {
+		return ComUtil.toTupleArray(readAndDec());
 	}
 
 	public Bucket readBucket() {
 		return new Bucket(readTupleArray());
 	}
 
-	public Bucket readBucket(int pid) {
-		return new Bucket(readTupleArray(pid));
+	public Bucket readBucketAndDec() {
+		return new Bucket(readTupleArrayAndDec());
 	}
 
 	public Bucket[] readBucketArray() {
 		return ComUtil.toBucketArray(read());
 	}
 
-	public Bucket[] readBucketArray(int pid) {
-		return ComUtil.toBucketArray(read(pid));
+	public Bucket[] readBucketArrayAndDec() {
+		return ComUtil.toBucketArray(readAndDec());
 	}
 
 	public GCSignal readGCSignal() {
 		return new GCSignal(read());
 	}
 
-	public GCSignal readGCSignal(int pid) {
-		return new GCSignal(read(pid));
+	public GCSignal readGCSignalAndDec() {
+		return new GCSignal(readAndDec());
 	}
 
 	public GCSignal[] readGCSignalArray() {
 		return ComUtil.toGCSignalArray(read());
 	}
 
-	public GCSignal[] readGCSignalArray(int pid) {
-		return ComUtil.toGCSignalArray(read(pid));
+	public GCSignal[] readGCSignalArrayAndDec() {
+		return ComUtil.toGCSignalArray(readAndDec());
 	}
 
 	public GCSignal[][] readDoubleGCSignalArray() {
 		return ComUtil.toDoubleGCSignalArray(read());
 	}
 
-	public GCSignal[][] readDoubleGCSignalArray(int pid) {
-		return ComUtil.toDoubleGCSignalArray(read(pid));
+	public GCSignal[][] readDoubleGCSignalArrayAndDec() {
+		return ComUtil.toDoubleGCSignalArray(readAndDec());
 	}
 
 	public GCSignal[][][] readTripleGCSignalArray() {
 		return ComUtil.toTripleGCSignalArray(read());
 	}
 
-	public GCSignal[][][] readTripleGCSignalArray(int pid) {
-		return ComUtil.toTripleGCSignalArray(read(pid));
+	public GCSignal[][][] readTripleGCSignalArrayAndDec() {
+		return ComUtil.toTripleGCSignalArray(readAndDec());
 	}
 
 	public GCSignal[][][][] readQuadGCSignalArray() {
 		return ComUtil.toQuadGCSignalArray(read());
 	}
 
-	public GCSignal[][][][] readQuadGCSignalArray(int pid) {
-		return ComUtil.toQuadGCSignalArray(read(pid));
+	public GCSignal[][][][] readQuadGCSignalArrayAndDec() {
+		return ComUtil.toQuadGCSignalArray(readAndDec());
 	}
 
 	public ArrayList<byte[]> readArrayList() {
 		return ComUtil.toArrayList(read());
 	}
 
-	public ArrayList<byte[]> readArrayList(int pid) {
-		return ComUtil.toArrayList(read(pid));
+	public ArrayList<byte[]> readArrayListAndDec() {
+		return ComUtil.toArrayList(readAndDec());
 	}
 
 	/**

@@ -357,7 +357,7 @@ public class PIRRetrieve extends Protocol {
 					ete.start();
 					OutPIRAccess out = this.runE(md, predata, tree_DE, tree_CE, Li, L, N, dN, timer);
 					ete.stop();
-					
+
 					out.j.t_D = con1.readInt();
 					out.j.t_C = con2.readInt();
 					out.X.CD = con1.read();
@@ -385,7 +385,7 @@ public class PIRRetrieve extends Protocol {
 					ete.start();
 					OutPIRAccess out = this.runD(md, predata, tree_DE, tree_CD, Li, L, N, dN, timer);
 					ete.stop();
-					
+
 					con1.write(out.j.t_D);
 					con1.write(out.X.CD);
 
@@ -393,7 +393,7 @@ public class PIRRetrieve extends Protocol {
 					ete.start();
 					OutPIRAccess out = this.runC(md, predata, tree_CD, tree_CE, Li, L, N, dN, timer);
 					ete.stop();
-					
+
 					con1.write(out.j.t_C);
 
 				} else {
@@ -412,7 +412,7 @@ public class PIRRetrieve extends Protocol {
 
 		// timer.divideBy(iterations - reset);
 		// timer.print();
-		
+
 		System.out.println(ete.toMS());
 
 		sanityCheck();
