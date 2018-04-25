@@ -1,5 +1,7 @@
 package pir;
 
+import java.security.SecureRandom;
+
 import communication.Communication;
 import crypto.Crypto;
 import exceptions.NoSuchPartyException;
@@ -7,22 +9,33 @@ import oram.Forest;
 import oram.Metadata;
 import protocols.Protocol;
 import protocols.struct.Party;
-import protocols.struct.PreData;
 import util.M;
-import util.P;
-import util.Timer;
 import util.Util;
 
 public class ShiftPIR extends Protocol {
 
-	private int pid = P.SftPIR;
+	SecureRandom sr1;
+	SecureRandom sr2;
 
 	public ShiftPIR(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
 
-	public byte[] runP1(PreData predata, byte[][] x, int s, Timer timer) {
-		timer.start(pid, M.online_comp);
+	public ShiftPIR(Communication con1, Communication con2, SecureRandom sr1, SecureRandom sr2) {
+		super(con1, con2);
+		this.sr1 = sr1;
+		this.sr2 = sr2;
+	}
+
+	public void reinit(Communication con1, Communication con2, SecureRandom sr1, SecureRandom sr2) {
+		this.con1 = con1;
+		this.con2 = con2;
+		this.sr1 = sr1;
+		this.sr2 = sr2;
+	}
+
+	public byte[] runP1(byte[][] x, int s) {
+		timer.start(M.online_comp);
 
 		// TODO: do in place shift
 		byte[][] xp = new byte[x.length][];
@@ -30,42 +43,39 @@ public class ShiftPIR extends Protocol {
 			xp[i] = x[(i + s) % x.length];
 		}
 
-		SSPIR sspir = new SSPIR(con1, con2);
-		byte[] z = sspir.runP1(predata, xp, timer);
+		SSPIR sspir = new SSPIR(con1, con2, sr1, sr2);
+		byte[] z = sspir.runP1(xp);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return z;
 	}
 
-	public byte[] runP2(PreData predata, byte[][] x, int s, Timer timer) {
-		timer.start(pid, M.online_comp);
+	public byte[] runP2(byte[][] x, int s) {
+		timer.start(M.online_comp);
 
 		byte[][] xp = new byte[x.length][];
 		for (int i = 0; i < x.length; i++) {
 			xp[i] = x[(i + s) % x.length];
 		}
 
-		SSPIR sspir = new SSPIR(con1, con2);
-		byte[] z = sspir.runP2(predata, xp, timer);
+		SSPIR sspir = new SSPIR(con1, con2, sr1, sr2);
+		byte[] z = sspir.runP2(xp);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return z;
 	}
 
-	public void runP3(PreData predata, int t, Timer timer) {
-		timer.start(pid, M.online_comp);
+	public void runP3(int l, int t) {
+		timer.start(M.online_comp);
 
-		SSPIR sspir = new SSPIR(con1, con2);
-		sspir.runP3(predata, t, timer);
+		SSPIR sspir = new SSPIR(con1, con2, sr1, sr2);
+		sspir.runP3(l, t);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 	}
 
 	@Override
 	public void run(Party party, Metadata md, Forest[] forest) {
-
-		Timer timer = new Timer();
-		PreData predata = new PreData();
 
 		for (int j = 0; j < 100; j++) {
 			int l = 100;
@@ -78,21 +88,27 @@ public class ShiftPIR extends Protocol {
 			int t = Crypto.sr.nextInt(l);
 
 			if (party == Party.Eddie) {
+				this.reinit(con1, con2, Crypto.sr_DE, Crypto.sr_CE);
+
 				con1.write(x);
 				con1.write(s);
-				byte[] out = this.runP1(predata, x, s, timer);
+				byte[] out = this.runP1(x, s);
 				con2.write(out);
 				con2.write(x);
 				con2.write(s);
 
 			} else if (party == Party.Debbie) {
+				this.reinit(con1, con2, Crypto.sr_DE, Crypto.sr_CD);
+
 				x = con1.readDoubleByteArray();
 				s = con1.readInt();
-				byte[] out = this.runP2(predata, x, s, timer);
+				byte[] out = this.runP2(x, s);
 				con2.write(out);
 
 			} else if (party == Party.Charlie) {
-				this.runP3(predata, t, timer);
+				this.reinit(con1, con2, Crypto.sr_CE, Crypto.sr_CD);
+
+				this.runP3(l, t);
 				byte[] out1 = con1.read();
 				x = con1.readDoubleByteArray();
 				s = con1.readInt();
