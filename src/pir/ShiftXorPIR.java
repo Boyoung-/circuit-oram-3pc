@@ -1,5 +1,6 @@
 package pir;
 
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 import communication.Communication;
@@ -9,22 +10,33 @@ import oram.Forest;
 import oram.Metadata;
 import protocols.Protocol;
 import protocols.struct.Party;
-import protocols.struct.PreData;
 import util.M;
-import util.P;
-import util.Timer;
 import util.Util;
 
 public class ShiftXorPIR extends Protocol {
 
-	private int pid = P.SftXorPIR;
+	SecureRandom sr1;
+	SecureRandom sr2;
 
 	public ShiftXorPIR(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
 
-	public byte[] runP1(PreData predata, byte[][] x, int s1, int s2, int m, Timer timer) {
-		timer.start(pid, M.online_comp);
+	public ShiftXorPIR(Communication con1, Communication con2, SecureRandom sr1, SecureRandom sr2) {
+		super(con1, con2);
+		this.sr1 = sr1;
+		this.sr2 = sr2;
+	}
+
+	public void reinit(Communication con1, Communication con2, SecureRandom sr1, SecureRandom sr2) {
+		this.con1 = con1;
+		this.con2 = con2;
+		this.sr1 = sr1;
+		this.sr2 = sr2;
+	}
+
+	public byte[] runP1(byte[][] x, int s1, int s2, int m) {
+		timer.start(M.online_comp);
 
 		int n = x.length;
 		int l = x[0].length / m;
@@ -36,15 +48,15 @@ public class ShiftXorPIR extends Protocol {
 			}
 		}
 
-		SSPIR sspir = new SSPIR(con1, con2);
-		byte[] z = sspir.runP1(predata, xp, timer);
+		SSPIR sspir = new SSPIR(con1, con2, sr1, sr2);
+		byte[] z = sspir.runP1(xp);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return z;
 	}
 
-	public byte[] runP2(PreData predata, byte[][] x, int s1, int s2, int m, Timer timer) {
-		timer.start(pid, M.online_comp);
+	public byte[] runP2(byte[][] x, int s1, int s2, int m) {
+		timer.start(M.online_comp);
 
 		int n = x.length;
 		int l = x[0].length / m;
@@ -56,29 +68,26 @@ public class ShiftXorPIR extends Protocol {
 			}
 		}
 
-		SSPIR sspir = new SSPIR(con1, con2);
-		byte[] z = sspir.runP2(predata, xp, timer);
+		SSPIR sspir = new SSPIR(con1, con2, sr1, sr2);
+		byte[] z = sspir.runP2(xp);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return z;
 	}
 
-	public void runP3(PreData predata, int t1, int t2, int m, Timer timer) {
-		timer.start(pid, M.online_comp);
+	public void runP3(int t1, int t2, int n, int m) {
+		timer.start(M.online_comp);
 
 		int t = t1 * m + t2;
 
-		SSPIR sspir = new SSPIR(con1, con2);
-		sspir.runP3(predata, t, timer);
+		SSPIR sspir = new SSPIR(con1, con2, sr1, sr2);
+		sspir.runP3(n * m, t);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 	}
 
 	@Override
 	public void run(Party party, Metadata md, Forest[] forest) {
-
-		Timer timer = new Timer();
-		PreData predata = new PreData();
 
 		for (int j = 0; j < 100; j++) {
 			int n = 500;
@@ -94,12 +103,14 @@ public class ShiftXorPIR extends Protocol {
 			int t2 = Crypto.sr.nextInt(m);
 
 			if (party == Party.Eddie) {
+				this.reinit(con1, con2, Crypto.sr_DE, Crypto.sr_CE);
+
 				con1.write(x);
 				con1.write(s1);
 				con1.write(s2);
 				con2.write(t1);
 				con2.write(t2);
-				byte[] e = this.runP1(predata, x, s1, s2, m, timer);
+				byte[] e = this.runP1(x, s1, s2, m);
 
 				byte[] d = con1.read();
 				Util.setXor(e, d);
@@ -114,17 +125,21 @@ public class ShiftXorPIR extends Protocol {
 					System.out.println(j + ": ShiftXorPIR test passed");
 
 			} else if (party == Party.Debbie) {
+				this.reinit(con1, con2, Crypto.sr_DE, Crypto.sr_CD);
+
 				x = con1.readDoubleByteArray();
 				s1 = con1.readInt();
 				s2 = con1.readInt();
-				byte[] d = this.runP2(predata, x, s1, s2, m, timer);
+				byte[] d = this.runP2(x, s1, s2, m);
 
 				con1.write(d);
 
 			} else if (party == Party.Charlie) {
+				this.reinit(con1, con2, Crypto.sr_CE, Crypto.sr_CD);
+
 				t1 = con1.readInt();
 				t2 = con1.readInt();
-				this.runP3(predata, t1, t2, m, timer);
+				this.runP3(t1, t2, n, m);
 
 			} else {
 				throw new NoSuchPartyException(party + "");
