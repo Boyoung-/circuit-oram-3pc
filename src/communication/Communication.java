@@ -3,6 +3,7 @@ package communication;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.StreamCorruptedException;
 import java.math.BigInteger;
 import java.net.InetSocketAddress;
@@ -13,6 +14,8 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+
+import org.apache.commons.lang3.SerializationUtils;
 
 import com.oblivm.backend.gc.GCSignal;
 
@@ -350,13 +353,13 @@ public class Communication {
 		write(out);
 	}
 
-	/*
-	 * public <T> void write(T out) {
-	 * write(SerializationUtils.serialize((Serializable) out)); }
-	 * 
-	 * public <T> void write(Bandwidth bandwidth, T out) { write(pid,
-	 * SerializationUtils.serialize((Serializable) out)); }
-	 */
+	public <T> void write(T out) {
+		write(SerializationUtils.serialize((Serializable) out));
+	}
+
+	public <T> void write(Bandwidth bandwidth, T out) {
+		write(bandwidth, SerializationUtils.serialize((Serializable) out));
+	}
 
 	public void write(BigInteger b) {
 		write(b.toByteArray());
@@ -582,10 +585,15 @@ public class Communication {
 		return total;
 	}
 
-	/*
-	 * public <T> T readObject() { T object =
-	 * SerializationUtils.deserialize(read()); return object; }
-	 */
+	public <T> T readObject() {
+		T object = SerializationUtils.deserialize(read());
+		return object;
+	}
+
+	public <T> T readObjectAndDec() {
+		T object = SerializationUtils.deserialize(readAndDec());
+		return object;
+	}
 
 	public BigInteger readBigInteger() {
 		return new BigInteger(read());
