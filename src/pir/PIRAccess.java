@@ -12,32 +12,25 @@ import oram.Forest;
 import oram.Metadata;
 import oram.Tree;
 import oram.Tuple;
-import pir.precomputation.PrePIRCOT;
 import protocols.Protocol;
-import protocols.struct.OutAccess;
 import protocols.struct.OutPIRAccess;
 import protocols.struct.OutPIRCOT;
 import protocols.struct.Party;
-import protocols.struct.PreData;
 import protocols.struct.TwoOneXor;
 import protocols.struct.TwoThreeXorByte;
 import protocols.struct.TwoThreeXorInt;
 import util.M;
-import util.P;
-import util.Timer;
 import util.Util;
 
 public class PIRAccess extends Protocol {
-
-	private int pid = P.ACC;
 
 	public PIRAccess(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
 
-	public OutPIRAccess runE(Metadata md, PreData predata, Tree tree_DE, Tree tree_CE, byte[] Li, TwoThreeXorByte L,
-			TwoThreeXorByte N, TwoThreeXorInt dN, Timer timer) {
-		timer.start(pid, M.online_comp);
+	public OutPIRAccess runE(Metadata md, Tree tree_DE, Tree tree_CE, byte[] Li, TwoThreeXorByte L, TwoThreeXorByte N,
+			TwoThreeXorInt dN) {
+		timer.start(M.online_comp);
 
 		Bucket[] pathBuckets_DE = tree_DE.getBucketsOnPath(Li);
 		Tuple[] pathTuples_DE = Bucket.bucketsToTuples(pathBuckets_DE);
@@ -64,8 +57,6 @@ public class PIRAccess extends Protocol {
 			X.DE = x_DE[0];
 			X.CE = x_CE[0];
 		} else {
-			PrePIRCOT preksearch = new PrePIRCOT(con1, con2);
-			preksearch.runE(predata, pathTuples, timer);
 
 			byte[][] u = new byte[pathTuples][];
 			for (int i = 0; i < pathTuples; i++) {
@@ -74,10 +65,10 @@ public class PIRAccess extends Protocol {
 			byte[] v = ArrayUtils.addAll(new byte[] { 1 }, N.CE);
 
 			PIRCOT ksearch = new PIRCOT(con1, con2);
-			j = ksearch.runE(predata, u, v, timer);
+			j = ksearch.runE(u, v);
 
-			ThreeShiftPIR threeshiftpir = new ThreeShiftPIR(con1, con2);
-			X = threeshiftpir.runE(predata, x_DE, x_CE, j, timer);
+			ThreeShiftPIR threeshiftpir = new ThreeShiftPIR(con1, con2, Crypto.sr_DE, Crypto.sr_CE);
+			X = threeshiftpir.runE(x_DE, x_CE, j);
 
 			dN21.t_E = dN.CE ^ dN.DE;
 			dN21.s_CE = dN.CE;
@@ -87,20 +78,20 @@ public class PIRAccess extends Protocol {
 		TwoThreeXorByte nextL = null;
 		byte[] Lip1 = null;
 		if (!isLastTree) {
-			ThreeShiftXorPIR threeshiftxorpir = new ThreeShiftXorPIR(con1, con2);
-			nextL = threeshiftxorpir.runE(predata, x_DE, x_CE, j, dN21, ttp, timer);
+			ThreeShiftXorPIR threeshiftxorpir = new ThreeShiftXorPIR(con1, con2, Crypto.sr_DE, Crypto.sr_CE);
+			nextL = threeshiftxorpir.runE(x_DE, x_CE, j, dN21, ttp);
 			Lip1 = Util.xor(Util.xor(nextL.DE, nextL.CE), nextL.CD);
 		}
 
 		OutPIRAccess out = new OutPIRAccess(null, pathTuples_CE, pathTuples_DE, j, X, nextL, Lip1);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return out;
 	}
 
-	public OutPIRAccess runD(Metadata md, PreData predata, Tree tree_DE, Tree tree_CD, byte[] Li, TwoThreeXorByte L,
-			TwoThreeXorByte N, TwoThreeXorInt dN, Timer timer) {
-		timer.start(pid, M.online_comp);
+	public OutPIRAccess runD(Metadata md, Tree tree_DE, Tree tree_CD, byte[] Li, TwoThreeXorByte L, TwoThreeXorByte N,
+			TwoThreeXorInt dN) {
+		timer.start(M.online_comp);
 
 		Bucket[] pathBuckets_DE = tree_DE.getBucketsOnPath(Li);
 		Tuple[] pathTuples_DE = Bucket.bucketsToTuples(pathBuckets_DE);
@@ -127,8 +118,6 @@ public class PIRAccess extends Protocol {
 			X.DE = x_DE[0];
 			X.CD = x_CD[0];
 		} else {
-			PrePIRCOT preksearch = new PrePIRCOT(con1, con2);
-			preksearch.runD(predata, pathTuples, timer);
 
 			byte[][] u = new byte[pathTuples][];
 			for (int i = 0; i < pathTuples; i++) {
@@ -139,10 +128,10 @@ public class PIRAccess extends Protocol {
 			Util.setXor(v, ArrayUtils.addAll(new byte[] { 1 }, N.CD));
 
 			PIRCOT ksearch = new PIRCOT(con1, con2);
-			j = ksearch.runD(predata, u, v, timer);
+			j = ksearch.runD(u, v);
 
-			ThreeShiftPIR threeshiftpir = new ThreeShiftPIR(con1, con2);
-			X = threeshiftpir.runD(predata, x_DE, x_CD, j, timer);
+			ThreeShiftPIR threeshiftpir = new ThreeShiftPIR(con1, con2, Crypto.sr_DE, Crypto.sr_CD);
+			X = threeshiftpir.runD(x_DE, x_CD, j);
 
 			dN21.t_D = dN.CD ^ dN.DE;
 			dN21.s_CD = dN.CD;
@@ -152,20 +141,20 @@ public class PIRAccess extends Protocol {
 		TwoThreeXorByte nextL = null;
 		byte[] Lip1 = null;
 		if (!isLastTree) {
-			ThreeShiftXorPIR threeshiftxorpir = new ThreeShiftXorPIR(con1, con2);
-			nextL = threeshiftxorpir.runD(predata, x_DE, x_CD, j, dN21, ttp, timer);
+			ThreeShiftXorPIR threeshiftxorpir = new ThreeShiftXorPIR(con1, con2, Crypto.sr_DE, Crypto.sr_CD);
+			nextL = threeshiftxorpir.runD(x_DE, x_CD, j, dN21, ttp);
 			Lip1 = Util.xor(Util.xor(nextL.DE, nextL.CE), nextL.CD);
 		}
 
 		OutPIRAccess out = new OutPIRAccess(pathTuples_CD, null, pathTuples_DE, j, X, nextL, Lip1);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return out;
 	}
 
-	public OutPIRAccess runC(Metadata md, PreData predata, Tree tree_CD, Tree tree_CE, byte[] Li, TwoThreeXorByte L,
-			TwoThreeXorByte N, TwoThreeXorInt dN, Timer timer) {
-		timer.start(pid, M.online_comp);
+	public OutPIRAccess runC(Metadata md, Tree tree_CD, Tree tree_CE, byte[] Li, TwoThreeXorByte L, TwoThreeXorByte N,
+			TwoThreeXorInt dN) {
+		timer.start(M.online_comp);
 
 		Bucket[] pathBuckets_CD = tree_CD.getBucketsOnPath(Li);
 		Tuple[] pathTuples_CD = Bucket.bucketsToTuples(pathBuckets_CD);
@@ -192,14 +181,12 @@ public class PIRAccess extends Protocol {
 			X.CE = x_CE[0];
 			X.CD = x_CD[0];
 		} else {
-			PrePIRCOT preksearch = new PrePIRCOT(con1, con2);
-			preksearch.runC(predata, timer);
 
 			PIRCOT ksearch = new PIRCOT(con1, con2);
-			j = ksearch.runC(predata, timer);
+			j = ksearch.runC(pathTuples);
 
-			ThreeShiftPIR threeshiftpir = new ThreeShiftPIR(con1, con2);
-			X = threeshiftpir.runC(predata, x_CD, x_CE, j, timer);
+			ThreeShiftPIR threeshiftpir = new ThreeShiftPIR(con1, con2, Crypto.sr_CE, Crypto.sr_CD);
+			X = threeshiftpir.runC(x_CD, x_CE, j);
 
 			dN21.t_C = dN.CD ^ dN.CE;
 			dN21.s_CD = dN.CD;
@@ -209,22 +196,19 @@ public class PIRAccess extends Protocol {
 		TwoThreeXorByte nextL = null;
 		byte[] Lip1 = null;
 		if (!isLastTree) {
-			ThreeShiftXorPIR threeshiftxorpir = new ThreeShiftXorPIR(con1, con2);
-			nextL = threeshiftxorpir.runC(predata, x_CD, x_CE, j, dN21, ttp, timer);
+			ThreeShiftXorPIR threeshiftxorpir = new ThreeShiftXorPIR(con1, con2, Crypto.sr_CE, Crypto.sr_CD);
+			nextL = threeshiftxorpir.runC(x_CD, x_CE, j, dN21, ttp);
 			Lip1 = Util.xor(Util.xor(nextL.DE, nextL.CE), nextL.CD);
 		}
 
 		OutPIRAccess out = new OutPIRAccess(pathTuples_CD, pathTuples_CE, null, j, X, nextL, Lip1);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return out;
 	}
 
 	@Override
 	public void run(Party party, Metadata md, Forest[] forest) {
-
-		Timer timer = new Timer();
-		PreData predata = new PreData();
 
 		Tree tree_CD = null;
 		Tree tree_DE = null;
@@ -262,7 +246,7 @@ public class PIRAccess extends Protocol {
 				byte[] Li = new byte[Llen];
 
 				if (party == Party.Eddie) {
-					OutPIRAccess out = this.runE(md, predata, tree_DE, tree_CE, Li, L, N, dN, timer);
+					OutPIRAccess out = this.runE(md, tree_DE, tree_CE, Li, L, N, dN);
 					out.j.t_D = con1.readInt();
 					out.j.t_C = con2.readInt();
 					out.X.CD = con1.read();
@@ -287,12 +271,12 @@ public class PIRAccess extends Protocol {
 						System.out.println(test + " " + treeIndex + ": PIRAcc test passed");
 
 				} else if (party == Party.Debbie) {
-					OutPIRAccess out = this.runD(md, predata, tree_DE, tree_CD, Li, L, N, dN, timer);
+					OutPIRAccess out = this.runD(md, tree_DE, tree_CD, Li, L, N, dN);
 					con1.write(out.j.t_D);
 					con1.write(out.X.CD);
 
 				} else if (party == Party.Charlie) {
-					OutPIRAccess out = this.runC(md, predata, tree_CD, tree_CE, Li, L, N, dN, timer);
+					OutPIRAccess out = this.runC(md, tree_CD, tree_CE, Li, L, N, dN);
 					con1.write(out.j.t_C);
 
 				} else {
@@ -303,195 +287,9 @@ public class PIRAccess extends Protocol {
 		}
 	}
 
-	// on second path
-	public OutAccess runE2(Tree OTi, Timer timer) {
-		timer.start(pid, M.online_comp);
+	// TODO: add Access on second path
 
-		// step 0: get Li from C
-		byte[] Li = new byte[0];
-		timer.start(pid, M.online_read);
-		if (OTi.getTreeIndex() > 0)
-			Li = con2.read();
-		timer.stop(pid, M.online_read);
-
-		// step 1
-		Bucket[] pathBuckets = OTi.getBucketsOnPath(Li);
-		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
-
-		// step 5
-		Tuple Ti = null;
-		if (OTi.getTreeIndex() == 0)
-			Ti = pathTuples[0];
-		else {
-			Ti = new Tuple(1, OTi.getNBytes(), OTi.getLBytes(), OTi.getABytes(), Crypto.sr);
-			Ti.setF(new byte[1]);
-		}
-
-		OutAccess outaccess = new OutAccess(Li, null, null, null, null, Ti, pathTuples);
-
-		timer.stop(pid, M.online_comp);
-		return outaccess;
-	}
-
-	public byte[] runD2(Tree OTi, Timer timer) {
-		timer.start(pid, M.online_comp);
-
-		// step 0: get Li from C
-		byte[] Li = new byte[0];
-		timer.start(pid, M.online_read);
-		if (OTi.getTreeIndex() > 0)
-			Li = con2.read();
-		timer.stop(pid, M.online_read);
-
-		// step 1
-		// Bucket[] pathBuckets = OTi.getBucketsOnPath(Li);
-		// Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
-
-		// step 2
-		// timer.start(pid, M.online_write);
-		// con2.write(pid, pathTuples);
-		// timer.stop(pid, M.online_write);
-
-		timer.stop(pid, M.online_comp);
-		return Li;
-	}
-
-	public OutAccess runC2(Metadata md, Tree OTi, int treeIndex, byte[] Li, Timer timer) {
-		timer.start(pid, M.online_comp);
-
-		// step 0: send Li to E and D
-		timer.start(pid, M.online_write);
-		if (treeIndex > 0) {
-			con1.write(Li);
-			con2.write(Li);
-		}
-		timer.stop(pid, M.online_write);
-
-		// step 1
-		Bucket[] pathBuckets = OTi.getBucketsOnPath(Li);
-		Tuple[] pathTuples = Bucket.bucketsToTuples(pathBuckets);
-
-		// step 2
-		// timer.start(pid, M.online_read);
-		// Tuple[] pathTuples = con2.readTupleArray(pid);
-		// timer.stop(pid, M.online_read);
-
-		// step 5
-		Tuple Ti = null;
-		if (treeIndex == 0) {
-			Ti = pathTuples[0];
-		} else {
-			Ti = new Tuple(1, md.getNBytesOfTree(treeIndex), md.getLBytesOfTree(treeIndex),
-					md.getABytesOfTree(treeIndex), Crypto.sr);
-			Ti.setF(new byte[1]);
-		}
-
-		OutAccess outaccess = new OutAccess(Li, null, Ti, pathTuples, null, null, null);
-
-		timer.stop(pid, M.online_comp);
-		return outaccess;
-	}
-
-	// for testing correctness
 	@Override
 	public void run(Party party, Metadata md, Forest forest) {
-		// int records = 5;
-		// int repeat = 5;
-		//
-		// int tau = md.getTau();
-		// int numTrees = md.getNumTrees();
-		// long numInsert = md.getNumInsertRecords();
-		// int addrBits = md.getAddrBits();
-		//
-		// Timer timer = new Timer();
-		//
-		// sanityCheck();
-		//
-		// System.out.println();
-		//
-		// for (int i = 0; i < records; i++) {
-		// long N = Global.cheat ? 0 : Util.nextLong(numInsert, Crypto.sr);
-		//
-		// for (int j = 0; j < repeat; j++) {
-		// System.out.println("Test: " + i + " " + j);
-		// System.out.println("N=" + BigInteger.valueOf(N).toString(2));
-		//
-		// byte[] Li = new byte[0];
-		//
-		// for (int ti = 0; ti < numTrees; ti++) {
-		// long Ni_value = Util.getSubBits(N, addrBits, addrBits -
-		// md.getNBitsOfTree(ti));
-		// long Nip1_pr_value = Util.getSubBits(N, addrBits - md.getNBitsOfTree(ti),
-		// Math.max(addrBits - md.getNBitsOfTree(ti) - tau, 0));
-		// byte[] Ni = Util.longToBytes(Ni_value, md.getNBytesOfTree(ti));
-		// byte[] Nip1_pr = Util.longToBytes(Nip1_pr_value, (tau + 7) / 8);
-		//
-		// PreData predata = new PreData();
-		// PreAccess preaccess = new PreAccess(con1, con2);
-		//
-		// if (party == Party.Eddie) {
-		// Tree OTi = forest.getTree(ti);
-		// int numTuples = (OTi.getD() - 1) * OTi.getW() + OTi.getStashSize();
-		// int[] tupleParam = new int[] { ti == 0 ? 0 : 1, md.getNBytesOfTree(ti),
-		// md.getLBytesOfTree(ti),
-		// md.getABytesOfTree(ti) };
-		// preaccess.runE(predata, md.getTwoTauPow(), numTuples, tupleParam, timer);
-		//
-		// byte[] sE_Ni = Util.nextBytes(Ni.length, Crypto.sr);
-		// byte[] sD_Ni = Util.xor(Ni, sE_Ni);
-		// con1.write(sD_Ni);
-		//
-		// byte[] sE_Nip1_pr = Util.nextBytes(Nip1_pr.length, Crypto.sr);
-		// byte[] sD_Nip1_pr = Util.xor(Nip1_pr, sE_Nip1_pr);
-		// con1.write(sD_Nip1_pr);
-		//
-		// OutAccess outaccess = runE(predata, OTi, sE_Ni, sE_Nip1_pr, timer);
-		//
-		// if (ti == numTrees - 1) {
-		// con2.write(N);
-		// con2.write(outaccess.E_Ti);
-		// }
-		//
-		// } else if (party == Party.Debbie) {
-		// Tree OTi = forest.getTree(ti);
-		// preaccess.runD(predata, timer);
-		//
-		// byte[] sD_Ni = con1.read();
-		//
-		// byte[] sD_Nip1_pr = con1.read();
-		//
-		// runD(predata, OTi, sD_Ni, sD_Nip1_pr, timer);
-		//
-		// } else if (party == Party.Charlie) {
-		// Tree OTi = forest.getTree(ti);
-		// preaccess.runC(timer);
-		//
-		// System.out.println("L" + ti + "=" + new BigInteger(1, Li).toString(2));
-		//
-		// OutAccess outaccess = runC(md, OTi, ti, Li, timer);
-		//
-		// Li = outaccess.C_Lip1;
-		//
-		// if (ti == numTrees - 1) {
-		// N = con1.readLong();
-		// Tuple E_Ti = con1.readTuple();
-		// long data = new BigInteger(1, Util.xor(outaccess.C_Ti.getA(),
-		// E_Ti.getA())).longValue();
-		// if (N == data) {
-		// System.out.println("PIR Access passed");
-		// System.out.println();
-		// } else {
-		// throw new AccessException("PIR Access failed: " + N + " != " + data);
-		// }
-		// }
-		//
-		// } else {
-		// throw new NoSuchPartyException(party + "");
-		// }
-		// }
-		// }
-		// }
-		//
-		// // timer.print();
 	}
 }

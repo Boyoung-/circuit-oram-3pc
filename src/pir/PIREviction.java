@@ -264,15 +264,13 @@ public class PIREviction extends Protocol {
 		timer.stop(pid, M.online_comp);
 	}
 
-	// for testing correctness
 	@Override
-	public void run(Party party, Metadata md, Forest forest) {
-		System.out.println("Use Retrieve to test Eviction");
+	public void run(Party party, Metadata md, Forest[] forest) {
+		System.out.println("Use PIRRetrieve to test PIREviction");
 	}
 
 	@Override
-	public void run(Party party, Metadata md, Forest[] forest) {
-		// TODO Auto-generated method stub
-
+	public void run(Party party, Metadata md, Forest forest) {
+		System.out.println("Use Retrieve to test Eviction");
 	}
 }
