@@ -8,125 +8,156 @@ import exceptions.NoSuchPartyException;
 import oram.Forest;
 import oram.Metadata;
 import oram.Tuple;
-import protocols.precomputation.PreSSXOT;
 import protocols.struct.Party;
-import protocols.struct.PreData;
 import util.M;
-import util.P;
-import util.Timer;
 import util.Util;
 
 // TODO: change XOT to do 2 rounds and 2|path| bndw
 
 public class SSXOT extends Protocol {
 
-	private int id;
-	private int pid;
-
 	public SSXOT(Communication con1, Communication con2) {
 		super(con1, con2);
-		this.id = 0;
-		pid = id == 0 ? P.URXOT : P.XOT;
 	}
 
-	public SSXOT(Communication con1, Communication con2, int id) {
-		super(con1, con2);
-		this.id = id;
-		pid = id == 0 ? P.URXOT : P.XOT;
-	}
+	public Tuple[] runE(Tuple[] m, int[] tupleParam) {
+		timer.start(M.offline_comp);
 
-	public Tuple[] runE(PreData predata, Tuple[] m, Timer timer) {
-		timer.start(pid, M.online_comp);
+		int n = m.length;
+
+		int[] E_pi = Util.randomPermutation(n, Crypto.sr_DE);
+
+		Tuple[] E_r = new Tuple[n];
+		for (int i = 0; i < n; i++) {
+			E_r[i] = new Tuple(tupleParam[0], tupleParam[1], tupleParam[2], tupleParam[3], Crypto.sr_DE);
+		}
+
+		timer.stop(M.offline_comp);
+
+		/////////////////////////////////////////////////////////////////////
+
+		timer.start(M.online_comp);
 
 		// step 1
 		Tuple[] a = new Tuple[m.length];
 		for (int i = 0; i < m.length; i++)
-			a[i] = m[predata.ssxot_E_pi[id][i]].xor(predata.ssxot_E_r[id][i]);
+			a[i] = m[E_pi[i]].xor(E_r[i]);
 
-		// timer.start(pid, M.online_write);
-		// con2.write(pid, a);
-		// timer.stop(pid, M.online_write);
-		con2.write(a);
+		timer.start(M.online_write);
+		con2.write(online_band, a);
+		timer.stop(M.online_write);
 
-		a = con2.readTupleArray();
-		timer.start(pid, M.online_read);
-		// a = con2.readTupleArray(pid);
+		timer.start(M.online_read);
+		a = con2.readTupleArrayAndDec();
 
 		// step 2
-		int[] j = con1.readIntArray(pid);
-		Tuple[] p = con1.readTupleArray(pid);
-		timer.stop(pid, M.online_read);
+		int[] j = con1.readIntArrayAndDec();
+		Tuple[] p = con1.readTupleArrayAndDec();
+		timer.stop(M.online_read);
 
 		// step 3
 		Tuple[] z = new Tuple[j.length];
 		for (int i = 0; i < j.length; i++)
 			z[i] = a[j[i]].xor(p[i]);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return z;
 	}
 
-	public void runD(PreData predata, int[] index, Timer timer) {
-		timer.start(pid, M.online_comp);
+	public void runD(int n, int k, int[] tupleParam, int[] index) {
+		timer.start(M.offline_comp);
+
+		Tuple[] delta = new Tuple[k];
+		for (int i = 0; i < k; i++)
+			delta[i] = new Tuple(tupleParam[0], tupleParam[1], tupleParam[2], tupleParam[3], Crypto.sr);
+
+		int[] E_pi = Util.randomPermutation(n, Crypto.sr_DE);
+		int[] C_pi = Util.randomPermutation(n, Crypto.sr_CD);
+		int[] E_pi_ivs = Util.inversePermutation(E_pi);
+		int[] C_pi_ivs = Util.inversePermutation(C_pi);
+
+		Tuple[] E_r = new Tuple[n];
+		Tuple[] C_r = new Tuple[n];
+		for (int i = 0; i < n; i++) {
+			E_r[i] = new Tuple(tupleParam[0], tupleParam[1], tupleParam[2], tupleParam[3], Crypto.sr_DE);
+			C_r[i] = new Tuple(tupleParam[0], tupleParam[1], tupleParam[2], tupleParam[3], Crypto.sr_CD);
+		}
+
+		timer.stop(M.offline_comp);
+
+		////////////////////////////////////////////////////////////////////
+
+		timer.start(M.online_comp);
 
 		// step 2
-		int k = index.length;
+		k = index.length;
 		int[] E_j = new int[k];
 		int[] C_j = new int[k];
 		Tuple[] E_p = new Tuple[k];
 		Tuple[] C_p = new Tuple[k];
 		for (int i = 0; i < k; i++) {
-			E_j[i] = predata.ssxot_E_pi_ivs[id][index[i]];
-			C_j[i] = predata.ssxot_C_pi_ivs[id][index[i]];
-			E_p[i] = predata.ssxot_E_r[id][E_j[i]].xor(predata.ssxot_delta[id][i]);
-			C_p[i] = predata.ssxot_C_r[id][C_j[i]].xor(predata.ssxot_delta[id][i]);
+			E_j[i] = E_pi_ivs[index[i]];
+			C_j[i] = C_pi_ivs[index[i]];
+			E_p[i] = E_r[E_j[i]].xor(delta[i]);
+			C_p[i] = C_r[C_j[i]].xor(delta[i]);
 		}
 
-		timer.start(pid, M.online_write);
-		con2.write(pid, E_j);
-		con2.write(pid, E_p);
-		con1.write(pid, C_j);
-		con1.write(pid, C_p);
-		timer.stop(pid, M.online_write);
+		timer.start(M.online_write);
+		con2.write(online_band, E_j);
+		con2.write(online_band, E_p);
+		con1.write(online_band, C_j);
+		con1.write(online_band, C_p);
+		timer.stop(M.online_write);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 	}
 
-	public Tuple[] runC(PreData predata, Tuple[] m, Timer timer) {
-		timer.start(pid, M.online_comp);
+	public Tuple[] runC(Tuple[] m, int[] tupleParam) {
+		timer.start(M.offline_comp);
+
+		int n = m.length;
+
+		int[] C_pi = Util.randomPermutation(n, Crypto.sr_CD);
+
+		Tuple[] C_r = new Tuple[n];
+		for (int i = 0; i < n; i++) {
+			C_r[i] = new Tuple(tupleParam[0], tupleParam[1], tupleParam[2], tupleParam[3], Crypto.sr_CD);
+		}
+
+		timer.stop(M.offline_comp);
+
+		////////////////////////////////////////////////////////////
+
+		timer.start(M.online_comp);
 
 		// step 1
 		Tuple[] a = new Tuple[m.length];
 		for (int i = 0; i < m.length; i++)
-			a[i] = m[predata.ssxot_C_pi[id][i]].xor(predata.ssxot_C_r[id][i]);
+			a[i] = m[C_pi[i]].xor(C_r[i]);
 
-		// timer.start(pid, M.online_write);
-		// con1.write(pid, a);
-		// timer.stop(pid, M.online_write);
-		con1.write(a);
+		timer.start(M.online_write);
+		con1.write(online_band, a);
+		timer.stop(M.online_write);
 
-		a = con1.readTupleArray();
-		timer.start(pid, M.online_read);
-		// a = con1.readTupleArray(pid);
+		timer.start(M.online_read);
+		a = con1.readTupleArrayAndDec();
 
 		// step 2
-		int[] j = con2.readIntArray(pid);
-		Tuple[] p = con2.readTupleArray(pid);
-		timer.stop(pid, M.online_read);
+		int[] j = con2.readIntArrayAndDec();
+		Tuple[] p = con2.readTupleArrayAndDec();
+		timer.stop(M.online_read);
 
 		// step 3
 		Tuple[] z = new Tuple[j.length];
 		for (int i = 0; i < j.length; i++)
 			z[i] = a[j[i]].xor(p[i]);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return z;
 	}
 
-	// for testing correctness
 	@Override
-	public void run(protocols.struct.Party party, Metadata md, oram.Forest forest) {
-		Timer timer = new Timer();
+	public void run(Party party, Metadata md, Forest[] forest) {
 
 		for (int j = 0; j < 100; j++) {
 			int n = 100;
@@ -140,25 +171,19 @@ public class SSXOT extends Protocol {
 				C_m[i] = new Tuple(tupleParam[0], tupleParam[1], tupleParam[2], tupleParam[3], null);
 			}
 
-			PreData predata = new PreData();
-			PreSSXOT pressxot = new PreSSXOT(con1, con2, 0);
-
 			if (party == Party.Eddie) {
-				pressxot.runE(predata, timer);
-				Tuple[] E_out_m = runE(predata, E_m, timer);
+				Tuple[] E_out_m = runE(E_m, tupleParam);
 
 				con2.write(E_m);
 				con2.write(E_out_m);
 
 			} else if (party == Party.Debbie) {
-				pressxot.runD(predata, n, k, tupleParam, timer);
-				runD(predata, index, timer);
+				runD(n, k, tupleParam, index);
 
 				con2.write(index);
 
 			} else if (party == Party.Charlie) {
-				pressxot.runC(predata, timer);
-				Tuple[] C_out_m = runC(predata, C_m, timer);
+				Tuple[] C_out_m = runC(C_m, tupleParam);
 
 				index = con2.readIntArray();
 				E_m = con1.readTupleArray();
@@ -181,13 +206,9 @@ public class SSXOT extends Protocol {
 				throw new NoSuchPartyException(party + "");
 			}
 		}
-
-		// timer.print();
 	}
 
 	@Override
-	public void run(Party party, Metadata md, Forest[] forest) {
-		// TODO Auto-generated method stub
-
+	public void run(Party party, Metadata md, Forest forest) {
 	}
 }

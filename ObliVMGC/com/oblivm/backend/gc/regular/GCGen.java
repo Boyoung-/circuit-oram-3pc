@@ -8,13 +8,14 @@ import com.oblivm.backend.gc.GCGenComp;
 import com.oblivm.backend.gc.GCSignal;
 import com.oblivm.backend.network.Network;
 
+import util.Bandwidth;
 import util.Timer;
 
 public class GCGen extends GCGenComp {
 	Garbler gb;
 
 	Timer timer = null;
-	int p;
+	Bandwidth band;
 	int m;
 	ArrayList<byte[]> msg = new ArrayList<byte[]>(threshold);
 
@@ -30,7 +31,7 @@ public class GCGen extends GCGenComp {
 		}
 	}
 
-	public GCGen(Network channel, Timer timer, int p, int m) {
+	public GCGen(Network channel, Timer timer, Bandwidth band, int m) {
 		super(channel, Mode.REAL);
 		gb = new Garbler();
 		for (int i = 0; i < 2; ++i) {
@@ -42,7 +43,7 @@ public class GCGen extends GCGenComp {
 		}
 
 		this.timer = timer;
-		this.p = p;
+		this.band = band;
 		this.m = m;
 	}
 
@@ -83,9 +84,9 @@ public class GCGen extends GCGenComp {
 
 	public void sendLastSetGTT() {
 		if (msg.size() > 0) {
-			timer.start(p, m);
-			channel.receiver.write(msg);
-			timer.stop(p, m);
+			timer.start(m);
+			channel.receiver.write(band, msg);
+			timer.stop(m);
 			msg.clear();
 		}
 	}
@@ -110,9 +111,9 @@ public class GCGen extends GCGenComp {
 
 			msg.add(rows);
 			if (msg.size() == threshold) {
-				timer.start(p, m);
-				channel.receiver.write(msg);
-				timer.stop(p, m);
+				timer.start(m);
+				channel.receiver.write(band, msg);
+				timer.stop(m);
 				msg.clear();
 			}
 		}

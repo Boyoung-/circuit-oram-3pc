@@ -20,7 +20,6 @@ public class GCEva extends GCEvaComp {
 	GCEva curr = null;
 
 	Timer timer = null;
-	int p;
 	int m;
 	ArrayList<byte[]> msg = new ArrayList<byte[]>(threshold);
 
@@ -33,7 +32,7 @@ public class GCEva extends GCEvaComp {
 		gtt[1][1] = GCSignal.newInstance(new byte[10]);
 	}
 
-	public GCEva(Network channel, Timer timer, int p, int m) {
+	public GCEva(Network channel, Timer timer, int m) {
 		super(channel, Mode.REAL);
 		gb = new Garbler();
 		gtt[0][0] = GCSignal.ZERO;
@@ -42,7 +41,6 @@ public class GCEva extends GCEvaComp {
 		gtt[1][1] = GCSignal.newInstance(new byte[10]);
 
 		this.timer = timer;
-		this.p = p;
 		this.m = m;
 	}
 
@@ -54,12 +52,14 @@ public class GCEva extends GCEvaComp {
 	public void receiveLastSetGTT() {
 		int remainder = (int) (numOfAnds % threshold);
 		if (remainder > 0) {
-			msg = channel.sender.readArrayList();
+			timer.start(m);
+			msg = channel.sender.readArrayListAndDec();
+			timer.stop(m);
 			for (int i = 0; i < remainder; i++) {
 				if (curr == null) {
 					curr = this;
 				} else {
-					curr.next = new GCEva(channel, timer, p, m);
+					curr.next = new GCEva(channel, timer, m);
 					curr = curr.next;
 				}
 				byte[] rows = msg.get(i);
@@ -87,12 +87,14 @@ public class GCEva extends GCEvaComp {
 			}
 		} else {
 			if (numOfAnds % threshold == 0) {
-				msg = channel.sender.readArrayList();
+				timer.start(m);
+				msg = channel.sender.readArrayListAndDec();
+				timer.stop(m);
 				for (int i = 0; i < threshold; i++) {
 					if (curr == null) {
 						curr = this;
 					} else {
-						curr.next = new GCEva(channel, timer, p, m);
+						curr.next = new GCEva(channel, timer, m);
 						curr = curr.next;
 					}
 					byte[] rows = msg.get(i);

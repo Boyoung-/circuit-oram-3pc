@@ -4,81 +4,152 @@ import java.math.BigInteger;
 
 import org.apache.commons.lang3.ArrayUtils;
 
+import com.oblivm.backend.flexsc.CompEnv;
 import com.oblivm.backend.gc.GCSignal;
+import com.oblivm.backend.gc.regular.GCEva;
+import com.oblivm.backend.gc.regular.GCGen;
+import com.oblivm.backend.network.Network;
 
 import communication.Communication;
 import crypto.Crypto;
 import exceptions.NoSuchPartyException;
+import gc.GCUpdateRoot;
 import gc.GCUtil;
 import oram.Forest;
 import oram.Metadata;
 import oram.Tuple;
-import protocols.precomputation.PreUpdateRoot;
 import protocols.struct.Party;
-import protocols.struct.PreData;
 import util.M;
-import util.P;
-import util.Timer;
 import util.Util;
 
 public class UpdateRoot extends Protocol {
-
-	private int pid = P.UR;
 
 	public UpdateRoot(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
 
-	public Tuple[] runE(PreData predata, boolean firstTree, byte[] Li, Tuple[] R, Tuple Ti, Timer timer) {
+	public Tuple[] runE(boolean firstTree, int sw, int lBits, int[] tupleParam, byte[] Li, Tuple[] R, Tuple Ti) {
 		if (firstTree)
 			return R;
 
-		timer.start(pid, M.online_comp);
+		timer.start(M.offline_comp);
+
+		int sLogW = (int) Math.ceil(Math.log(sw) / Math.log(2));
+		GCSignal[][] j1KeyPairs = GCUtil.genKeyPairs(sLogW);
+		GCSignal[][] LiKeyPairs = GCUtil.genKeyPairs(lBits);
+		GCSignal[][] E_feKeyPairs = GCUtil.genKeyPairs(sw);
+		GCSignal[][] C_feKeyPairs = GCUtil.genKeyPairs(sw);
+		GCSignal[] j1ZeroKeys = GCUtil.getZeroKeys(j1KeyPairs);
+		GCSignal[] LiZeroKeys = GCUtil.getZeroKeys(LiKeyPairs);
+		GCSignal[] E_feZeroKeys = GCUtil.getZeroKeys(E_feKeyPairs);
+		GCSignal[] C_feZeroKeys = GCUtil.getZeroKeys(C_feKeyPairs);
+		GCSignal[][][] E_labelKeyPairs = new GCSignal[sw][][];
+		GCSignal[][][] C_labelKeyPairs = new GCSignal[sw][][];
+		GCSignal[][] E_labelZeroKeys = new GCSignal[sw][];
+		GCSignal[][] C_labelZeroKeys = new GCSignal[sw][];
+		for (int i = 0; i < sw; i++) {
+			E_labelKeyPairs[i] = GCUtil.genKeyPairs(lBits);
+			C_labelKeyPairs[i] = GCUtil.genKeyPairs(lBits);
+			E_labelZeroKeys[i] = GCUtil.getZeroKeys(E_labelKeyPairs[i]);
+			C_labelZeroKeys[i] = GCUtil.getZeroKeys(C_labelKeyPairs[i]);
+		}
+
+		Network channel = new Network(null, con1);
+		CompEnv<GCSignal> gen = new GCGen(channel, timer, offline_band, M.offline_write);
+		GCSignal[][] outZeroKeys = new GCUpdateRoot<GCSignal>(gen, lBits + 1, sw).rootFindDeepestAndEmpty(j1ZeroKeys,
+				LiZeroKeys, E_feZeroKeys, C_feZeroKeys, E_labelZeroKeys, C_labelZeroKeys);
+		((GCGen) gen).sendLastSetGTT();
+
+		byte[][][] outKeyHashes = new byte[outZeroKeys.length][][];
+		for (int i = 0; i < outZeroKeys.length; i++)
+			outKeyHashes[i] = GCUtil.genOutKeyHashes(outZeroKeys[i]);
+
+		timer.start(M.offline_write);
+		con2.write(offline_band, C_feKeyPairs);
+		con2.write(offline_band, C_labelKeyPairs);
+		con1.write(offline_band, outKeyHashes);
+		timer.stop(M.offline_write);
+
+		timer.stop(M.offline_comp);
+
+		//////////////////////////////////////////////////////////////////////////////////
+
+		timer.start(M.online_comp);
 
 		// step 1
 		int j1 = Crypto.sr.nextInt(R.length);
-		GCSignal[] j1InputKeys = GCUtil.revSelectKeys(predata.ur_j1KeyPairs, BigInteger.valueOf(j1).toByteArray());
-		GCSignal[] LiInputKeys = GCUtil.revSelectKeys(predata.ur_LiKeyPairs, Li);
-		GCSignal[] E_feInputKeys = GCUtil.selectFeKeys(predata.ur_E_feKeyPairs, R);
-		GCSignal[][] E_labelInputKeys = GCUtil.selectLabelKeys(predata.ur_E_labelKeyPairs, R);
+		GCSignal[] j1InputKeys = GCUtil.revSelectKeys(j1KeyPairs, BigInteger.valueOf(j1).toByteArray());
+		GCSignal[] LiInputKeys = GCUtil.revSelectKeys(LiKeyPairs, Li);
+		GCSignal[] E_feInputKeys = GCUtil.selectFeKeys(E_feKeyPairs, R);
+		GCSignal[][] E_labelInputKeys = GCUtil.selectLabelKeys(E_labelKeyPairs, R);
 
-		timer.start(pid, M.online_write);
-		con1.write(pid, j1InputKeys);
-		con1.write(pid, LiInputKeys);
-		con1.write(pid, E_feInputKeys);
-		con1.write(pid, E_labelInputKeys);
-		timer.stop(pid, M.online_write);
+		timer.start(M.online_write);
+		con1.write(online_band, j1InputKeys);
+		con1.write(online_band, LiInputKeys);
+		con1.write(online_band, E_feInputKeys);
+		con1.write(online_band, E_labelInputKeys);
+		timer.stop(M.online_write);
 
 		// step 4
 		R = ArrayUtils.addAll(R, new Tuple[] { Ti });
-		SSXOT ssxot = new SSXOT(con1, con2, 0);
-		R = ssxot.runE(predata, R, timer);
+		SSXOT ssxot = new SSXOT(con1, con2);
+		R = ssxot.runE(R, tupleParam);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return R;
 	}
 
-	public void runD(PreData predata, boolean firstTree, byte[] Li, int w, Timer timer) {
+	public void runD(boolean firstTree, int sw, int lBits, int[] tupleParam, byte[] Li, int w) {
 		if (firstTree)
 			return;
 
-		timer.start(pid, M.online_comp);
+		timer.start(M.offline_comp);
+
+		int logSW = (int) Math.ceil(Math.log(sw) / Math.log(2));
+		GCSignal[] j1ZeroKeys = GCUtil.genEmptyKeys(logSW);
+		GCSignal[] LiZeroKeys = GCUtil.genEmptyKeys(lBits);
+		GCSignal[] E_feZeroKeys = GCUtil.genEmptyKeys(sw);
+		GCSignal[] C_feZeroKeys = GCUtil.genEmptyKeys(sw);
+		GCSignal[][] E_labelZeroKeys = new GCSignal[sw][];
+		GCSignal[][] C_labelZeroKeys = new GCSignal[sw][];
+		for (int i = 0; i < sw; i++) {
+			E_labelZeroKeys[i] = GCUtil.genEmptyKeys(lBits);
+			C_labelZeroKeys[i] = GCUtil.genEmptyKeys(lBits);
+		}
+
+		Network channel = new Network(con1, null);
+		CompEnv<GCSignal> eva = new GCEva(channel, timer, M.offline_read);
+		GCUpdateRoot<GCSignal> gcur = new GCUpdateRoot<GCSignal>(eva, lBits + 1, sw);
+		gcur.rootFindDeepestAndEmpty(j1ZeroKeys, LiZeroKeys, E_feZeroKeys, C_feZeroKeys, E_labelZeroKeys,
+				C_labelZeroKeys);
+		((GCEva) eva).receiveLastSetGTT();
+		eva.setEvaluate();
+
+		timer.start(M.offline_read);
+		byte[][][] outKeyHashes = con1.readTripleByteArrayAndDec();
+		timer.stop(M.offline_read);
+
+		timer.stop(M.offline_comp);
+
+		///////////////////////////////////////////////////////////////////////////////
+
+		timer.start(M.online_comp);
 
 		// step 1
-		timer.start(pid, M.online_read);
-		GCSignal[] j1InputKeys = con1.readGCSignalArray(pid);
-		GCSignal[] LiInputKeys = con1.readGCSignalArray(pid);
-		GCSignal[] E_feInputKeys = con1.readGCSignalArray(pid);
-		GCSignal[][] E_labelInputKeys = con1.readDoubleGCSignalArray(pid);
-		GCSignal[] C_feInputKeys = con2.readGCSignalArray(pid);
-		GCSignal[][] C_labelInputKeys = con2.readDoubleGCSignalArray(pid);
-		timer.stop(pid, M.online_read);
+		timer.start(M.online_read);
+		GCSignal[] j1InputKeys = con1.readGCSignalArrayAndDec();
+		GCSignal[] LiInputKeys = con1.readGCSignalArrayAndDec();
+		GCSignal[] E_feInputKeys = con1.readGCSignalArrayAndDec();
+		GCSignal[][] E_labelInputKeys = con1.readDoubleGCSignalArrayAndDec();
+		GCSignal[] C_feInputKeys = con2.readGCSignalArrayAndDec();
+		GCSignal[][] C_labelInputKeys = con2.readDoubleGCSignalArrayAndDec();
+		timer.stop(M.online_read);
 
 		// step 2
-		GCSignal[][] outKeys = predata.ur_gcur.rootFindDeepestAndEmpty(j1InputKeys, LiInputKeys, E_feInputKeys,
-				C_feInputKeys, E_labelInputKeys, C_labelInputKeys);
-		int j1 = GCUtil.evaOutKeys(outKeys[0], predata.ur_outKeyHashes[0]).intValue();
-		int j2 = GCUtil.evaOutKeys(outKeys[1], predata.ur_outKeyHashes[1]).intValue();
+		GCSignal[][] outKeys = gcur.rootFindDeepestAndEmpty(j1InputKeys, LiInputKeys, E_feInputKeys, C_feInputKeys,
+				E_labelInputKeys, C_labelInputKeys);
+		int j1 = GCUtil.evaOutKeys(outKeys[0], outKeyHashes[0]).intValue();
+		int j2 = GCUtil.evaOutKeys(outKeys[1], outKeyHashes[1]).intValue();
 
 		// step 3
 		int r = Crypto.sr.nextInt(w);
@@ -91,47 +162,53 @@ public class UpdateRoot extends Protocol {
 		I[j1] = tmp;
 
 		// step 4
-		SSXOT ssxot = new SSXOT(con1, con2, 0);
-		ssxot.runD(predata, I, timer);
+		SSXOT ssxot = new SSXOT(con1, con2);
+		ssxot.runD(sw + 1, sw, tupleParam, I);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 	}
 
-	public Tuple[] runC(PreData predata, boolean firstTree, Tuple[] R, Tuple Ti, Timer timer) {
+	public Tuple[] runC(boolean firstTree, int[] tupleParam, Tuple[] R, Tuple Ti) {
 		if (firstTree)
 			return R;
 
-		timer.start(pid, M.online_comp);
+		timer.start(M.offline_comp);
+
+		timer.start(M.offline_read);
+		GCSignal[][] C_feKeyPairs = con1.readDoubleGCSignalArrayAndDec();
+		GCSignal[][][] C_labelKeyPairs = con1.readTripleGCSignalArrayAndDec();
+		timer.stop(M.offline_read);
+
+		timer.stop(M.offline_comp);
+
+		////////////////////////////////////////////////////////////////////////////
+
+		timer.start(M.online_comp);
 
 		// step 1
-		GCSignal[] C_feInputKeys = GCUtil.selectFeKeys(predata.ur_C_feKeyPairs, R);
-		GCSignal[][] C_labelInputKeys = GCUtil.selectLabelKeys(predata.ur_C_labelKeyPairs, R);
+		GCSignal[] C_feInputKeys = GCUtil.selectFeKeys(C_feKeyPairs, R);
+		GCSignal[][] C_labelInputKeys = GCUtil.selectLabelKeys(C_labelKeyPairs, R);
 
-		timer.start(pid, M.online_write);
-		con2.write(pid, C_feInputKeys);
-		con2.write(pid, C_labelInputKeys);
-		timer.stop(pid, M.online_write);
+		timer.start(M.online_write);
+		con2.write(online_band, C_feInputKeys);
+		con2.write(online_band, C_labelInputKeys);
+		timer.stop(M.online_write);
 
 		// step 4
 		R = ArrayUtils.addAll(R, new Tuple[] { Ti });
-		SSXOT ssxot = new SSXOT(con1, con2, 0);
-		R = ssxot.runC(predata, R, timer);
+		SSXOT ssxot = new SSXOT(con1, con2);
+		R = ssxot.runC(R, tupleParam);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return R;
 	}
 
-	// for testing correctness
 	@Override
-	public void run(Party party, Metadata md, Forest forest) {
-		Timer timer = new Timer();
+	public void run(Party party, Metadata md, Forest[] forest) {
 
 		for (int i = 0; i < 100; i++) {
 
 			System.out.println("i=" + i);
-
-			PreData predata = new PreData();
-			PreUpdateRoot preupdateroot = new PreUpdateRoot(con1, con2);
 
 			if (party == Party.Eddie) {
 				int sw = Crypto.sr.nextInt(15) + 10;
@@ -141,15 +218,17 @@ public class UpdateRoot extends Protocol {
 				for (int j = 0; j < sw; j++)
 					R[j] = new Tuple(1, 2, (lBits + 7) / 8, 3, Crypto.sr);
 				Tuple Ti = new Tuple(1, 2, (lBits + 7) / 8, 3, Crypto.sr);
+				int[] tupleParam = new int[] { 1, 2, (lBits + 7) / 8, 3 };
 
 				con1.write(sw);
 				con1.write(lBits);
 				con1.write(Li);
+				con1.write(tupleParam);
 				con2.write(sw);
 				con2.write(lBits);
+				con2.write(tupleParam);
 
-				preupdateroot.runE(predata, false, sw, lBits, timer);
-				Tuple[] newR = runE(predata, false, Li, R, Ti, timer);
+				Tuple[] newR = runE(false, sw, lBits, tupleParam, Li, R, Ti);
 
 				Tuple[] R_C = con2.readTupleArray();
 				int cnt = 0;
@@ -222,27 +301,26 @@ public class UpdateRoot extends Protocol {
 				} else {
 					System.err.println("UpdateRoot test failed 8");
 				}
-				System.out.println();
 
 			} else if (party == Party.Debbie) {
 				int sw = con1.readInt();
 				int lBits = con1.readInt();
 				byte[] Li = con1.read();
-				int[] tupleParam = new int[] { 1, 2, (lBits + 7) / 8, 3 };
+				int[] tupleParam = con1.readIntArray();
 
-				preupdateroot.runD(predata, false, sw, lBits, tupleParam, timer);
-				runD(predata, false, Li, md.getW(), timer);
+				runD(false, sw, lBits, tupleParam, Li, md.getW());
 
 			} else if (party == Party.Charlie) {
 				int sw = con1.readInt();
 				int lBits = con1.readInt();
+				int[] tupleParam = con1.readIntArray();
+
 				Tuple[] R = new Tuple[sw];
 				for (int j = 0; j < sw; j++)
 					R[j] = new Tuple(1, 2, (lBits + 7) / 8, 3, null);
 				Tuple Ti = new Tuple(1, 2, (lBits + 7) / 8, 3, null);
 
-				preupdateroot.runC(predata, false, timer);
-				R = runC(predata, false, R, Ti, timer);
+				R = runC(false, tupleParam, R, Ti);
 
 				con1.write(R);
 
@@ -251,12 +329,9 @@ public class UpdateRoot extends Protocol {
 			}
 		}
 
-		// timer.print();
 	}
 
 	@Override
-	public void run(Party party, Metadata md, Forest[] forest) {
-		// TODO Auto-generated method stub
-
+	public void run(Party party, Metadata md, Forest forest) {
 	}
 }
