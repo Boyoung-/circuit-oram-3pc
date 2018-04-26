@@ -1,5 +1,6 @@
 package pir;
 
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 import communication.Communication;
@@ -11,50 +12,59 @@ import oram.Tuple;
 import protocols.Protocol;
 import protocols.struct.OutULiT;
 import protocols.struct.Party;
-import protocols.struct.PreData;
 import protocols.struct.TwoThreeXorByte;
 import protocols.struct.TwoThreeXorInt;
 import util.M;
-import util.P;
-import util.Timer;
 import util.Util;
 
 public class ULiT extends Protocol {
 
-	private int pid = P.ULiT;
+	SecureRandom sr1;
+	SecureRandom sr2;
 
 	public ULiT(Communication con1, Communication con2) {
 		super(con1, con2);
 	}
 
-	public OutULiT runE(PreData predata, TwoThreeXorByte X, TwoThreeXorByte N, TwoThreeXorInt dN, TwoThreeXorByte Lp,
-			TwoThreeXorByte Lpi, TwoThreeXorByte Li, int ttp, Timer timer) {
-		timer.start(pid, M.offline_comp);
+	public ULiT(Communication con1, Communication con2, SecureRandom sr1, SecureRandom sr2) {
+		super(con1, con2);
+		this.sr1 = sr1;
+		this.sr2 = sr2;
+	}
+
+	public void reinit(Communication con1, Communication con2, SecureRandom sr1, SecureRandom sr2) {
+		this.con1 = con1;
+		this.con2 = con2;
+		this.sr1 = sr1;
+		this.sr2 = sr2;
+	}
+
+	public OutULiT runE(TwoThreeXorByte X, TwoThreeXorByte N, TwoThreeXorInt dN, TwoThreeXorByte Lp,
+			TwoThreeXorByte Lpi, TwoThreeXorByte Li, int ttp) {
+		timer.start(M.offline_comp);
 
 		int l = Li.CE.length;
 
-		timer.start(pid, M.offline_read);
-		byte[] x2 = con1.read();
-		timer.stop(pid, M.offline_read);
+		byte[] x2 = Util.nextBytes(X.CD.length, sr1);
 
-		timer.stop(pid, M.offline_comp);
+		timer.stop(M.offline_comp);
 
 		// ----------------------------------------- //
 
-		timer.start(pid, M.online_comp);
+		timer.start(M.online_comp);
 
 		int dN_E = dN.CE;
 		byte[] xorLi_E = Util.xor(Lpi.CE, Li.CE);
 
-		InsLbl inslbl = new InsLbl(con1, con2);
-		inslbl.runP1(predata, dN_E, xorLi_E, ttp, timer);
+		InsLbl inslbl = new InsLbl(con1, con2, sr1, sr2);
+		inslbl.runP1(dN_E, xorLi_E, ttp);
 
-		inslbl = new InsLbl(con2, con1);
-		byte[] b1 = inslbl.runP3(predata, ttp, l, timer);
+		inslbl.reinit(con2, con1, sr2, sr1);
+		byte[] b1 = inslbl.runP3(ttp, l);
 
-		timer.start(pid, M.online_read);
-		byte[] me = con1.read(pid);
-		timer.stop(pid, M.online_read);
+		timer.start(M.online_read);
+		byte[] me = con1.readAndDec();
+		timer.stop(M.online_read);
 
 		byte[] x3 = Util.xor(me, b1);
 
@@ -65,46 +75,41 @@ public class ULiT extends Protocol {
 		out.CE = new Tuple(new byte[] { 1 }, N.CE, Lp.CE, X.CE);
 		out.DE = new Tuple(new byte[] { 1 }, N.DE, Lp.DE, X.DE);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return out;
 	}
 
-	public OutULiT runD(PreData predata, TwoThreeXorByte X, TwoThreeXorByte N, TwoThreeXorInt dN, TwoThreeXorByte Lp,
-			TwoThreeXorByte Lpi, TwoThreeXorByte Li, int ttp, Timer timer) {
-		timer.start(pid, M.offline_comp);
+	public OutULiT runD(TwoThreeXorByte X, TwoThreeXorByte N, TwoThreeXorInt dN, TwoThreeXorByte Lp,
+			TwoThreeXorByte Lpi, TwoThreeXorByte Li, int ttp) {
+		timer.start(M.offline_comp);
 
-		byte[] x1 = Util.nextBytes(X.CD.length, Crypto.sr);
-		byte[] x2 = Util.nextBytes(X.CD.length, Crypto.sr);
+		byte[] x1 = Util.nextBytes(X.CD.length, sr2);
+		byte[] x2 = Util.nextBytes(X.CD.length, sr1);
 
-		timer.start(pid, M.offline_write);
-		con2.write(x1);
-		con1.write(x2);
-		timer.stop(pid, M.offline_write);
-
-		timer.stop(pid, M.offline_comp);
+		timer.stop(M.offline_comp);
 
 		// ----------------------------------------- //
 
-		timer.start(pid, M.online_comp);
+		timer.start(M.online_comp);
 
 		int dN_D = dN.CD ^ dN.DE;
 		byte[] xorLi_D = Util.xor(Util.xor(Lpi.CD, Li.CD), Util.xor(Lpi.DE, Li.DE));
 
-		InsLbl inslbl = new InsLbl(con1, con2);
-		byte[] a2 = inslbl.runP2(predata, dN_D, xorLi_D, ttp, timer);
+		InsLbl inslbl = new InsLbl(con1, con2, sr1, sr2);
+		byte[] a2 = inslbl.runP2(dN_D, xorLi_D, ttp);
 
-		inslbl = new InsLbl(con2, con1);
-		byte[] a1 = inslbl.runP2(predata, dN_D, xorLi_D, ttp, timer);
+		inslbl.reinit(con2, con1, sr2, sr1);
+		byte[] a1 = inslbl.runP2(dN_D, xorLi_D, ttp);
 
 		Util.setXor(a1, x1);
 		Util.setXor(a1, x2);
 		Util.setXor(a2, x1);
 		Util.setXor(a2, x2);
 
-		timer.start(pid, M.online_write);
-		con1.write(pid, a1);
-		con2.write(pid, a2);
-		timer.stop(pid, M.online_write);
+		timer.start(M.online_write);
+		con1.write(online_band, a1);
+		con2.write(online_band, a2);
+		timer.stop(M.online_write);
 
 		Util.setXor(X.CD, x1);
 		Util.setXor(X.DE, x2);
@@ -113,38 +118,36 @@ public class ULiT extends Protocol {
 		out.CD = new Tuple(new byte[] { 1 }, N.CD, Lp.CD, X.CD);
 		out.DE = new Tuple(new byte[] { 1 }, N.DE, Lp.DE, X.DE);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return out;
 	}
 
-	public OutULiT runC(PreData predata, TwoThreeXorByte X, TwoThreeXorByte N, TwoThreeXorInt dN, TwoThreeXorByte Lp,
-			TwoThreeXorByte Lpi, TwoThreeXorByte Li, int ttp, Timer timer) {
-		timer.start(pid, M.offline_comp);
+	public OutULiT runC(TwoThreeXorByte X, TwoThreeXorByte N, TwoThreeXorInt dN, TwoThreeXorByte Lp,
+			TwoThreeXorByte Lpi, TwoThreeXorByte Li, int ttp) {
+		timer.start(M.offline_comp);
 
 		int l = Li.CE.length;
 
-		timer.start(pid, M.offline_read);
-		byte[] x1 = con2.read();
-		timer.stop(pid, M.offline_read);
+		byte[] x1 = Util.nextBytes(X.CD.length, sr2);
 
-		timer.stop(pid, M.offline_comp);
+		timer.stop(M.offline_comp);
 
 		// ----------------------------------------- //
 
-		timer.start(pid, M.online_comp);
-
-		InsLbl inslbl = new InsLbl(con1, con2);
-		byte[] b2 = inslbl.runP3(predata, ttp, l, timer);
+		timer.start(M.online_comp);
 
 		int dN_C = dN.CE;
 		byte[] xorLi_C = Util.xor(Lpi.CE, Li.CE);
 
-		inslbl = new InsLbl(con2, con1);
-		inslbl.runP1(predata, dN_C, xorLi_C, ttp, timer);
+		InsLbl inslbl = new InsLbl(con1, con2, sr1, sr2);
+		byte[] b2 = inslbl.runP3(ttp, l);
 
-		timer.start(pid, M.online_read);
-		byte[] mc = con2.read(pid);
-		timer.stop(pid, M.online_read);
+		inslbl.reinit(con2, con1, sr2, sr1);
+		inslbl.runP1(dN_C, xorLi_C, ttp);
+
+		timer.start(M.online_read);
+		byte[] mc = con2.readAndDec();
+		timer.stop(M.online_read);
 
 		byte[] x3 = Util.xor(mc, b2);
 
@@ -155,15 +158,12 @@ public class ULiT extends Protocol {
 		out.CD = new Tuple(new byte[] { 1 }, N.CD, Lp.CD, X.CD);
 		out.CE = new Tuple(new byte[] { 1 }, N.CE, Lp.CE, X.CE);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return out;
 	}
 
 	@Override
 	public void run(Party party, Metadata md, Forest[] forest) {
-
-		Timer timer = new Timer();
-		PreData predata = new PreData();
 
 		for (int j = 0; j < 100; j++) {
 			int ttp = (int) Math.pow(2, 8);
@@ -206,6 +206,8 @@ public class ULiT extends Protocol {
 			Util.setXor(Li.CE, Li.DE);
 
 			if (party == Party.Eddie) {
+				this.reinit(con1, con2, Crypto.sr_DE, Crypto.sr_CE);
+
 				con1.write(X.CD);
 				con1.write(X.DE);
 				con1.write(N.CD);
@@ -232,7 +234,7 @@ public class ULiT extends Protocol {
 				con2.write(dN.CD);
 				con2.write(dN.CE);
 
-				OutULiT out = this.runE(predata, X, N, dN, Lp, Lpi, Li, ttp, timer);
+				OutULiT out = this.runE(X, N, dN, Lp, Lpi, Li, ttp);
 				out.CD = con1.readTuple();
 				Tuple T = out.CD.xor(out.CE);
 				T.setXor(out.DE);
@@ -280,6 +282,8 @@ public class ULiT extends Protocol {
 					System.out.println(j + ": ULiT test passed");
 
 			} else if (party == Party.Debbie) {
+				this.reinit(con1, con2, Crypto.sr_DE, Crypto.sr_CD);
+
 				X.CD = con1.read();
 				X.DE = con1.read();
 				N.CD = con1.read();
@@ -293,10 +297,12 @@ public class ULiT extends Protocol {
 				dN.CD = con1.readInt();
 				dN.DE = con1.readInt();
 
-				OutULiT out = this.runD(predata, X, N, dN, Lp, Lpi, Li, ttp, timer);
+				OutULiT out = this.runD(X, N, dN, Lp, Lpi, Li, ttp);
 				con1.write(out.CD);
 
 			} else if (party == Party.Charlie) {
+				this.reinit(con1, con2, Crypto.sr_CE, Crypto.sr_CD);
+
 				X.CD = con1.read();
 				X.CE = con1.read();
 				N.CD = con1.read();
@@ -310,7 +316,7 @@ public class ULiT extends Protocol {
 				dN.CD = con1.readInt();
 				dN.CE = con1.readInt();
 
-				this.runC(predata, X, N, dN, Lp, Lpi, Li, ttp, timer);
+				this.runC(X, N, dN, Lp, Lpi, Li, ttp);
 
 			} else {
 				throw new NoSuchPartyException(party + "");
