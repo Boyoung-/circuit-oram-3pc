@@ -4,16 +4,16 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 import communication.Communication;
+import crypto.Crypto;
 import exceptions.NoSuchPartyException;
 import oram.Forest;
+import oram.Global;
 import oram.Metadata;
 import oram.Tree;
 import oram.Tuple;
 import protocols.Eviction;
 import protocols.Protocol;
 import protocols.UpdateRoot;
-import protocols.precomputation.PreEviction;
-import protocols.precomputation.PreUpdateRoot;
 import protocols.struct.OutFF;
 import protocols.struct.OutPIRAccess;
 import protocols.struct.OutULiT;
@@ -21,9 +21,7 @@ import protocols.struct.Party;
 import protocols.struct.PreData;
 import protocols.struct.TwoThreeXorByte;
 import protocols.struct.TwoThreeXorInt;
-import util.Bandwidth;
 import util.M;
-import util.P;
 import util.StopWatch;
 import util.Timer;
 import util.Util;
@@ -31,8 +29,6 @@ import util.Util;
 // TODO: really FlipFlag on path, and update path in Eviction
 
 public class PIRRetrieve extends Protocol {
-
-	private int pid = P.PIRRtv;
 
 	Communication[] cons1;
 	Communication[] cons2;
@@ -47,22 +43,22 @@ public class PIRRetrieve extends Protocol {
 	}
 
 	public OutPIRAccess runE(Metadata md, PreData predata, Tree tree_DE, Tree tree_CE, byte[] Li, TwoThreeXorByte L,
-			TwoThreeXorByte N, TwoThreeXorInt dN, Timer timer) {
-		timer.start(pid, M.online_comp);
+			TwoThreeXorByte N, TwoThreeXorInt dN) {
+		timer.start(M.online_comp);
 
 		int treeIndex = tree_DE.getTreeIndex();
 		boolean isLastTree = treeIndex == md.getNumTrees() - 1;
 		boolean isFirstTree = treeIndex == 0;
 
 		PIRAccess piracc = new PIRAccess(con1, con2);
-		OutPIRAccess outpiracc = piracc.runE(md, predata, tree_DE, tree_CE, Li, L, N, dN, timer);
+		OutPIRAccess outpiracc = piracc.runE(md, tree_DE, tree_CE, Li, L, N, dN);
 
 		OutULiT T = new OutULiT();
 		if (!isLastTree) {
 			TwoThreeXorByte Lp = new TwoThreeXorByte(md.getLBytesOfTree(treeIndex));
 			TwoThreeXorByte Lpi = new TwoThreeXorByte(md.getLBytesOfTree(treeIndex + 1));
-			ULiT ulit = new ULiT(con1, con2);
-			T = ulit.runE(predata, outpiracc.X, N, dN, Lp, Lpi, outpiracc.nextL, md.getTwoTauPow(), timer);
+			ULiT ulit = new ULiT(con1, con2, Crypto.sr_DE, Crypto.sr_CE);
+			T = ulit.runE(outpiracc.X, N, dN, Lp, Lpi, outpiracc.nextL, md.getTwoTauPow());
 		} else {
 			T.DE = outpiracc.pathTuples_DE[0];
 			T.CE = outpiracc.pathTuples_CE[0];
@@ -78,7 +74,7 @@ public class PIRRetrieve extends Protocol {
 				fb_CE[i] = outpiracc.pathTuples_CE[i].getF();
 			}
 			FlipFlag ff = new FlipFlag(con1, con2);
-			OutFF outff = ff.runE(predata, fb_DE, fb_CE, outpiracc.j.s_DE, timer);
+			OutFF outff = ff.runE(fb_DE, fb_CE, outpiracc.j.s_DE);
 			for (int i = 0; i < pathTuples; i++) {
 				// outpiracc.pathTuples_DE[i].setF(outff.fb_DE[i]);
 				// outpiracc.pathTuples_CE[i].setF(outff.fb_CE[i]);
@@ -86,8 +82,11 @@ public class PIRRetrieve extends Protocol {
 		}
 
 		int stashSize = tree_DE.getStashSize();
-		PreUpdateRoot preupdateroot = new PreUpdateRoot(con1, con2);
-		preupdateroot.runE(predata, isFirstTree, stashSize, md.getLBitsOfTree(treeIndex), timer);
+		int[] tupleParam = new int[] { treeIndex == 0 ? 0 : 1, md.getNBytesOfTree(treeIndex),
+				md.getLBytesOfTree(treeIndex), md.getABytesOfTree(treeIndex) };
+		// PreUpdateRoot preupdateroot = new PreUpdateRoot(con1, con2);
+		// preupdateroot.runE(predata, isFirstTree, stashSize,
+		// md.getLBitsOfTree(treeIndex), timer);
 
 		Tuple[] path = new Tuple[pathTuples];
 		for (int i = 0; i < pathTuples; i++) {
@@ -95,68 +94,71 @@ public class PIRRetrieve extends Protocol {
 		}
 		Tuple[] R = Arrays.copyOfRange(path, 0, stashSize);
 		UpdateRoot updateroot = new UpdateRoot(con1, con2);
-		R = updateroot.runE(predata, isFirstTree, Li, R, T.DE.xor(T.CE), timer);
+		R = updateroot.runE(isFirstTree, stashSize, md.getLBitsOfTree(treeIndex), tupleParam, Li, R, T.DE.xor(T.CE));
 		System.arraycopy(R, 0, path, 0, R.length);
 
-		PreEviction preeviction = new PreEviction(con1, con2);
-		preeviction.runE(predata, isFirstTree, tree_DE.getD(), tree_DE.getW(), timer);
+		// PreEviction preeviction = new PreEviction(con1, con2);
+		// preeviction.runE(predata, isFirstTree, tree_DE.getD(), tree_DE.getW(),
+		// timer);
 
 		Eviction eviction = new Eviction(con1, con2);
-		eviction.runE(predata, isFirstTree, Li, path, tree_DE, timer);
+		eviction.runE(predata, isFirstTree, tupleParam, Li, path, tree_DE);
 
 		// simulation of Reshare
-		timer.start(pid, M.online_write);
-		con2.write(pid, path);
-		timer.stop(pid, M.online_write);
+		timer.start(M.online_write);
+		con2.write(online_band, path);
+		timer.stop(M.online_write);
 
-		timer.start(pid, M.online_read);
-		con2.readTupleArray(pid);
-		timer.stop(pid, M.online_read);
+		timer.start(M.online_read);
+		con2.readTupleArrayAndDec();
+		timer.stop(M.online_read);
 
 		// second eviction sim
-		preupdateroot.runE(predata, isFirstTree, stashSize, md.getLBitsOfTree(treeIndex), timer);
+		// preupdateroot.runE(predata, isFirstTree, stashSize,
+		// md.getLBitsOfTree(treeIndex), timer);
 
 		for (int i = 0; i < pathTuples; i++) {
 			path[i] = outpiracc.pathTuples_DE[i].xor(outpiracc.pathTuples_CE[i]);
 		}
 		R = Arrays.copyOfRange(path, 0, stashSize);
-		R = updateroot.runE(predata, isFirstTree, Li, R, T.DE.xor(T.CE), timer);
+		R = updateroot.runE(isFirstTree, stashSize, md.getLBitsOfTree(treeIndex), tupleParam, Li, R, T.DE.xor(T.CE));
 		System.arraycopy(R, 0, path, 0, R.length);
 
-		preeviction.runE(predata, isFirstTree, tree_DE.getD(), tree_DE.getW(), timer);
+		// preeviction.runE(predata, isFirstTree, tree_DE.getD(), tree_DE.getW(),
+		// timer);
 
-		eviction.runE(predata, isFirstTree, Li, path, tree_DE, timer);
+		eviction.runE(predata, isFirstTree, tupleParam, Li, path, tree_DE);
 
 		// simulation of Reshare
-		timer.start(pid, M.online_write);
-		con2.write(pid, path);
-		timer.stop(pid, M.online_write);
+		timer.start(M.online_write);
+		con2.write(online_band, path);
+		timer.stop(M.online_write);
 
-		timer.start(pid, M.online_read);
-		con2.readTupleArray(pid);
-		timer.stop(pid, M.online_read);
+		timer.start(M.online_read);
+		con2.readTupleArrayAndDec();
+		timer.stop(M.online_read);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return outpiracc;
 	}
 
 	public OutPIRAccess runD(Metadata md, PreData predata, Tree tree_DE, Tree tree_CD, byte[] Li, TwoThreeXorByte L,
-			TwoThreeXorByte N, TwoThreeXorInt dN, Timer timer) {
-		timer.start(pid, M.online_comp);
+			TwoThreeXorByte N, TwoThreeXorInt dN) {
+		timer.start(M.online_comp);
 
 		int treeIndex = tree_DE.getTreeIndex();
 		boolean isLastTree = treeIndex == md.getNumTrees() - 1;
 		boolean isFirstTree = treeIndex == 0;
 
 		PIRAccess piracc = new PIRAccess(con1, con2);
-		OutPIRAccess outpiracc = piracc.runD(md, predata, tree_DE, tree_CD, Li, L, N, dN, timer);
+		OutPIRAccess outpiracc = piracc.runD(md, tree_DE, tree_CD, Li, L, N, dN);
 
 		OutULiT T = new OutULiT();
 		if (!isLastTree) {
 			TwoThreeXorByte Lp = new TwoThreeXorByte(md.getLBytesOfTree(treeIndex));
 			TwoThreeXorByte Lpi = new TwoThreeXorByte(md.getLBytesOfTree(treeIndex + 1));
-			ULiT ulit = new ULiT(con1, con2);
-			T = ulit.runD(predata, outpiracc.X, N, dN, Lp, Lpi, outpiracc.nextL, md.getTwoTauPow(), timer);
+			ULiT ulit = new ULiT(con1, con2, Crypto.sr_DE, Crypto.sr_CD);
+			T = ulit.runD(outpiracc.X, N, dN, Lp, Lpi, outpiracc.nextL, md.getTwoTauPow());
 		} else {
 			T.CD = outpiracc.pathTuples_CD[0];
 			T.DE = outpiracc.pathTuples_DE[0];
@@ -172,7 +174,7 @@ public class PIRRetrieve extends Protocol {
 				fb_CD[i] = outpiracc.pathTuples_CD[i].getF();
 			}
 			FlipFlag ff = new FlipFlag(con1, con2);
-			OutFF outff = ff.runD(predata, fb_DE, fb_CD, outpiracc.j.s_DE, timer);
+			OutFF outff = ff.runD(fb_DE, fb_CD, outpiracc.j.s_DE);
 			for (int i = 0; i < pathTuples; i++) {
 				// outpiracc.pathTuples_DE[i].setF(outff.fb_DE[i]);
 				// outpiracc.pathTuples_CD[i].setF(outff.fb_CD[i]);
@@ -182,48 +184,52 @@ public class PIRRetrieve extends Protocol {
 		int stashSize = tree_DE.getStashSize();
 		int[] tupleParam = new int[] { treeIndex == 0 ? 0 : 1, md.getNBytesOfTree(treeIndex),
 				md.getLBytesOfTree(treeIndex), md.getABytesOfTree(treeIndex) };
-		PreUpdateRoot preupdateroot = new PreUpdateRoot(con1, con2);
-		preupdateroot.runD(predata, isFirstTree, stashSize, md.getLBitsOfTree(treeIndex), tupleParam, timer);
+		// PreUpdateRoot preupdateroot = new PreUpdateRoot(con1, con2);
+		// preupdateroot.runD(predata, isFirstTree, stashSize,
+		// md.getLBitsOfTree(treeIndex), tupleParam, timer);
 
 		UpdateRoot updateroot = new UpdateRoot(con1, con2);
-		updateroot.runD(predata, isFirstTree, Li, tree_DE.getW(), timer);
+		updateroot.runD(isFirstTree, stashSize, md.getLBitsOfTree(treeIndex), tupleParam, Li, tree_DE.getW());
 
-		PreEviction preeviction = new PreEviction(con1, con2);
-		preeviction.runD(predata, isFirstTree, tree_DE.getD(), tree_DE.getW(), tupleParam, timer);
+		// PreEviction preeviction = new PreEviction(con1, con2);
+		// preeviction.runD(predata, isFirstTree, tree_DE.getD(), tree_DE.getW(),
+		// tupleParam, timer);
 
 		Eviction eviction = new Eviction(con1, con2);
-		eviction.runD(predata, isFirstTree, Li, tree_DE, timer);
+		eviction.runD(predata, isFirstTree, tupleParam, Li, tree_DE);
 
 		// second eviction sim
-		preupdateroot.runD(predata, isFirstTree, stashSize, md.getLBitsOfTree(treeIndex), tupleParam, timer);
+		// preupdateroot.runD(predata, isFirstTree, stashSize,
+		// md.getLBitsOfTree(treeIndex), tupleParam, timer);
 
-		updateroot.runD(predata, isFirstTree, Li, tree_DE.getW(), timer);
+		updateroot.runD(isFirstTree, stashSize, md.getLBitsOfTree(treeIndex), tupleParam, Li, tree_DE.getW());
 
-		preeviction.runD(predata, isFirstTree, tree_DE.getD(), tree_DE.getW(), tupleParam, timer);
+		// preeviction.runD(predata, isFirstTree, tree_DE.getD(), tree_DE.getW(),
+		// tupleParam, timer);
 
-		eviction.runD(predata, isFirstTree, Li, tree_DE, timer);
+		eviction.runD(predata, isFirstTree, tupleParam, Li, tree_DE);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return outpiracc;
 	}
 
 	public OutPIRAccess runC(Metadata md, PreData predata, Tree tree_CD, Tree tree_CE, byte[] Li, TwoThreeXorByte L,
-			TwoThreeXorByte N, TwoThreeXorInt dN, Timer timer) {
-		timer.start(pid, M.online_comp);
+			TwoThreeXorByte N, TwoThreeXorInt dN) {
+		timer.start(M.online_comp);
 
 		int treeIndex = tree_CE.getTreeIndex();
 		boolean isLastTree = treeIndex == md.getNumTrees() - 1;
 		boolean isFirstTree = treeIndex == 0;
 
 		PIRAccess piracc = new PIRAccess(con1, con2);
-		OutPIRAccess outpiracc = piracc.runC(md, predata, tree_CD, tree_CE, Li, L, N, dN, timer);
+		OutPIRAccess outpiracc = piracc.runC(md, tree_CD, tree_CE, Li, L, N, dN);
 
 		OutULiT T = new OutULiT();
 		if (!isLastTree) {
 			TwoThreeXorByte Lp = new TwoThreeXorByte(md.getLBytesOfTree(treeIndex));
 			TwoThreeXorByte Lpi = new TwoThreeXorByte(md.getLBytesOfTree(treeIndex + 1));
-			ULiT ulit = new ULiT(con1, con2);
-			T = ulit.runC(predata, outpiracc.X, N, dN, Lp, Lpi, outpiracc.nextL, md.getTwoTauPow(), timer);
+			ULiT ulit = new ULiT(con1, con2, Crypto.sr_CE, Crypto.sr_CD);
+			T = ulit.runC(outpiracc.X, N, dN, Lp, Lpi, outpiracc.nextL, md.getTwoTauPow());
 		} else {
 			T.CD = outpiracc.pathTuples_CD[0];
 			T.CE = outpiracc.pathTuples_CE[0];
@@ -239,7 +245,7 @@ public class PIRRetrieve extends Protocol {
 				fb_CD[i] = outpiracc.pathTuples_CD[i].getF();
 			}
 			FlipFlag ff = new FlipFlag(con1, con2);
-			OutFF outff = ff.runC(predata, fb_CD, fb_CE, outpiracc.j.t_C, timer);
+			OutFF outff = ff.runC(fb_CD, fb_CE, outpiracc.j.t_C);
 			for (int i = 0; i < pathTuples; i++) {
 				// outpiracc.pathTuples_CD[i].setF(outff.fb_CD[i]);
 				// outpiracc.pathTuples_CE[i].setF(outff.fb_CE[i]);
@@ -247,53 +253,55 @@ public class PIRRetrieve extends Protocol {
 		}
 
 		int stashSize = tree_CE.getStashSize();
-		PreUpdateRoot preupdateroot = new PreUpdateRoot(con1, con2);
-		preupdateroot.runC(predata, isFirstTree, timer);
+		int[] tupleParam = new int[] { treeIndex == 0 ? 0 : 1, md.getNBytesOfTree(treeIndex),
+				md.getLBytesOfTree(treeIndex), md.getABytesOfTree(treeIndex) };
+		// PreUpdateRoot preupdateroot = new PreUpdateRoot(con1, con2);
+		// preupdateroot.runC(predata, isFirstTree, timer);
 
 		Tuple[] path = outpiracc.pathTuples_CD;
 		Tuple[] R = Arrays.copyOfRange(path, 0, stashSize);
 
 		UpdateRoot updateroot = new UpdateRoot(con1, con2);
-		R = updateroot.runC(predata, isFirstTree, R, T.CD, timer);
+		R = updateroot.runC(isFirstTree, tupleParam, R, T.CD);
 		System.arraycopy(R, 0, path, 0, R.length);
 
-		PreEviction preeviction = new PreEviction(con1, con2);
-		preeviction.runC(predata, isFirstTree, timer);
+		// PreEviction preeviction = new PreEviction(con1, con2);
+		// preeviction.runC(predata, isFirstTree, timer);
 
 		Eviction eviction = new Eviction(con1, con2);
-		eviction.runC(predata, isFirstTree, path, tree_CD.getD(), stashSize, tree_CD.getW(), timer);
+		eviction.runC(predata, isFirstTree, tupleParam, path, tree_CD.getD(), stashSize, tree_CD.getW());
 
 		// simulation of Reshare
-		timer.start(pid, M.online_write);
-		con1.write(pid, path);
-		timer.stop(pid, M.online_write);
+		timer.start(M.online_write);
+		con1.write(online_band, path);
+		timer.stop(M.online_write);
 
-		timer.start(pid, M.online_read);
-		con1.readTupleArray(pid);
-		timer.stop(pid, M.online_read);
+		timer.start(M.online_read);
+		con1.readTupleArrayAndDec();
+		timer.stop(M.online_read);
 
 		// second eviction sim
-		preupdateroot.runC(predata, isFirstTree, timer);
+		// preupdateroot.runC(predata, isFirstTree, timer);
 
 		R = Arrays.copyOfRange(path, 0, stashSize);
 
-		R = updateroot.runC(predata, isFirstTree, R, T.CD, timer);
+		R = updateroot.runC(isFirstTree, tupleParam, R, T.CD);
 		System.arraycopy(R, 0, path, 0, R.length);
 
-		preeviction.runC(predata, isFirstTree, timer);
+		// preeviction.runC(predata, isFirstTree, timer);
 
-		eviction.runC(predata, isFirstTree, path, tree_CD.getD(), stashSize, tree_CD.getW(), timer);
+		eviction.runC(predata, isFirstTree, tupleParam, path, tree_CD.getD(), stashSize, tree_CD.getW());
 
 		// simulation of Reshare
-		timer.start(pid, M.online_write);
-		con1.write(pid, path);
-		timer.stop(pid, M.online_write);
+		timer.start(M.online_write);
+		con1.write(online_band, path);
+		timer.stop(M.online_write);
 
-		timer.start(pid, M.online_read);
-		con1.readTupleArray(pid);
-		timer.stop(pid, M.online_read);
+		timer.start(M.online_read);
+		con1.readTupleArrayAndDec();
+		timer.stop(M.online_read);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return outpiracc;
 	}
 
@@ -318,10 +326,7 @@ public class PIRRetrieve extends Protocol {
 				ete.reset();
 			}
 			if (test == 1) {
-				for (int k = 0; k < cons1.length; k++) {
-					cons1[k].bandSwitch = false;
-					cons2[k].bandSwitch = false;
-				}
+				Global.bandSwitch = false;
 			}
 
 			for (int treeIndex = 0; treeIndex < md.getNumTrees(); treeIndex++) {
@@ -355,7 +360,7 @@ public class PIRRetrieve extends Protocol {
 
 				if (party == Party.Eddie) {
 					ete.start();
-					OutPIRAccess out = this.runE(md, predata, tree_DE, tree_CE, Li, L, N, dN, timer);
+					OutPIRAccess out = this.runE(md, predata, tree_DE, tree_CE, Li, L, N, dN);
 					ete.stop();
 
 					out.j.t_D = con1.readInt();
@@ -383,7 +388,7 @@ public class PIRRetrieve extends Protocol {
 
 				} else if (party == Party.Debbie) {
 					ete.start();
-					OutPIRAccess out = this.runD(md, predata, tree_DE, tree_CD, Li, L, N, dN, timer);
+					OutPIRAccess out = this.runD(md, predata, tree_DE, tree_CD, Li, L, N, dN);
 					ete.stop();
 
 					con1.write(out.j.t_D);
@@ -391,7 +396,7 @@ public class PIRRetrieve extends Protocol {
 
 				} else if (party == Party.Charlie) {
 					ete.start();
-					OutPIRAccess out = this.runC(md, predata, tree_CD, tree_CE, Li, L, N, dN, timer);
+					OutPIRAccess out = this.runC(md, predata, tree_CD, tree_CE, Li, L, N, dN);
 					ete.stop();
 
 					con1.write(out.j.t_C);
@@ -403,12 +408,12 @@ public class PIRRetrieve extends Protocol {
 
 		}
 
-		Bandwidth total = new Bandwidth("Total Online");
-		for (int i = 0; i < P.size; i++) {
-			for (int j = 0; j < cons1.length; j++)
-				total.add(cons1[j].bandwidth[i].add(cons2[j].bandwidth[i]).bandwidth);
-		}
-		System.out.println(total.toString());
+		// Bandwidth total = new Bandwidth("Total Online");
+		// for (int i = 0; i < P.size; i++) {
+		// for (int j = 0; j < cons1.length; j++)
+		// total.add(cons1[j].bandwidth[i].add(cons2[j].bandwidth[i]).bandwidth);
+		// }
+		// System.out.println(total.toString());
 
 		// timer.divideBy(iterations - reset);
 		// timer.print();

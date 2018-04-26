@@ -45,7 +45,7 @@ public class ULiT extends Protocol {
 
 		int l = Li.CE.length;
 
-		byte[] x2 = Util.nextBytes(X.CD.length, sr1);
+		byte[] x2 = Util.nextBytes(X.DE.length, sr1);
 
 		timer.stop(M.offline_comp);
 
