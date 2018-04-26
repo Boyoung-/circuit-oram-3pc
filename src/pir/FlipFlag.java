@@ -8,15 +8,10 @@ import oram.Metadata;
 import protocols.Protocol;
 import protocols.struct.OutFF;
 import protocols.struct.Party;
-import protocols.struct.PreData;
 import util.M;
-import util.P;
-import util.Timer;
 import util.Util;
 
 public class FlipFlag extends Protocol {
-
-	private int pid = P.FF;
 
 	public FlipFlag(Communication con1, Communication con2) {
 		super(con1, con2);
@@ -24,125 +19,120 @@ public class FlipFlag extends Protocol {
 
 	// TODO: remove loop around setXor: use Util.setXor(byte[][], byte[][])
 
-	public OutFF runE(PreData predata, byte[][] fb_DE, byte[][] fb_CE, int i2, Timer timer) {
-		timer.start(pid, M.offline_comp);
+	public OutFF runE(byte[][] fb_DE, byte[][] fb_CE, int i2) {
+		timer.start(M.offline_comp);
 
+		int n = fb_DE.length;
 		OutFF outff = new OutFF();
 
-		timer.start(pid, M.offline_read);
-		outff.fb_DE = con1.readDoubleByteArray();
-		timer.stop(pid, M.offline_read);
+		outff.fb_DE = new byte[n][1];
+		for (int i = 0; i < n; i++) {
+			Crypto.sr_DE.nextBytes(outff.fb_DE[i]);
+		}
 
-		timer.stop(pid, M.offline_comp);
+		timer.stop(M.offline_comp);
 
 		// ----------------------------------------- //
 
-		timer.start(pid, M.online_comp);
+		timer.start(M.online_comp);
 
-		int n = fb_DE.length;
 		byte[][] a2 = new byte[n][1];
 
 		Shift shift = new Shift(con1, con2);
-		byte[][] m2 = shift.runE(predata, a2, n - i2, timer);
+		byte[][] m2 = shift.runE(a2, n - i2);
 
 		for (int i = 0; i < n; i++)
 			Util.setXor(m2[i], outff.fb_DE[i]);
 
-		timer.start(pid, M.online_write);
-		con2.write(pid, m2);
-		timer.stop(pid, M.online_write);
+		timer.start(M.online_write);
+		con2.write(online_band, m2);
+		timer.stop(M.online_write);
 
-		timer.start(pid, M.online_read);
-		byte[][] m1 = con2.readDoubleByteArray(pid);
-		timer.stop(pid, M.online_read);
+		timer.start(M.online_read);
+		byte[][] m1 = con2.readDoubleByteArrayAndDec();
+		timer.stop(M.online_read);
 
 		outff.fb_CE = Util.xor(m1, m2);
 		Util.setXor(outff.fb_CE, fb_CE);
 		Util.setXor(outff.fb_DE, fb_DE);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return outff;
 	}
 
-	public OutFF runD(PreData predata, byte[][] fb_DE, byte[][] fb_CD, int i2, Timer timer) {
-		timer.start(pid, M.offline_comp);
+	public OutFF runD(byte[][] fb_DE, byte[][] fb_CD, int i2) {
+		timer.start(M.offline_comp);
 
 		int n = fb_DE.length;
 		OutFF outff = new OutFF();
+
 		outff.fb_CD = new byte[n][1];
 		outff.fb_DE = new byte[n][1];
 		for (int i = 0; i < n; i++) {
-			Crypto.sr.nextBytes(outff.fb_CD[i]);
-			Crypto.sr.nextBytes(outff.fb_DE[i]);
+			Crypto.sr_CD.nextBytes(outff.fb_CD[i]);
+			Crypto.sr_DE.nextBytes(outff.fb_DE[i]);
 		}
 
-		timer.start(pid, M.offline_write);
-		con1.write(outff.fb_DE);
-		con2.write(outff.fb_CD);
-		timer.stop(pid, M.offline_write);
-
-		timer.stop(pid, M.offline_comp);
+		timer.stop(M.offline_comp);
 
 		// ----------------------------------------- //
 
-		timer.start(pid, M.online_comp);
+		timer.start(M.online_comp);
 
 		Shift shift = new Shift(con1, con2);
-		shift.runD(predata, n - i2, n, 1, timer);
+		shift.runD(n - i2, n, 1);
 
 		Util.setXor(outff.fb_CD, fb_CD);
 		Util.setXor(outff.fb_DE, fb_DE);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return outff;
 	}
 
-	public OutFF runC(PreData predata, byte[][] fb_CD, byte[][] fb_CE, int i1, Timer timer) {
-		timer.start(pid, M.offline_comp);
+	public OutFF runC(byte[][] fb_CD, byte[][] fb_CE, int i1) {
+		timer.start(M.offline_comp);
 
+		int n = fb_CD.length;
 		OutFF outff = new OutFF();
 
-		timer.start(pid, M.offline_read);
-		outff.fb_CD = con2.readDoubleByteArray();
-		timer.stop(pid, M.offline_read);
+		outff.fb_CD = new byte[n][1];
+		for (int i = 0; i < n; i++) {
+			Crypto.sr_CD.nextBytes(outff.fb_CD[i]);
+		}
 
-		timer.stop(pid, M.offline_comp);
+		timer.stop(M.offline_comp);
 
 		// ----------------------------------------- //
 
-		timer.start(pid, M.online_comp);
+		timer.start(M.online_comp);
 
-		int n = fb_CD.length;
 		byte[][] a1 = new byte[n][1];
 		a1[i1][0] = 1;
 
 		Shift shift = new Shift(con1, con2);
-		byte[][] m1 = shift.runC(predata, a1, timer);
+		byte[][] m1 = shift.runC(a1);
 
 		for (int i = 0; i < n; i++)
 			Util.setXor(m1[i], outff.fb_CD[i]);
 
-		timer.start(pid, M.online_write);
-		con1.write(pid, m1);
-		timer.stop(pid, M.online_write);
+		timer.start(M.online_write);
+		con1.write(online_band, m1);
+		timer.stop(M.online_write);
 
-		timer.start(pid, M.online_read);
-		byte[][] m2 = con1.readDoubleByteArray(pid);
-		timer.stop(pid, M.online_read);
+		timer.start(M.online_read);
+		byte[][] m2 = con1.readDoubleByteArrayAndDec();
+		timer.stop(M.online_read);
 
 		outff.fb_CE = Util.xor(m1, m2);
 		Util.setXor(outff.fb_CE, fb_CE);
 		Util.setXor(outff.fb_CD, fb_CD);
 
-		timer.stop(pid, M.online_comp);
+		timer.stop(M.online_comp);
 		return outff;
 	}
 
 	@Override
 	public void run(Party party, Metadata md, Forest[] forest) {
-
-		Timer timer = new Timer();
-		PreData predata = new PreData();
 
 		for (int j = 0; j < 100; j++) {
 			int n = 100;
@@ -170,7 +160,7 @@ public class FlipFlag extends Protocol {
 				con2.write(fb_CD);
 				con2.write(i1);
 
-				outff = this.runE(predata, fb_DE, fb_CE, i2, timer);
+				outff = this.runE(fb_DE, fb_CE, i2);
 				outff.fb_CD = con1.readDoubleByteArray();
 
 				byte[][] fbp = Util.xor(Util.xor(outff.fb_CD, outff.fb_CE), outff.fb_DE);
@@ -192,7 +182,7 @@ public class FlipFlag extends Protocol {
 				fb_DE = con1.readDoubleByteArray();
 				i2 = con1.readInt();
 
-				outff = this.runD(predata, fb_DE, fb_CD, i2, timer);
+				outff = this.runD(fb_DE, fb_CD, i2);
 				con1.write(outff.fb_CD);
 
 			} else if (party == Party.Charlie) {
@@ -200,7 +190,7 @@ public class FlipFlag extends Protocol {
 				fb_CD = con1.readDoubleByteArray();
 				i1 = con1.readInt();
 
-				outff = this.runC(predata, fb_CD, fb_CE, i1, timer);
+				outff = this.runC(fb_CD, fb_CE, i1);
 
 			} else {
 				throw new NoSuchPartyException(party + "");
