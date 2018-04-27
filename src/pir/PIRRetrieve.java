@@ -27,6 +27,7 @@ import util.Timer;
 import util.Util;
 
 // TODO: really FlipFlag on path, and update path in Eviction
+// TODO: fix simulation
 
 public class PIRRetrieve extends Protocol {
 
@@ -84,9 +85,6 @@ public class PIRRetrieve extends Protocol {
 		int stashSize = tree_DE.getStashSize();
 		int[] tupleParam = new int[] { treeIndex == 0 ? 0 : 1, md.getNBytesOfTree(treeIndex),
 				md.getLBytesOfTree(treeIndex), md.getABytesOfTree(treeIndex) };
-		// PreUpdateRoot preupdateroot = new PreUpdateRoot(con1, con2);
-		// preupdateroot.runE(predata, isFirstTree, stashSize,
-		// md.getLBitsOfTree(treeIndex), timer);
 
 		Tuple[] path = new Tuple[pathTuples];
 		for (int i = 0; i < pathTuples; i++) {
@@ -97,12 +95,8 @@ public class PIRRetrieve extends Protocol {
 		R = updateroot.runE(isFirstTree, stashSize, md.getLBitsOfTree(treeIndex), tupleParam, Li, R, T.DE.xor(T.CE));
 		System.arraycopy(R, 0, path, 0, R.length);
 
-		// PreEviction preeviction = new PreEviction(con1, con2);
-		// preeviction.runE(predata, isFirstTree, tree_DE.getD(), tree_DE.getW(),
-		// timer);
-
 		Eviction eviction = new Eviction(con1, con2);
-		eviction.runE(predata, isFirstTree, tupleParam, Li, path, tree_DE);
+		eviction.runE(isFirstTree, tupleParam, Li, path, tree_DE);
 
 		// simulation of Reshare
 		timer.start(M.online_write);
@@ -114,9 +108,6 @@ public class PIRRetrieve extends Protocol {
 		timer.stop(M.online_read);
 
 		// second eviction sim
-		// preupdateroot.runE(predata, isFirstTree, stashSize,
-		// md.getLBitsOfTree(treeIndex), timer);
-
 		for (int i = 0; i < pathTuples; i++) {
 			path[i] = outpiracc.pathTuples_DE[i].xor(outpiracc.pathTuples_CE[i]);
 		}
@@ -124,10 +115,7 @@ public class PIRRetrieve extends Protocol {
 		R = updateroot.runE(isFirstTree, stashSize, md.getLBitsOfTree(treeIndex), tupleParam, Li, R, T.DE.xor(T.CE));
 		System.arraycopy(R, 0, path, 0, R.length);
 
-		// preeviction.runE(predata, isFirstTree, tree_DE.getD(), tree_DE.getW(),
-		// timer);
-
-		eviction.runE(predata, isFirstTree, tupleParam, Li, path, tree_DE);
+		eviction.runE(isFirstTree, tupleParam, Li, path, tree_DE);
 
 		// simulation of Reshare
 		timer.start(M.online_write);
@@ -184,30 +172,17 @@ public class PIRRetrieve extends Protocol {
 		int stashSize = tree_DE.getStashSize();
 		int[] tupleParam = new int[] { treeIndex == 0 ? 0 : 1, md.getNBytesOfTree(treeIndex),
 				md.getLBytesOfTree(treeIndex), md.getABytesOfTree(treeIndex) };
-		// PreUpdateRoot preupdateroot = new PreUpdateRoot(con1, con2);
-		// preupdateroot.runD(predata, isFirstTree, stashSize,
-		// md.getLBitsOfTree(treeIndex), tupleParam, timer);
 
 		UpdateRoot updateroot = new UpdateRoot(con1, con2);
 		updateroot.runD(isFirstTree, stashSize, md.getLBitsOfTree(treeIndex), tupleParam, Li, tree_DE.getW());
 
-		// PreEviction preeviction = new PreEviction(con1, con2);
-		// preeviction.runD(predata, isFirstTree, tree_DE.getD(), tree_DE.getW(),
-		// tupleParam, timer);
-
 		Eviction eviction = new Eviction(con1, con2);
-		eviction.runD(predata, isFirstTree, tupleParam, Li, tree_DE);
+		eviction.runD(isFirstTree, tupleParam, Li, tree_DE);
 
 		// second eviction sim
-		// preupdateroot.runD(predata, isFirstTree, stashSize,
-		// md.getLBitsOfTree(treeIndex), tupleParam, timer);
-
 		updateroot.runD(isFirstTree, stashSize, md.getLBitsOfTree(treeIndex), tupleParam, Li, tree_DE.getW());
 
-		// preeviction.runD(predata, isFirstTree, tree_DE.getD(), tree_DE.getW(),
-		// tupleParam, timer);
-
-		eviction.runD(predata, isFirstTree, tupleParam, Li, tree_DE);
+		eviction.runD(isFirstTree, tupleParam, Li, tree_DE);
 
 		timer.stop(M.online_comp);
 		return outpiracc;
@@ -255,8 +230,6 @@ public class PIRRetrieve extends Protocol {
 		int stashSize = tree_CE.getStashSize();
 		int[] tupleParam = new int[] { treeIndex == 0 ? 0 : 1, md.getNBytesOfTree(treeIndex),
 				md.getLBytesOfTree(treeIndex), md.getABytesOfTree(treeIndex) };
-		// PreUpdateRoot preupdateroot = new PreUpdateRoot(con1, con2);
-		// preupdateroot.runC(predata, isFirstTree, timer);
 
 		Tuple[] path = outpiracc.pathTuples_CD;
 		Tuple[] R = Arrays.copyOfRange(path, 0, stashSize);
@@ -265,11 +238,8 @@ public class PIRRetrieve extends Protocol {
 		R = updateroot.runC(isFirstTree, tupleParam, R, T.CD);
 		System.arraycopy(R, 0, path, 0, R.length);
 
-		// PreEviction preeviction = new PreEviction(con1, con2);
-		// preeviction.runC(predata, isFirstTree, timer);
-
 		Eviction eviction = new Eviction(con1, con2);
-		eviction.runC(predata, isFirstTree, tupleParam, path, tree_CD.getD(), stashSize, tree_CD.getW());
+		eviction.runC(isFirstTree, tupleParam, path, tree_CD.getD(), stashSize, tree_CD.getW());
 
 		// simulation of Reshare
 		timer.start(M.online_write);
@@ -281,16 +251,12 @@ public class PIRRetrieve extends Protocol {
 		timer.stop(M.online_read);
 
 		// second eviction sim
-		// preupdateroot.runC(predata, isFirstTree, timer);
-
 		R = Arrays.copyOfRange(path, 0, stashSize);
 
 		R = updateroot.runC(isFirstTree, tupleParam, R, T.CD);
 		System.arraycopy(R, 0, path, 0, R.length);
 
-		// preeviction.runC(predata, isFirstTree, timer);
-
-		eviction.runC(predata, isFirstTree, tupleParam, path, tree_CD.getD(), stashSize, tree_CD.getW());
+		eviction.runC(isFirstTree, tupleParam, path, tree_CD.getD(), stashSize, tree_CD.getW());
 
 		// simulation of Reshare
 		timer.start(M.online_write);

@@ -18,7 +18,6 @@ import oram.Metadata;
 import oram.Tree;
 import oram.Tuple;
 import protocols.struct.Party;
-import protocols.struct.PreData;
 import util.M;
 import util.Util;
 
@@ -47,7 +46,7 @@ public class Eviction extends Protocol {
 		return evict;
 	}
 
-	public void runE(PreData predata, boolean firstTree, int[] tupleParam, byte[] Li, Tuple[] originalPath, Tree OTi) {
+	public void runE(boolean firstTree, int[] tupleParam, byte[] Li, Tuple[] originalPath, Tree OTi) {
 		if (firstTree) {
 			// OTi.setBucketsOnPath(new BigInteger(1, Li).longValue(), new Bucket[] { new
 			// Bucket(originalPath) });
@@ -62,36 +61,36 @@ public class Eviction extends Protocol {
 		int w = OTi.getW();
 		int logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2));
 
-		predata.evict_LiKeyPairs = GCUtil.genKeyPairs(d - 1);
-		GCSignal[] LiZeroKeys = GCUtil.getZeroKeys(predata.evict_LiKeyPairs);
+		GCSignal[][] evict_LiKeyPairs = GCUtil.genKeyPairs(d - 1);
+		GCSignal[] LiZeroKeys = GCUtil.getZeroKeys(evict_LiKeyPairs);
 
-		predata.evict_E_feKeyPairs = new GCSignal[d][][];
-		predata.evict_C_feKeyPairs = new GCSignal[d][][];
+		GCSignal[][][] evict_E_feKeyPairs = new GCSignal[d][][];
+		GCSignal[][][] evict_C_feKeyPairs = new GCSignal[d][][];
 		GCSignal[][] E_feZeroKeys = new GCSignal[d][];
 		GCSignal[][] C_feZeroKeys = new GCSignal[d][];
 
-		predata.evict_E_labelKeyPairs = new GCSignal[d][w][][];
-		predata.evict_C_labelKeyPairs = new GCSignal[d][w][][];
+		GCSignal[][][][] evict_E_labelKeyPairs = new GCSignal[d][w][][];
+		GCSignal[][][][] evict_C_labelKeyPairs = new GCSignal[d][w][][];
 		GCSignal[][][] E_labelZeroKeys = new GCSignal[d][w][];
 		GCSignal[][][] C_labelZeroKeys = new GCSignal[d][w][];
 
-		predata.evict_deltaKeyPairs = new GCSignal[d][][];
+		GCSignal[][][] evict_deltaKeyPairs = new GCSignal[d][][];
 		GCSignal[][] deltaZeroKeys = new GCSignal[d][];
 
 		for (int i = 0; i < d; i++) {
-			predata.evict_E_feKeyPairs[i] = GCUtil.genKeyPairs(w);
-			predata.evict_C_feKeyPairs[i] = GCUtil.genKeyPairs(w);
-			E_feZeroKeys[i] = GCUtil.getZeroKeys(predata.evict_E_feKeyPairs[i]);
-			C_feZeroKeys[i] = GCUtil.getZeroKeys(predata.evict_C_feKeyPairs[i]);
+			evict_E_feKeyPairs[i] = GCUtil.genKeyPairs(w);
+			evict_C_feKeyPairs[i] = GCUtil.genKeyPairs(w);
+			E_feZeroKeys[i] = GCUtil.getZeroKeys(evict_E_feKeyPairs[i]);
+			C_feZeroKeys[i] = GCUtil.getZeroKeys(evict_C_feKeyPairs[i]);
 
-			predata.evict_deltaKeyPairs[i] = GCUtil.genKeyPairs(logW);
-			deltaZeroKeys[i] = GCUtil.getZeroKeys(predata.evict_deltaKeyPairs[i]);
+			evict_deltaKeyPairs[i] = GCUtil.genKeyPairs(logW);
+			deltaZeroKeys[i] = GCUtil.getZeroKeys(evict_deltaKeyPairs[i]);
 
 			for (int j = 0; j < w; j++) {
-				predata.evict_E_labelKeyPairs[i][j] = GCUtil.genKeyPairs(d - 1);
-				predata.evict_C_labelKeyPairs[i][j] = GCUtil.genKeyPairs(d - 1);
-				E_labelZeroKeys[i][j] = GCUtil.getZeroKeys(predata.evict_E_labelKeyPairs[i][j]);
-				C_labelZeroKeys[i][j] = GCUtil.getZeroKeys(predata.evict_C_labelKeyPairs[i][j]);
+				evict_E_labelKeyPairs[i][j] = GCUtil.genKeyPairs(d - 1);
+				evict_C_labelKeyPairs[i][j] = GCUtil.genKeyPairs(d - 1);
+				E_labelZeroKeys[i][j] = GCUtil.getZeroKeys(evict_E_labelKeyPairs[i][j]);
+				C_labelZeroKeys[i][j] = GCUtil.getZeroKeys(evict_C_labelKeyPairs[i][j]);
 			}
 		}
 
@@ -101,42 +100,33 @@ public class Eviction extends Protocol {
 				E_labelZeroKeys, C_labelZeroKeys, deltaZeroKeys);
 		((GCGen) gen).sendLastSetGTT();
 
-		predata.evict_tiOutKeyHashes = new byte[d][][];
-		predata.evict_targetOutKeyPairs = new GCSignal[d][][];
+		byte[][][] evict_tiOutKeyHashes = new byte[d][][];
+		GCSignal[][][] evict_targetOutKeyPairs = new GCSignal[d][][];
 		for (int i = 0; i < d; i++) {
-			predata.evict_tiOutKeyHashes[i] = GCUtil.genOutKeyHashes(outZeroKeys[1][i]);
-			predata.evict_targetOutKeyPairs[i] = GCUtil.recoverOutKeyPairs(outZeroKeys[0][i]);
+			evict_tiOutKeyHashes[i] = GCUtil.genOutKeyHashes(outZeroKeys[1][i]);
+			evict_targetOutKeyPairs[i] = GCUtil.recoverOutKeyPairs(outZeroKeys[0][i]);
 		}
 
 		timer.start(M.offline_write);
-		con2.write(predata.evict_C_feKeyPairs);
-		con2.write(predata.evict_C_labelKeyPairs);
+		con2.write(offline_band, evict_C_feKeyPairs);
+		con2.write(offline_band, evict_C_labelKeyPairs);
 
-		con1.write(predata.evict_tiOutKeyHashes);
-		con1.write(predata.evict_targetOutKeyPairs);
+		con1.write(offline_band, evict_tiOutKeyHashes);
 		timer.stop(M.offline_write);
 
 		// Permutation
-		predata.evict_pi = Util.randomPermutation(d, Crypto.sr);
-		predata.evict_delta = new byte[d][];
-		predata.evict_rho = new byte[d][];
-		predata.evict_delta_p = new int[d][];
-		predata.evict_rho_p = new int[d][];
+		int[] evict_pi = Util.randomPermutation(d, Crypto.sr_CE);
+		byte[][] evict_delta = new byte[d][(logW + 7) / 8];
+		byte[][] evict_rho = new byte[d][(logW + 7) / 8];
+		int[][] evict_delta_p = new int[d][];
+		int[][] evict_rho_p = new int[d][];
 
 		for (int i = 0; i < d; i++) {
-			predata.evict_delta[i] = Util.nextBytes((logW + 7) / 8, Crypto.sr);
-			predata.evict_rho[i] = Util.nextBytes((logW + 7) / 8, Crypto.sr);
-			predata.evict_delta_p[i] = Util.getXorPermutation(predata.evict_delta[i], logW);
-			predata.evict_rho_p[i] = Util.getXorPermutation(predata.evict_rho[i], logW);
+			Crypto.sr_CE.nextBytes(evict_delta[i]);
+			Crypto.sr_CE.nextBytes(evict_rho[i]);
+			evict_delta_p[i] = Util.getXorPermutation(evict_delta[i], logW);
+			evict_rho_p[i] = Util.getXorPermutation(evict_rho[i], logW);
 		}
-
-		timer.start(M.offline_write);
-		con2.write(predata.evict_pi);
-		con2.write(predata.evict_delta);
-		con2.write(predata.evict_rho);
-		con2.write(predata.evict_delta_p);
-		con2.write(predata.evict_rho_p);
-		timer.stop(M.offline_write);
 
 		timer.stop(M.offline_comp);
 
@@ -150,14 +140,14 @@ public class Eviction extends Protocol {
 
 		Bucket[] pathBuckets = Bucket.tuplesToBuckets(pathTuples, d, w, w);
 
-		GCSignal[] LiInputKeys = GCUtil.revSelectKeys(predata.evict_LiKeyPairs, Li);
+		GCSignal[] LiInputKeys = GCUtil.revSelectKeys(evict_LiKeyPairs, Li);
 		GCSignal[][] E_feInputKeys = new GCSignal[d][];
 		GCSignal[][][] E_labelInputKeys = new GCSignal[d][][];
 		GCSignal[][] deltaInputKeys = new GCSignal[d][];
 		for (int i = 0; i < d; i++) {
-			E_feInputKeys[i] = GCUtil.selectFeKeys(predata.evict_E_feKeyPairs[i], pathBuckets[i].getTuples());
-			E_labelInputKeys[i] = GCUtil.selectLabelKeys(predata.evict_E_labelKeyPairs[i], pathBuckets[i].getTuples());
-			deltaInputKeys[i] = GCUtil.revSelectKeys(predata.evict_deltaKeyPairs[i], predata.evict_delta[i]);
+			E_feInputKeys[i] = GCUtil.selectFeKeys(evict_E_feKeyPairs[i], pathBuckets[i].getTuples());
+			E_labelInputKeys[i] = GCUtil.selectLabelKeys(evict_E_labelKeyPairs[i], pathBuckets[i].getTuples());
+			deltaInputKeys[i] = GCUtil.revSelectKeys(evict_deltaKeyPairs[i], evict_delta[i]);
 		}
 
 		timer.start(M.online_write);
@@ -168,19 +158,19 @@ public class Eviction extends Protocol {
 		timer.stop(M.online_write);
 
 		PermuteTarget permutetarget = new PermuteTarget(con1, con2);
-		permutetarget.runE(d, predata.evict_pi, predata.evict_targetOutKeyPairs);
+		permutetarget.runE(d, evict_pi, evict_targetOutKeyPairs);
 
 		PermuteIndex permuteindex = new PermuteIndex(con1, con2);
-		permuteindex.runE(w, predata.evict_pi);
+		permuteindex.runE(w, evict_pi);
 
 		int W = (int) Math.pow(2, logW);
 		for (int i = 0; i < d; i++) {
 			pathBuckets[i].expand(W);
-			pathBuckets[i].permute(predata.evict_delta_p[i]);
+			pathBuckets[i].permute(evict_delta_p[i]);
 		}
-		pathBuckets = Util.permute(pathBuckets, predata.evict_pi);
+		pathBuckets = Util.permute(pathBuckets, evict_pi);
 		for (int i = 0; i < d; i++) {
-			pathBuckets[i].permute(predata.evict_rho_p[i]);
+			pathBuckets[i].permute(evict_rho_p[i]);
 		}
 		pathTuples = Bucket.bucketsToTuples(pathBuckets);
 
@@ -189,13 +179,13 @@ public class Eviction extends Protocol {
 
 		pathBuckets = Bucket.tuplesToBuckets(pathTuples, d, W, W);
 		for (int i = 0; i < d; i++) {
-			int[] rho_ivs = Util.inversePermutation(predata.evict_rho_p[i]);
+			int[] rho_ivs = Util.inversePermutation(evict_rho_p[i]);
 			pathBuckets[i].permute(rho_ivs);
 		}
-		int[] pi_ivs = Util.inversePermutation(predata.evict_pi);
+		int[] pi_ivs = Util.inversePermutation(evict_pi);
 		pathBuckets = Util.permute(pathBuckets, pi_ivs);
 		for (int i = 0; i < d; i++) {
-			int[] delta_ivs = Util.inversePermutation(predata.evict_delta_p[i]);
+			int[] delta_ivs = Util.inversePermutation(evict_delta_p[i]);
 			pathBuckets[i].permute(delta_ivs);
 			pathBuckets[i].shrink(w);
 		}
@@ -206,7 +196,7 @@ public class Eviction extends Protocol {
 		timer.stop(M.online_comp);
 	}
 
-	public void runD(PreData predata, boolean firstTree, int[] tupleParam, byte[] Li, Tree OTi) {
+	public void runD(boolean firstTree, int[] tupleParam, byte[] Li, Tree OTi) {
 		if (firstTree) {
 			timer.start(M.online_read);
 			// Tuple[] originalPath = con2.readTupleArrayAndDec();
@@ -244,15 +234,13 @@ public class Eviction extends Protocol {
 
 		Network channel = new Network(con1, null);
 		CompEnv<GCSignal> eva = new GCEva(channel, timer, M.offline_read);
-		predata.evict_gcroute = new GCRoute<GCSignal>(eva, d, w);
-		predata.evict_gcroute.routing(LiZeroKeys, E_feZeroKeys, C_feZeroKeys, E_labelZeroKeys, C_labelZeroKeys,
-				deltaZeroKeys);
+		GCRoute<GCSignal> evict_gcroute = new GCRoute<GCSignal>(eva, d, w);
+		evict_gcroute.routing(LiZeroKeys, E_feZeroKeys, C_feZeroKeys, E_labelZeroKeys, C_labelZeroKeys, deltaZeroKeys);
 		((GCEva) eva).receiveLastSetGTT();
 		eva.setEvaluate();
 
 		timer.start(M.offline_read);
-		predata.evict_tiOutKeyHashes = con1.readTripleByteArray();
-		predata.evict_targetOutKeyPairs = con1.readTripleGCSignalArray();
+		byte[][][] evict_tiOutKeyHashes = con1.readTripleByteArrayAndDec();
 		timer.stop(M.offline_read);
 
 		timer.stop(M.offline_comp);
@@ -271,12 +259,12 @@ public class Eviction extends Protocol {
 		GCSignal[][][] C_labelInputKeys = con2.readTripleGCSignalArrayAndDec();
 		timer.stop(M.online_read);
 
-		GCSignal[][][] outKeys = predata.evict_gcroute.routing(LiInputKeys, E_feInputKeys, C_feInputKeys,
-				E_labelInputKeys, C_labelInputKeys, deltaInputKeys);
+		GCSignal[][][] outKeys = evict_gcroute.routing(LiInputKeys, E_feInputKeys, C_feInputKeys, E_labelInputKeys,
+				C_labelInputKeys, deltaInputKeys);
 
 		byte[][] ti_p = new byte[deltaInputKeys.length][];
 		for (int i = 0; i < ti_p.length; i++) {
-			ti_p[i] = Util.padArray(GCUtil.evaOutKeys(outKeys[1][i], predata.evict_tiOutKeyHashes[i]).toByteArray(),
+			ti_p[i] = Util.padArray(GCUtil.evaOutKeys(outKeys[1][i], evict_tiOutKeyHashes[i]).toByteArray(),
 					(logW + 7) / 8);
 		}
 
@@ -301,7 +289,7 @@ public class Eviction extends Protocol {
 		timer.stop(M.online_comp);
 	}
 
-	public void runC(PreData predata, boolean firstTree, int[] tupleParam, Tuple[] originalPath, int d, int sw, int w) {
+	public void runC(boolean firstTree, int[] tupleParam, Tuple[] originalPath, int d, int sw, int w) {
 		if (firstTree) {
 			timer.start(M.online_write);
 			// con2.write(online_band, originalPath);
@@ -313,16 +301,24 @@ public class Eviction extends Protocol {
 
 		// GC
 		timer.start(M.offline_read);
-		predata.evict_C_feKeyPairs = con1.readTripleGCSignalArray();
-		predata.evict_C_labelKeyPairs = con1.readQuadGCSignalArray();
+		GCSignal[][][] evict_C_feKeyPairs = con1.readTripleGCSignalArrayAndDec();
+		GCSignal[][][][] evict_C_labelKeyPairs = con1.readQuadGCSignalArrayAndDec();
+		timer.stop(M.offline_read);
 
 		// Permutation
-		predata.evict_pi = con1.readIntArray();
-		predata.evict_delta = con1.readDoubleByteArray();
-		predata.evict_rho = con1.readDoubleByteArray();
-		predata.evict_delta_p = con1.readDoubleIntArray();
-		predata.evict_rho_p = con1.readDoubleIntArray();
-		timer.stop(M.offline_read);
+		int logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2));
+		int[] evict_pi = Util.randomPermutation(d, Crypto.sr_CE);
+		byte[][] evict_delta = new byte[d][(logW + 7) / 8];
+		byte[][] evict_rho = new byte[d][(logW + 7) / 8];
+		int[][] evict_delta_p = new int[d][];
+		int[][] evict_rho_p = new int[d][];
+
+		for (int i = 0; i < d; i++) {
+			Crypto.sr_CE.nextBytes(evict_delta[i]);
+			Crypto.sr_CE.nextBytes(evict_rho[i]);
+			evict_delta_p[i] = Util.getXorPermutation(evict_delta[i], logW);
+			evict_rho_p[i] = Util.getXorPermutation(evict_rho[i], logW);
+		}
 
 		timer.stop(M.offline_comp);
 
@@ -339,8 +335,8 @@ public class Eviction extends Protocol {
 		GCSignal[][] C_feInputKeys = new GCSignal[d][];
 		GCSignal[][][] C_labelInputKeys = new GCSignal[d][][];
 		for (int i = 0; i < d; i++) {
-			C_feInputKeys[i] = GCUtil.selectFeKeys(predata.evict_C_feKeyPairs[i], pathBuckets[i].getTuples());
-			C_labelInputKeys[i] = GCUtil.selectLabelKeys(predata.evict_C_labelKeyPairs[i], pathBuckets[i].getTuples());
+			C_feInputKeys[i] = GCUtil.selectFeKeys(evict_C_feKeyPairs[i], pathBuckets[i].getTuples());
+			C_labelInputKeys[i] = GCUtil.selectLabelKeys(evict_C_labelKeyPairs[i], pathBuckets[i].getTuples());
 		}
 
 		timer.start(M.online_write);
@@ -349,20 +345,19 @@ public class Eviction extends Protocol {
 		timer.stop(M.online_write);
 
 		PermuteTarget permutetarget = new PermuteTarget(con1, con2);
-		permutetarget.runC(firstTree, d, predata.evict_pi);
+		permutetarget.runC(firstTree, d, evict_pi);
 
 		PermuteIndex permuteindex = new PermuteIndex(con1, con2);
-		permuteindex.runC(firstTree, w, predata.evict_pi, predata.evict_rho);
+		permuteindex.runC(firstTree, w, evict_pi, evict_rho);
 
-		int logW = (int) Math.ceil(Math.log(w + 1) / Math.log(2));
 		int W = (int) Math.pow(2, logW);
 		for (int i = 0; i < d; i++) {
 			pathBuckets[i].expand(W);
-			pathBuckets[i].permute(predata.evict_delta_p[i]);
+			pathBuckets[i].permute(evict_delta_p[i]);
 		}
-		pathBuckets = Util.permute(pathBuckets, predata.evict_pi);
+		pathBuckets = Util.permute(pathBuckets, evict_pi);
 		for (int i = 0; i < d; i++) {
-			pathBuckets[i].permute(predata.evict_rho_p[i]);
+			pathBuckets[i].permute(evict_rho_p[i]);
 		}
 		pathTuples = Bucket.bucketsToTuples(pathBuckets);
 
@@ -371,13 +366,13 @@ public class Eviction extends Protocol {
 
 		pathBuckets = Bucket.tuplesToBuckets(pathTuples, d, W, W);
 		for (int i = 0; i < d; i++) {
-			int[] rho_ivs = Util.inversePermutation(predata.evict_rho_p[i]);
+			int[] rho_ivs = Util.inversePermutation(evict_rho_p[i]);
 			pathBuckets[i].permute(rho_ivs);
 		}
-		int[] pi_ivs = Util.inversePermutation(predata.evict_pi);
+		int[] pi_ivs = Util.inversePermutation(evict_pi);
 		pathBuckets = Util.permute(pathBuckets, pi_ivs);
 		for (int i = 0; i < d; i++) {
-			int[] delta_ivs = Util.inversePermutation(predata.evict_delta_p[i]);
+			int[] delta_ivs = Util.inversePermutation(evict_delta_p[i]);
 			pathBuckets[i].permute(delta_ivs);
 			pathBuckets[i].shrink(w);
 		}
