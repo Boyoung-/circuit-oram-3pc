@@ -17,7 +17,10 @@ import oram.Forest;
 import oram.Metadata;
 import oram.Tree;
 import oram.Tuple;
-import protocols.struct.Party;
+import struct.Party;
+import subprotocols.PermuteIndex;
+import subprotocols.PermuteTarget;
+import subprotocols.SSXOT;
 import util.M;
 import util.Util;
 

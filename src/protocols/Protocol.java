@@ -6,7 +6,7 @@ import exceptions.NoSuchPartyException;
 import oram.Forest;
 import oram.Global;
 import oram.Metadata;
-import protocols.struct.Party;
+import struct.Party;
 import util.Bandwidth;
 import util.Timer;
 

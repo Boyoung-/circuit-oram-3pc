@@ -15,8 +15,8 @@ import exceptions.NoSuchPartyException;
 import oram.Global;
 import oram.Metadata;
 import protocols.*;
-import pir.*;
-import protocols.struct.Party;
+import struct.Party;
+import subprotocols.*;
 
 public class CLI {
 	public static final int DEFAULT_PORT = 8000;

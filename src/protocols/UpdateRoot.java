@@ -18,7 +18,8 @@ import gc.GCUtil;
 import oram.Forest;
 import oram.Metadata;
 import oram.Tuple;
-import protocols.struct.Party;
+import struct.Party;
+import subprotocols.SSXOT;
 import util.M;
 import util.Util;
 
