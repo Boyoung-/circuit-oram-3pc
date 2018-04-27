@@ -70,17 +70,7 @@ public class CLI {
 		Class<? extends Protocol> operation = null;
 		String protocol = cmd.getOptionValue("protocol", "retrieve").toLowerCase();
 
-		if (protocol.equals("acc")) {
-			operation = Access.class;
-		} else if (protocol.equals("cot")) {
-			operation = SSCOT.class;
-		} else if (protocol.equals("iot")) {
-			operation = SSIOT.class;
-		} else if (protocol.equals("rsf")) {
-			operation = Reshuffle.class;
-		} else if (protocol.equals("ppt")) {
-			operation = PostProcessT.class;
-		} else if (protocol.equals("ur")) {
+		if (protocol.equals("ur")) {
 			operation = UpdateRoot.class;
 		} else if (protocol.equals("evi")) {
 			operation = Eviction.class;
@@ -90,19 +80,12 @@ public class CLI {
 			operation = PermuteIndex.class;
 		} else if (protocol.equals("xot")) {
 			operation = SSXOT.class;
-		} else if (protocol.equals("rtv")) {
-			operation = Retrieve.class;
-
 		} else if (protocol.equals("pircot")) {
 			operation = PIRCOT.class;
-		} else if (protocol.equals("piriot")) {
-			operation = PIRIOT.class;
 		} else if (protocol.equals("piracc")) {
 			operation = PIRAccess.class;
 		} else if (protocol.equals("pirrtv")) {
 			operation = PIRRetrieve.class;
-		} else if (protocol.equals("pirrsf")) {
-			operation = PIRReshuffle.class;
 		} else if (protocol.equals("sspir")) {
 			operation = SSPIR.class;
 		} else if (protocol.equals("shiftpir")) {
@@ -171,9 +154,6 @@ public class CLI {
 
 			try {
 				Protocol p = operationCtor.newInstance(con1[0], con2[0]);
-				if (protocol.equals("rtv")) {
-					((Retrieve) p).setCons(con1, con2);
-				}
 				if (protocol.equals("pirrtv")) {
 					((PIRRetrieve) p).setCons(con1, con2);
 				}
@@ -216,9 +196,6 @@ public class CLI {
 
 			try {
 				Protocol p = operationCtor.newInstance(con1[0], con2[0]);
-				if (protocol.equals("rtv")) {
-					((Retrieve) p).setCons(con1, con2);
-				}
 				if (protocol.equals("pirrtv")) {
 					((PIRRetrieve) p).setCons(con1, con2);
 				}
@@ -262,9 +239,6 @@ public class CLI {
 
 			try {
 				Protocol p = operationCtor.newInstance(con1[0], con2[0]);
-				if (protocol.equals("rtv")) {
-					((Retrieve) p).setCons(con1, con2);
-				}
 				if (protocol.equals("pirrtv")) {
 					((PIRRetrieve) p).setCons(con1, con2);
 				}
