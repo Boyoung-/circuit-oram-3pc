@@ -4,7 +4,7 @@ import communication.Communication;
 import crypto.Crypto;
 import crypto.PRF;
 import exceptions.NoSuchPartyException;
-import exceptions.SSCOTException;
+import exceptions.PIRCOTException;
 import oram.Forest;
 import oram.Metadata;
 import protocols.Protocol;
@@ -147,7 +147,7 @@ public class PIRCOT extends Protocol {
 		}
 
 		if (count != 1) {
-			throw new SSCOTException("Invariant error: " + count);
+			throw new PIRCOTException("Invariant error: " + count);
 		}
 
 		int delta_D = (t_C - s_CE + l) % l;

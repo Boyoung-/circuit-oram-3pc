@@ -18,12 +18,10 @@ import protocols.struct.OutFF;
 import protocols.struct.OutPIRAccess;
 import protocols.struct.OutULiT;
 import protocols.struct.Party;
-import protocols.struct.PreData;
 import protocols.struct.TwoThreeXorByte;
 import protocols.struct.TwoThreeXorInt;
 import util.M;
 import util.StopWatch;
-import util.Timer;
 import util.Util;
 
 // TODO: really FlipFlag on path, and update path in Eviction
@@ -43,8 +41,8 @@ public class PIRRetrieve extends Protocol {
 		cons2 = b;
 	}
 
-	public OutPIRAccess runE(Metadata md, PreData predata, Tree tree_DE, Tree tree_CE, byte[] Li, TwoThreeXorByte L,
-			TwoThreeXorByte N, TwoThreeXorInt dN) {
+	public OutPIRAccess runE(Metadata md, Tree tree_DE, Tree tree_CE, byte[] Li, TwoThreeXorByte L, TwoThreeXorByte N,
+			TwoThreeXorInt dN) {
 		timer.start(M.online_comp);
 
 		int treeIndex = tree_DE.getTreeIndex();
@@ -130,8 +128,8 @@ public class PIRRetrieve extends Protocol {
 		return outpiracc;
 	}
 
-	public OutPIRAccess runD(Metadata md, PreData predata, Tree tree_DE, Tree tree_CD, byte[] Li, TwoThreeXorByte L,
-			TwoThreeXorByte N, TwoThreeXorInt dN) {
+	public OutPIRAccess runD(Metadata md, Tree tree_DE, Tree tree_CD, byte[] Li, TwoThreeXorByte L, TwoThreeXorByte N,
+			TwoThreeXorInt dN) {
 		timer.start(M.online_comp);
 
 		int treeIndex = tree_DE.getTreeIndex();
@@ -188,8 +186,8 @@ public class PIRRetrieve extends Protocol {
 		return outpiracc;
 	}
 
-	public OutPIRAccess runC(Metadata md, PreData predata, Tree tree_CD, Tree tree_CE, byte[] Li, TwoThreeXorByte L,
-			TwoThreeXorByte N, TwoThreeXorInt dN) {
+	public OutPIRAccess runC(Metadata md, Tree tree_CD, Tree tree_CE, byte[] Li, TwoThreeXorByte L, TwoThreeXorByte N,
+			TwoThreeXorInt dN) {
 		timer.start(M.online_comp);
 
 		int treeIndex = tree_CE.getTreeIndex();
@@ -275,8 +273,6 @@ public class PIRRetrieve extends Protocol {
 	public void run(Party party, Metadata md, Forest[] forest) {
 
 		StopWatch ete = new StopWatch("ETE");
-		Timer timer = new Timer();
-		PreData predata = new PreData();
 
 		Tree tree_CD = null;
 		Tree tree_DE = null;
@@ -326,7 +322,7 @@ public class PIRRetrieve extends Protocol {
 
 				if (party == Party.Eddie) {
 					ete.start();
-					OutPIRAccess out = this.runE(md, predata, tree_DE, tree_CE, Li, L, N, dN);
+					OutPIRAccess out = this.runE(md, tree_DE, tree_CE, Li, L, N, dN);
 					ete.stop();
 
 					out.j.t_D = con1.readInt();
@@ -354,7 +350,7 @@ public class PIRRetrieve extends Protocol {
 
 				} else if (party == Party.Debbie) {
 					ete.start();
-					OutPIRAccess out = this.runD(md, predata, tree_DE, tree_CD, Li, L, N, dN);
+					OutPIRAccess out = this.runD(md, tree_DE, tree_CD, Li, L, N, dN);
 					ete.stop();
 
 					con1.write(out.j.t_D);
@@ -362,7 +358,7 @@ public class PIRRetrieve extends Protocol {
 
 				} else if (party == Party.Charlie) {
 					ete.start();
-					OutPIRAccess out = this.runC(md, predata, tree_CD, tree_CE, Li, L, N, dN);
+					OutPIRAccess out = this.runC(md, tree_CD, tree_CE, Li, L, N, dN);
 					ete.stop();
 
 					con1.write(out.j.t_C);
