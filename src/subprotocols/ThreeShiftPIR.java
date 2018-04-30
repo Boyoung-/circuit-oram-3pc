@@ -21,12 +21,20 @@ public class ThreeShiftPIR extends Protocol {
 
 	public ThreeShiftPIR(Communication con1, Communication con2) {
 		super(con1, con2);
+
+		online_band = all.ThreeShiftPIR_on;
+		offline_band = all.ThreeShiftPIR_off;
+		timer = all.ThreeShiftPIR;
 	}
 
 	public ThreeShiftPIR(Communication con1, Communication con2, SecureRandom sr1, SecureRandom sr2) {
 		super(con1, con2);
 		this.sr1 = sr1;
 		this.sr2 = sr2;
+
+		online_band = all.ThreeShiftPIR_on;
+		offline_band = all.ThreeShiftPIR_off;
+		timer = all.ThreeShiftPIR;
 	}
 
 	public void reinit(Communication con1, Communication con2, SecureRandom sr1, SecureRandom sr2) {

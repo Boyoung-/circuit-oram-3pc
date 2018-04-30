@@ -7,6 +7,7 @@ import oram.Forest;
 import oram.Global;
 import oram.Metadata;
 import struct.Party;
+import struct.TimeAndBandwidth;
 import util.Bandwidth;
 import util.Timer;
 
@@ -16,6 +17,20 @@ public abstract class Protocol {
 	public Timer timer;
 	public Bandwidth online_band;
 	public Bandwidth offline_band;
+
+	public static TimeAndBandwidth all;
+
+	static {
+		all = new TimeAndBandwidth();
+	}
+
+	public synchronized void addTime(Timer from, Timer to) {
+		to.add(from);
+	}
+
+	public synchronized void addBand(Bandwidth from, Bandwidth to) {
+		to.add(from);
+	}
 
 	/*
 	 * Connections are alphabetized so:
@@ -29,9 +44,9 @@ public abstract class Protocol {
 	public Protocol(Communication con1, Communication con2) {
 		this.con1 = con1;
 		this.con2 = con2;
-		timer = new Timer();
-		online_band = new Bandwidth("Online");
-		offline_band = new Bandwidth("Offline");
+		// timer = new Timer();
+		// online_band = new Bandwidth();
+		// offline_band = new Bandwidth();
 	}
 
 	private static final boolean ENSURE_SANITY = true;

@@ -27,6 +27,10 @@ public class UpdateRoot extends Protocol {
 
 	public UpdateRoot(Communication con1, Communication con2) {
 		super(con1, con2);
+
+		online_band = all.UpdateRoot_on;
+		offline_band = all.UpdateRoot_off;
+		timer = all.UpdateRoot;
 	}
 
 	public Tuple[] runE(boolean firstTree, int sw, int lBits, int[] tupleParam, byte[] Li, Tuple[] R, Tuple Ti) {

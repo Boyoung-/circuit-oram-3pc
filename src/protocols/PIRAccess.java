@@ -28,6 +28,10 @@ public class PIRAccess extends Protocol {
 
 	public PIRAccess(Communication con1, Communication con2) {
 		super(con1, con2);
+
+		online_band = all.Access_on;
+		offline_band = all.Access_off;
+		timer = all.Access;
 	}
 
 	public OutPIRAccess runE(Metadata md, Tree tree_DE, Tree tree_CE, byte[] Li, TwoThreeXorByte L, TwoThreeXorByte N,

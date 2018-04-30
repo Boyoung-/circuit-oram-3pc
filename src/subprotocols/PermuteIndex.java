@@ -16,6 +16,10 @@ public class PermuteIndex extends Protocol {
 
 	public PermuteIndex(Communication con1, Communication con2) {
 		super(con1, con2);
+
+		online_band = all.PermTuple_on;
+		offline_band = all.PermTuple_off;
+		timer = all.PermTuple;
 	}
 
 	public void runE(int w, int[] evict_pi) {

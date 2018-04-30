@@ -17,8 +17,10 @@ import struct.OutULiT;
 import struct.Party;
 import struct.TwoThreeXorByte;
 import struct.TwoThreeXorInt;
+import util.Bandwidth;
 import util.M;
 import util.StopWatch;
+import util.Timer;
 import util.Util;
 
 // TODO: really FlipFlag on path, and update path in Eviction
@@ -31,6 +33,10 @@ public class PIRRetrieve extends Protocol {
 
 	public PIRRetrieve(Communication con1, Communication con2) {
 		super(con1, con2);
+
+		online_band = new Bandwidth();
+		offline_band = new Bandwidth();
+		timer = new Timer();
 	}
 
 	public void setCons(Communication[] a, Communication[] b) {

@@ -18,6 +18,10 @@ public class PIRCOT extends Protocol {
 
 	public PIRCOT(Communication con1, Communication con2) {
 		super(con1, con2);
+
+		online_band = all.KSearch_on;
+		offline_band = all.KSearch_off;
+		timer = all.KSearch;
 	}
 
 	public OutPIRCOT runE(byte[][] u, byte[] v) {

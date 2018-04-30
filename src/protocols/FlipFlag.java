@@ -15,6 +15,10 @@ public class FlipFlag extends Protocol {
 
 	public FlipFlag(Communication con1, Communication con2) {
 		super(con1, con2);
+
+		online_band = all.FlipFlag_on;
+		offline_band = all.FlipFlag_off;
+		timer = all.FlipFlag;
 	}
 
 	// TODO: remove loop around setXor: use Util.setXor(byte[][], byte[][])

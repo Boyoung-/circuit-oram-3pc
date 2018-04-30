@@ -7,6 +7,11 @@ public class Bandwidth {
 	public String task;
 	public long bandwidth;
 
+	public Bandwidth() {
+		task = "";
+		bandwidth = 0;
+	}
+
 	public Bandwidth(String t) {
 		task = t;
 		bandwidth = 0;
@@ -25,12 +30,18 @@ public class Bandwidth {
 		bandwidth += n;
 	}
 
-	public Bandwidth add(Bandwidth b) {
+	public Bandwidth addAndReturn(Bandwidth b) {
 		if (!task.equals(b.task))
 			throw new BandwidthException("Task: " + task + " != " + b.task);
 		Bandwidth total = new Bandwidth(task);
 		total.bandwidth = bandwidth + b.bandwidth;
 		return total;
+	}
+
+	public void add(Bandwidth b) {
+		if (!task.equals(b.task))
+			throw new BandwidthException("Task: " + task + " != " + b.task);
+		bandwidth += b.bandwidth;
 	}
 
 	public String noPreToString() {

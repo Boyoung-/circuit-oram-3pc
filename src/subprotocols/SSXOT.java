@@ -19,6 +19,10 @@ public class SSXOT extends Protocol {
 
 	public SSXOT(Communication con1, Communication con2) {
 		super(con1, con2);
+
+		online_band = all.SSXOT_on;
+		offline_band = all.SSXOT_off;
+		timer = all.SSXOT;
 	}
 
 	public Tuple[] runE(Tuple[] m, int[] tupleParam) {

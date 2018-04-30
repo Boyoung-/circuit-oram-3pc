@@ -19,6 +19,10 @@ public class PermuteTarget extends Protocol {
 
 	public PermuteTarget(Communication con1, Communication con2) {
 		super(con1, con2);
+
+		online_band = all.PermBucket_on;
+		offline_band = all.PermBucket_off;
+		timer = all.PermBucket;
 	}
 
 	public void runE(int d, int[] evict_pi, GCSignal[][][] evict_targetOutKeyPairs) {

@@ -14,6 +14,10 @@ public class Shift extends Protocol {
 
 	public Shift(Communication con1, Communication con2) {
 		super(con1, con2);
+
+		online_band = all.Shift_on;
+		offline_band = all.Shift_off;
+		timer = all.Shift;
 	}
 
 	public byte[][] runE(byte[][] x, int s) {

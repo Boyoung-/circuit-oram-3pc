@@ -30,6 +30,10 @@ public class Eviction extends Protocol {
 
 	public Eviction(Communication con1, Communication con2) {
 		super(con1, con2);
+
+		online_band = all.Eviction_on;
+		offline_band = all.Eviction_off;
+		timer = all.Eviction;
 	}
 
 	private int[] prepareEviction(int[] target, int[] ti, int W) {

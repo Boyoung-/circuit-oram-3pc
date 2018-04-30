@@ -6,18 +6,20 @@ import exceptions.TimerException;
 
 public class Timer {
 	StopWatch[] watches;
-	Stack<StopWatch> stack;
+	static Stack<StopWatch> stack;
+
+	static {
+		stack = new Stack<StopWatch>();
+	}
 
 	public Timer() {
 		watches = new StopWatch[M.size];
 		for (int j = 0; j < M.size; j++)
 			watches[j] = new StopWatch(M.names[j]);
-		stack = new Stack<StopWatch>();
 	}
 
 	public Timer(StopWatch[] sws) {
 		watches = sws;
-		stack = new Stack<StopWatch>();
 	}
 
 	public void start(int m) {
@@ -70,13 +72,23 @@ public class Timer {
 		return new Timer(sws);
 	}
 
-	public Timer add(Timer t) {
-		if (!stack.empty() || !t.stack.empty())
+	public Timer addAndReturn(Timer t) {
+		// if (!stack.empty() || !t.stack.empty())
+		if (!stack.empty())
 			throw new TimerException("Stack not empty");
 
 		StopWatch[] sws = new StopWatch[M.size];
 		for (int i = 0; i < watches.length; i++)
-			sws[i] = watches[i].add(t.watches[i]);
+			sws[i] = watches[i].addAndReturn(t.watches[i]);
 		return new Timer(sws);
+	}
+
+	public void add(Timer t) {
+		// if (!stack.empty() || !t.stack.empty())
+		if (!stack.empty())
+			throw new TimerException("Stack not empty");
+
+		for (int i = 0; i < watches.length; i++)
+			watches[i].add(t.watches[i]);
 	}
 }
