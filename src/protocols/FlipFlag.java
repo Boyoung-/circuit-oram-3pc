@@ -9,16 +9,19 @@ import struct.OutFF;
 import struct.Party;
 import subprotocols.Shift;
 import util.M;
+import util.P;
 import util.Util;
 
 public class FlipFlag extends Protocol {
 
+	int pid = P.FF;
+
 	public FlipFlag(Communication con1, Communication con2) {
 		super(con1, con2);
 
-		online_band = all.FlipFlag_on;
-		offline_band = all.FlipFlag_off;
-		timer = all.FlipFlag;
+		online_band = all.online_band[pid];
+		offline_band = all.offline_band[pid];
+		timer = all.timer[pid];
 	}
 
 	// TODO: remove loop around setXor: use Util.setXor(byte[][], byte[][])

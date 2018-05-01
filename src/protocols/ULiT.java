@@ -15,6 +15,7 @@ import struct.TwoThreeXorByte;
 import struct.TwoThreeXorInt;
 import subprotocols.InsLbl;
 import util.M;
+import util.P;
 import util.Util;
 
 public class ULiT extends Protocol {
@@ -22,12 +23,14 @@ public class ULiT extends Protocol {
 	SecureRandom sr1;
 	SecureRandom sr2;
 
+	int pid = P.ULIT;
+
 	public ULiT(Communication con1, Communication con2) {
 		super(con1, con2);
 
-		online_band = all.ULiT_on;
-		offline_band = all.ULiT_off;
-		timer = all.ULiT;
+		online_band = all.online_band[pid];
+		offline_band = all.offline_band[pid];
+		timer = all.timer[pid];
 	}
 
 	public ULiT(Communication con1, Communication con2, SecureRandom sr1, SecureRandom sr2) {
@@ -35,9 +38,9 @@ public class ULiT extends Protocol {
 		this.sr1 = sr1;
 		this.sr2 = sr2;
 
-		online_band = all.ULiT_on;
-		offline_band = all.ULiT_off;
-		timer = all.ULiT;
+		online_band = all.online_band[pid];
+		offline_band = all.offline_band[pid];
+		timer = all.timer[pid];
 	}
 
 	public void reinit(Communication con1, Communication con2, SecureRandom sr1, SecureRandom sr2) {

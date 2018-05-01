@@ -10,6 +10,7 @@ import oram.Metadata;
 import protocols.Protocol;
 import struct.Party;
 import util.M;
+import util.P;
 import util.Util;
 
 public class ShiftPIR extends Protocol {
@@ -17,12 +18,14 @@ public class ShiftPIR extends Protocol {
 	SecureRandom sr1;
 	SecureRandom sr2;
 
+	int pid = P.SPIR;
+
 	public ShiftPIR(Communication con1, Communication con2) {
 		super(con1, con2);
 
-		online_band = all.ShiftPIR_on;
-		offline_band = all.ShiftPIR_off;
-		timer = all.ShiftPIR;
+		online_band = all.online_band[pid];
+		offline_band = all.offline_band[pid];
+		timer = all.timer[pid];
 	}
 
 	public ShiftPIR(Communication con1, Communication con2, SecureRandom sr1, SecureRandom sr2) {
@@ -30,9 +33,9 @@ public class ShiftPIR extends Protocol {
 		this.sr1 = sr1;
 		this.sr2 = sr2;
 
-		online_band = all.ShiftPIR_on;
-		offline_band = all.ShiftPIR_off;
-		timer = all.ShiftPIR;
+		online_band = all.online_band[pid];
+		offline_band = all.offline_band[pid];
+		timer = all.timer[pid];
 	}
 
 	public void reinit(Communication con1, Communication con2, SecureRandom sr1, SecureRandom sr2) {

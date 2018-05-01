@@ -12,6 +12,7 @@ import struct.OutPIRCOT;
 import struct.Party;
 import struct.TwoThreeXorByte;
 import util.M;
+import util.P;
 import util.Util;
 
 public class ThreeShiftPIR extends Protocol {
@@ -19,12 +20,14 @@ public class ThreeShiftPIR extends Protocol {
 	SecureRandom sr1;
 	SecureRandom sr2;
 
+	int pid = P.TSPIR;
+
 	public ThreeShiftPIR(Communication con1, Communication con2) {
 		super(con1, con2);
 
-		online_band = all.ThreeShiftPIR_on;
-		offline_band = all.ThreeShiftPIR_off;
-		timer = all.ThreeShiftPIR;
+		online_band = all.online_band[pid];
+		offline_band = all.offline_band[pid];
+		timer = all.timer[pid];
 	}
 
 	public ThreeShiftPIR(Communication con1, Communication con2, SecureRandom sr1, SecureRandom sr2) {
@@ -32,9 +35,9 @@ public class ThreeShiftPIR extends Protocol {
 		this.sr1 = sr1;
 		this.sr2 = sr2;
 
-		online_band = all.ThreeShiftPIR_on;
-		offline_band = all.ThreeShiftPIR_off;
-		timer = all.ThreeShiftPIR;
+		online_band = all.online_band[pid];
+		offline_band = all.offline_band[pid];
+		timer = all.timer[pid];
 	}
 
 	public void reinit(Communication con1, Communication con2, SecureRandom sr1, SecureRandom sr2) {

@@ -11,18 +11,21 @@ import oram.Tuple;
 import protocols.Protocol;
 import struct.Party;
 import util.M;
+import util.P;
 import util.Util;
 
 // TODO: change XOT to do 2 rounds and 2|path| bndw
 
 public class SSXOT extends Protocol {
 
+	int pid = P.XOT;
+
 	public SSXOT(Communication con1, Communication con2) {
 		super(con1, con2);
 
-		online_band = all.SSXOT_on;
-		offline_band = all.SSXOT_off;
-		timer = all.SSXOT;
+		online_band = all.online_band[pid];
+		offline_band = all.offline_band[pid];
+		timer = all.timer[pid];
 	}
 
 	public Tuple[] runE(Tuple[] m, int[] tupleParam) {

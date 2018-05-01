@@ -7,8 +7,8 @@ import oram.Forest;
 import oram.Global;
 import oram.Metadata;
 import struct.Party;
-import struct.TimeAndBandwidth;
 import util.Bandwidth;
+import util.TimeAndBandwidth;
 import util.Timer;
 
 public abstract class Protocol {

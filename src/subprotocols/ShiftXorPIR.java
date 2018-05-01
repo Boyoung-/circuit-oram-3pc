@@ -11,6 +11,7 @@ import oram.Metadata;
 import protocols.Protocol;
 import struct.Party;
 import util.M;
+import util.P;
 import util.Util;
 
 public class ShiftXorPIR extends Protocol {
@@ -18,12 +19,14 @@ public class ShiftXorPIR extends Protocol {
 	SecureRandom sr1;
 	SecureRandom sr2;
 
+	int pid = P.SXPIR;
+
 	public ShiftXorPIR(Communication con1, Communication con2) {
 		super(con1, con2);
 
-		online_band = all.ShiftXorPIR_on;
-		offline_band = all.ShiftXorPIR_off;
-		timer = all.ShiftXorPIR;
+		online_band = all.online_band[pid];
+		offline_band = all.offline_band[pid];
+		timer = all.timer[pid];
 	}
 
 	public ShiftXorPIR(Communication con1, Communication con2, SecureRandom sr1, SecureRandom sr2) {
@@ -31,9 +34,9 @@ public class ShiftXorPIR extends Protocol {
 		this.sr1 = sr1;
 		this.sr2 = sr2;
 
-		online_band = all.ShiftXorPIR_on;
-		offline_band = all.ShiftXorPIR_off;
-		timer = all.ShiftXorPIR;
+		online_band = all.online_band[pid];
+		offline_band = all.offline_band[pid];
+		timer = all.timer[pid];
 	}
 
 	public void reinit(Communication con1, Communication con2, SecureRandom sr1, SecureRandom sr2) {

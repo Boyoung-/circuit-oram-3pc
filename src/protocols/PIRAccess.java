@@ -22,16 +22,19 @@ import subprotocols.PIRCOT;
 import subprotocols.ThreeShiftPIR;
 import subprotocols.ThreeShiftXorPIR;
 import util.M;
+import util.P;
 import util.Util;
 
 public class PIRAccess extends Protocol {
 
+	int pid = P.ACC;
+
 	public PIRAccess(Communication con1, Communication con2) {
 		super(con1, con2);
 
-		online_band = all.Access_on;
-		offline_band = all.Access_off;
-		timer = all.Access;
+		online_band = all.online_band[pid];
+		offline_band = all.offline_band[pid];
+		timer = all.timer[pid];
 	}
 
 	public OutPIRAccess runE(Metadata md, Tree tree_DE, Tree tree_CE, byte[] Li, TwoThreeXorByte L, TwoThreeXorByte N,

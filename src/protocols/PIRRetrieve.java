@@ -19,8 +19,8 @@ import struct.TwoThreeXorByte;
 import struct.TwoThreeXorInt;
 import util.Bandwidth;
 import util.M;
+import util.P;
 import util.StopWatch;
-import util.Timer;
 import util.Util;
 
 // TODO: really FlipFlag on path, and update path in Eviction
@@ -31,12 +31,14 @@ public class PIRRetrieve extends Protocol {
 	Communication[] cons1;
 	Communication[] cons2;
 
+	int pid = P.RTV;
+
 	public PIRRetrieve(Communication con1, Communication con2) {
 		super(con1, con2);
 
-		online_band = new Bandwidth();
-		offline_band = new Bandwidth();
-		timer = new Timer();
+		online_band = all.online_band[pid];
+		offline_band = all.offline_band[pid];
+		timer = all.timer[pid];
 	}
 
 	public void setCons(Communication[] a, Communication[] b) {
@@ -281,13 +283,13 @@ public class PIRRetrieve extends Protocol {
 		Tree tree_DE = null;
 		Tree tree_CE = null;
 
-		int iterations = 100;
-		int reset = 20;
+		int iterations = 10;
+		int reset = 2;
 
 		for (int test = 0; test < iterations; test++) {
 
 			if (test == reset) {
-				timer.reset();
+				all.resetTime();
 				ete.reset();
 			}
 			if (test == 1) {
@@ -373,22 +375,41 @@ public class PIRRetrieve extends Protocol {
 
 		}
 
-		// Bandwidth total = new Bandwidth("Total Online");
-		// for (int i = 0; i < P.size; i++) {
-		// for (int j = 0; j < cons1.length; j++)
-		// total.add(cons1[j].bandwidth[i].add(cons2[j].bandwidth[i]).bandwidth);
-		// }
-		// System.out.println(total.toString());
+		System.out.println();
 
-		// timer.divideBy(iterations - reset);
-		// timer.print();
+		Bandwidth band_on = new Bandwidth("Total Online Band");
+		Bandwidth band_off = new Bandwidth("Total Offline Band");
+		for (int i = 0; i < P.size; i++) {
+			System.out.println(all.offline_band[i].noPreToString());
+			System.out.println(all.online_band[i].noPreToString());
+			band_on.add(all.online_band[i]);
+			band_off.add(all.offline_band[i]);
+		}
+		System.out.println(band_off.noPreToString());
+		System.out.println(band_on.noPreToString());
 
-		System.out.println(ete.toMS());
+		System.out.println();
+
+		StopWatch time_on = new StopWatch("Total Online Time");
+		StopWatch time_off = new StopWatch("Total Offline Time");
+		for (int i = 0; i < P.size; i++) {
+			for (int j = 0; j < 3; j++)
+				time_on.add(all.timer[i].watches[j]);
+			for (int j = 3; j < M.size; j++)
+				time_off.add(all.timer[i].watches[j]);
+			all.timer[i].noPrePrint();
+		}
+		System.out.println(time_off.noPreToMS());
+		System.out.println(time_on.noPreToMS());
+
+		System.out.println();
+		System.out.println(ete.noPreToMS());
+
+		System.out.println();
 
 		sanityCheck();
 	}
 
-	// for testing correctness
 	@Override
 	public void run(Party party, Metadata md, Forest forest) {
 	}

@@ -14,6 +14,7 @@ import struct.Party;
 import struct.TwoOneXor;
 import struct.TwoThreeXorByte;
 import util.M;
+import util.P;
 import util.Util;
 
 public class ThreeShiftXorPIR extends Protocol {
@@ -21,12 +22,14 @@ public class ThreeShiftXorPIR extends Protocol {
 	SecureRandom sr1;
 	SecureRandom sr2;
 
+	int pid = P.TSXPIR;
+
 	public ThreeShiftXorPIR(Communication con1, Communication con2) {
 		super(con1, con2);
 
-		online_band = all.ThreeShiftXorPIR_on;
-		offline_band = all.ThreeShiftXorPIR_off;
-		timer = all.ThreeShiftXorPIR;
+		online_band = all.online_band[pid];
+		offline_band = all.offline_band[pid];
+		timer = all.timer[pid];
 	}
 
 	public ThreeShiftXorPIR(Communication con1, Communication con2, SecureRandom sr1, SecureRandom sr2) {
@@ -34,9 +37,9 @@ public class ThreeShiftXorPIR extends Protocol {
 		this.sr1 = sr1;
 		this.sr2 = sr2;
 
-		online_band = all.ThreeShiftXorPIR_on;
-		offline_band = all.ThreeShiftXorPIR_off;
-		timer = all.ThreeShiftXorPIR;
+		online_band = all.online_band[pid];
+		offline_band = all.offline_band[pid];
+		timer = all.timer[pid];
 	}
 
 	public void reinit(Communication con1, Communication con2, SecureRandom sr1, SecureRandom sr2) {

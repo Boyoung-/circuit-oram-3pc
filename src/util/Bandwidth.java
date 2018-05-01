@@ -39,8 +39,8 @@ public class Bandwidth {
 	}
 
 	public void add(Bandwidth b) {
-		if (!task.equals(b.task))
-			throw new BandwidthException("Task: " + task + " != " + b.task);
+		// if (!task.equals(b.task))
+		// throw new BandwidthException("Task: " + task + " != " + b.task);
 		bandwidth += b.bandwidth;
 	}
 

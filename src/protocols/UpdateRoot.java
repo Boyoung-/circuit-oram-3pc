@@ -21,16 +21,19 @@ import oram.Tuple;
 import struct.Party;
 import subprotocols.SSXOT;
 import util.M;
+import util.P;
 import util.Util;
 
 public class UpdateRoot extends Protocol {
 
+	int pid = P.UR;
+
 	public UpdateRoot(Communication con1, Communication con2) {
 		super(con1, con2);
 
-		online_band = all.UpdateRoot_on;
-		offline_band = all.UpdateRoot_off;
-		timer = all.UpdateRoot;
+		online_band = all.online_band[pid];
+		offline_band = all.offline_band[pid];
+		timer = all.timer[pid];
 	}
 
 	public Tuple[] runE(boolean firstTree, int sw, int lBits, int[] tupleParam, byte[] Li, Tuple[] R, Tuple Ti) {

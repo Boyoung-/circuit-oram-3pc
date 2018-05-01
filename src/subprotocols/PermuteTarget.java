@@ -13,16 +13,19 @@ import oram.Metadata;
 import protocols.Protocol;
 import struct.Party;
 import util.M;
+import util.P;
 import util.Util;
 
 public class PermuteTarget extends Protocol {
 
+	int pid = P.PB;
+
 	public PermuteTarget(Communication con1, Communication con2) {
 		super(con1, con2);
 
-		online_band = all.PermBucket_on;
-		offline_band = all.PermBucket_off;
-		timer = all.PermBucket;
+		online_band = all.online_band[pid];
+		offline_band = all.offline_band[pid];
+		timer = all.timer[pid];
 	}
 
 	public void runE(int d, int[] evict_pi, GCSignal[][][] evict_targetOutKeyPairs) {

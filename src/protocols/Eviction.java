@@ -22,18 +22,21 @@ import subprotocols.PermuteIndex;
 import subprotocols.PermuteTarget;
 import subprotocols.SSXOT;
 import util.M;
+import util.P;
 import util.Util;
 
 // TODO: set bucket on path
 
 public class Eviction extends Protocol {
 
+	int pid = P.EVI;
+
 	public Eviction(Communication con1, Communication con2) {
 		super(con1, con2);
 
-		online_band = all.Eviction_on;
-		offline_band = all.Eviction_off;
-		timer = all.Eviction;
+		online_band = all.online_band[pid];
+		offline_band = all.offline_band[pid];
+		timer = all.timer[pid];
 	}
 
 	private int[] prepareEviction(int[] target, int[] ti, int W) {

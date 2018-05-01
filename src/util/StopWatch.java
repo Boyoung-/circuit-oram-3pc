@@ -90,10 +90,11 @@ public class StopWatch {
 	}
 
 	public String noPreToMS() {
-		return "\n" + (elapsedWC / 1000000) + "\n" + (elapsedCPU / 1000000);
+		// return "\n" + (elapsedWC / 1000000) + "\n" + (elapsedCPU / 1000000);
+		return "" + (elapsedWC / 1000000) + "\n" + (elapsedCPU / 1000000);
 	}
 
-	public StopWatch divideBy(int n) {
+	public StopWatch divideByAndReturn(int n) {
 		if (isOn) {
 			try {
 				throw new StopWatchException("StopWatch is still running");
@@ -106,6 +107,19 @@ public class StopWatch {
 		sw.elapsedWC = elapsedWC / n;
 		sw.elapsedCPU = elapsedCPU / n;
 		return sw;
+	}
+
+	public void divideBy(int n) {
+		if (isOn) {
+			try {
+				throw new StopWatchException("StopWatch is still running");
+			} catch (StopWatchException e) {
+				e.printStackTrace();
+			}
+		}
+
+		elapsedWC /= n;
+		elapsedCPU /= n;
 	}
 
 	public StopWatch addAndReturn(StopWatch s) {
@@ -140,13 +154,13 @@ public class StopWatch {
 			}
 		}
 
-		if (!task.equals(s.task)) {
-			try {
-				throw new StopWatchException("Tasks don't match: " + task + " != " + s.task);
-			} catch (StopWatchException e) {
-				e.printStackTrace();
-			}
-		}
+		// if (!task.equals(s.task)) {
+		// try {
+		// throw new StopWatchException("Tasks don't match: " + task + " != " + s.task);
+		// } catch (StopWatchException e) {
+		// e.printStackTrace();
+		// }
+		// }
 
 		elapsedWC += s.elapsedWC;
 		elapsedCPU += s.elapsedCPU;

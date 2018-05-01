@@ -5,7 +5,7 @@ import java.util.Stack;
 import exceptions.TimerException;
 
 public class Timer {
-	StopWatch[] watches;
+	public StopWatch[] watches;
 	static Stack<StopWatch> stack;
 
 	static {
@@ -16,6 +16,12 @@ public class Timer {
 		watches = new StopWatch[M.size];
 		for (int j = 0; j < M.size; j++)
 			watches[j] = new StopWatch(M.names[j]);
+	}
+
+	public Timer(String task) {
+		watches = new StopWatch[M.size];
+		for (int j = 0; j < M.size; j++)
+			watches[j] = new StopWatch(task + "_" + M.names[j]);
 	}
 
 	public Timer(StopWatch[] sws) {
@@ -52,23 +58,27 @@ public class Timer {
 	public void print() {
 		if (!stack.empty())
 			throw new TimerException("Stack not empty");
-		for (int i = 0; i < watches.length; i++)
+		for (int i = 3; i < watches.length; i++)
+			System.out.println(watches[i].toMS());
+		for (int i = 0; i < 3; i++)
 			System.out.println(watches[i].toMS());
 	}
 
 	public void noPrePrint() {
 		if (!stack.empty())
 			throw new TimerException("Stack not empty");
-		for (int i = 0; i < watches.length; i++)
+		for (int i = 3; i < watches.length; i++)
+			System.out.println(watches[i].noPreToMS());
+		for (int i = 0; i < 3; i++)
 			System.out.println(watches[i].noPreToMS());
 	}
 
-	public Timer divideBy(int n) {
+	public Timer divideByAndReturn(int n) {
 		if (!stack.empty())
 			throw new TimerException("Stack not empty");
 		StopWatch[] sws = new StopWatch[M.size];
 		for (int i = 0; i < watches.length; i++)
-			sws[i] = watches[i].divideBy(n);
+			sws[i] = watches[i].divideByAndReturn(n);
 		return new Timer(sws);
 	}
 

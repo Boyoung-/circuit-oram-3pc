@@ -11,17 +11,20 @@ import protocols.Protocol;
 import struct.OutPIRCOT;
 import struct.Party;
 import util.M;
+import util.P;
 import util.Util;
 
 // KSearch
 public class PIRCOT extends Protocol {
 
+	int pid = P.KSER;
+
 	public PIRCOT(Communication con1, Communication con2) {
 		super(con1, con2);
 
-		online_band = all.KSearch_on;
-		offline_band = all.KSearch_off;
-		timer = all.KSearch;
+		online_band = all.online_band[pid];
+		offline_band = all.offline_band[pid];
+		timer = all.timer[pid];
 	}
 
 	public OutPIRCOT runE(byte[][] u, byte[] v) {
