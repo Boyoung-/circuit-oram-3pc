@@ -104,6 +104,8 @@ public class CLI {
 			operation = InsLbl.class;
 		} else if (protocol.equals("ulit")) {
 			operation = ULiT.class;
+		} else if (protocol.equals("ssot")) {
+			operation = SSOT.class;
 
 		} else {
 			System.out.println("Protocol " + protocol + " not supported");
